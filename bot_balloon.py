@@ -241,12 +241,13 @@ def list_order_view(update: Update, context: CallbackContext) -> int:
     
 
 def list_order(update: Update, context: CallbackContext) -> int:
-    #global state_machine
+    global state_machine
     user = update.message.from_user
+    print(update.message.text)
+    print(state_machine)
     logger.info("Пользователь %s запросил список заказов", user.first_name)
     order_list = list_order_from_db(mdb, update)
     reply_keyboard = [[],[]]
-    #reply_keyboard = [['Латекс', 'Фольга', 'Баблс'],['Стойка','Надпись','Акссесуары'], ['Другое'], ['/end']]
     reply_text = "Вот список ваших заказов: \n"
     cnt = 0
     for order in order_list:
@@ -254,13 +255,20 @@ def list_order(update: Update, context: CallbackContext) -> int:
         reply_text += "%d\n" % order['order_cnt']
         reply_keyboard[0].append(str(order['order_cnt']))
     reply_keyboard[1].append('Вернуться назад')
+    if update.message.text == "Редактировать заказ" or state_machine != ORDER:
+        logger.info("Пользователь %s запросил список заказов для редактирования", user.first_name)
+        context.user_data['last_msg'] = update.message.text
+        state_machine = ORDER_CHANGE
+    else:
+        logger.info("Пользователь %s попал в else", user.first_name)
+        state_machine = ORDER_EDIT
     update.message.reply_text(reply_text,reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     return cnt
 
 def select_order(update: Update, context: CallbackContext) -> int:
     global state_machine
     user = update.message.from_user
-    if state_machine == ORDER_CHANGE and (update.message.text != 'Состав заказа' and update.message.text != 'Изменить заказ' and update.message.text != 'Удалить заказ'):
+    if state_machine == ORDER_CHANGE and (update.message.text != 'Состав заказа' and update.message.text != 'Изменить заказ' and update.message.text != 'Удалить заказ' and context.user_data['last_msg'] != "Редактировать заказ"):
         logger.info("Пользователь %s выбрал заказ %d", user.first_name, int(update.message.text))
         context.user_data['select_order'] = int(update.message.text)
         reply_keyboard = [['Состав заказа', 'Изменить заказ','Удалить заказ'],['Вернуться назад']]
@@ -275,6 +283,10 @@ def select_order(update: Update, context: CallbackContext) -> int:
     elif state_machine == ORDER_CHANGE and update.message.text == 'Удалить заказ':
         logger.info("Пользователь %s выбрал заказ %d чтобы удалить", user.first_name, context.user_data['select_order'])
         remove_order(update, context)
+    elif state_machine == ORDER_CHANGE and context.user_data['last_msg'] == "Редактировать заказ":
+        context.user_data['select_order'] = int(update.message.text)
+        logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать", user.first_name, context.user_data['select_order'])
+        edit_order(update, context)
     return state_machine
 
 def show_order(update: Update, context: CallbackContext) -> int:
@@ -287,15 +299,15 @@ def show_order(update: Update, context: CallbackContext) -> int:
         order_num = context.user_data['select_order']
         order = show_order_user_from_db(mdb, update, order_num)
         #print(show_order_user_from_db(mdb, update, order_num))
-        # text = "Заказ № "+ str(context.user_data['select_order']) +":\n"
-        # text += "ФИО:"+ order['fio']+"\n"
-        # text += "Телефон:"+ order['tel']+"\n"
-        # text += "Дата:"+ order['date']+"\n"
-        # text += "Адрес:"+ order['location']+"\n"
-        # text += make_msg_order_list(order)
-        # update.message.reply_text(text)
-        # update.message.text = order_num
-        # select_order(update, context)
+        text = "Заказ № "+ str(context.user_data['select_order']) +":\n"
+        text += "ФИО:"+ order['fio']+"\n"
+        text += "Телефон:"+ order['tel']+"\n"
+        text += "Дата:"+ order['date']+"\n"
+        text += "Адрес:"+ order['location']+"\n"
+        text += make_msg_order_list(order)
+        update.message.reply_text(text)
+        update.message.text = order_num
+        select_order(update, context)
     #elif state_machine == ORDER_CHANGE:
         
     #else
@@ -305,20 +317,13 @@ def show_order(update: Update, context: CallbackContext) -> int:
 def edit_order(update: Update, context: CallbackContext) -> int:
     global state_machine
     user = update.message.from_user
-    if state_machine == ORDER and (update.message.text != 'ФИО' and update.message.text != 'Телефон' and update.message.text != 'Дата и время' and update.message.text != 'Состав заказа'):
+    if (state_machine == ORDER or state_machine == ORDER_CHANGE) and (update.message.text != 'ФИО' and update.message.text != 'Телефон' and update.message.text != 'Дата и время' and update.message.text != 'Состав заказа'):
         state_machine = ORDER_EDIT
         # Сюда вставить функцию редактирования заказа из БД
         logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать", user.first_name, context.user_data['select_order'])
         reply_keyboard = [['ФИО', 'Телефон','Дата и время', 'Адрес'],['Состав заказа'],['Вернуться назад']]
         reply_text = "Выберите что изменить: \n"
-        update.message.reply_text(reply_text,reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
-    elif state_machine == ORDER_CHANGE and (update.message.text != 'ФИО' and update.message.text != 'Телефон' and update.message.text != 'Дата и время' and update.message.text != 'Состав заказа'):
-        state_machine = ORDER_EDIT
-        # Сюда вставить функцию редактирования заказа из БД
-        logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать", user.first_name, context.user_data['select_order'])
-        reply_keyboard = [['ФИО', 'Телефон','Дата и время', 'Адрес'],['Состав заказа'],['Вернуться назад']]
-        reply_text = "Выберите что изменить: \n"
-        update.message.reply_text(reply_text,reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+        update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     elif state_machine == ORDER_EDIT and update.message.text == 'ФИО':
         logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать ФИО", user.first_name, context.user_data['select_order'])
         context.user_data['last_msg'] = "ФИО"
@@ -328,8 +333,11 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         logger.info("Пользователь %s выбрал заказ %d и отредактировал %s", user.first_name, context.user_data['select_order'], context.user_data['last_msg'])
         #Сюда вставить функцию по изменению ФИО (Телефон, Дата, Место) в заказе
         edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'fio', update.message.text)
-        text = "фамилия изменина"
+        context.user_data['last_msg'] = update.message.text
+        text = "В заказе №"+str(context.user_data['select_order'])+" фамилия изменена на "+update.message.text
         update.message.reply_text(text)
+        state_machine = CHANGE
+        change(update, context)
     #else
         
     return state_machine
@@ -1050,7 +1058,7 @@ def main() -> None:
                 CommandHandler('skip', skip),
             ],
             #Блок получения данных для формирования состава заказа
-            ORDER: [MessageHandler(Filters.regex('^(Добавить новый заказ)$'), order), MessageHandler(Filters.regex('^(Редактировать заказ)$'), order), MessageHandler(Filters.regex('^(Удалить заказ)$'), remove_order),  MessageHandler(Filters.regex('^(Вывести список заказов)$'), list_order_view), MessageHandler(Filters.regex('^(Вернуться назад)$'), start)], # Выбор манипуляций с заказом
+            ORDER: [MessageHandler(Filters.regex('^(Добавить новый заказ)$'), order), MessageHandler(Filters.regex('^(Редактировать заказ)$'), list_order), MessageHandler(Filters.regex('^(Удалить заказ)$'), remove_order),  MessageHandler(Filters.regex('^(Вывести список заказов)$'), list_order_view), MessageHandler(Filters.regex('^(Вернуться назад)$'), start)], # Выбор манипуляций с заказом
             ORDER_CHANGE: [MessageHandler(Filters.regex('^[1-9][0-9]*$'), select_order), MessageHandler(Filters.regex('^(Состав заказа|Изменить заказ|Удалить заказ)$'), select_order ), MessageHandler(Filters.regex('^(Вернуться назад)$'), start)], # Выбор манипуляций с заказом
             ORDER_REMOVE: [MessageHandler(Filters.regex('^(Добавить новый заказ)$'), order), MessageHandler(Filters.regex('^(Редактировать заказ)$'), order), MessageHandler(Filters.regex('^(Удалить заказ)$'), remove_order), MessageHandler(Filters.regex('^[1-9][0-9]*$'), remove_order), MessageHandler(Filters.regex('^(Вывести список заказов)$'), list_order_view), MessageHandler(Filters.regex('^(Вернуться назад)$'), start)], # Выбор манипуляций с заказом
             ORDER_EDIT: [MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), edit_order), MessageHandler(Filters.regex('^(ФИО|Телефон|Дата и время|Адрес|Состав заказа)$'), edit_order),  MessageHandler(Filters.regex('^(Вернуться назад)$'), start)], # Выбор манипуляций с заказом

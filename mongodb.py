@@ -6,9 +6,10 @@ client = MongoClient('localhost', 27017)
 # Connect to our database
 mdb = client['orderballoonbot']
 
+
+#from settings import client, mdb
 # Fetch our series collection
 series_collection = mdb['user_id']
-
 
 # Imports truncated for brevity
 
@@ -68,11 +69,9 @@ def save_user_order(mdb, update, user_data):
         order = mdb.orders.find_one({"user_id": user['user_id']})   # поиск в коллекции orders по user.id
         if not order:  # если такого нет, создаем словарь с данными
             order = {
-                #'_id': user['order_cnt']+1,
                 'order_cnt': user['order_cnt'] + 1,
                 'user_id': user['user_id'],
-                # "order_cnt": (user['order_cnt'] + 1)
-                str(user['order_cnt']+1):{
+                'order': {
                     "fio": user_data['fio'],
                     "tel": user_data['tel'],
                     "from": user_data['from'],
@@ -86,10 +85,9 @@ def save_user_order(mdb, update, user_data):
             mdb.orders.insert_one(order)   # сохраняем в коллекцию orders
         else:
             order = {
-                #'_id': user['order_cnt']+1,
                 'order_cnt': user['order_cnt'] + 1,
                 'user_id': user['user_id'],
-                str(user['order_cnt']+1):{
+                'order': {
                     "fio": user_data['fio'],
                     "tel": user_data['tel'],
                     "from": user_data['from'],
@@ -107,26 +105,21 @@ def save_user_order(mdb, update, user_data):
 
 def list_order_from_db(mdb, update):
     user = search_or_save_user(mdb, update.effective_user, update.message)
-    order_list = mdb.orders.find({'user_id' : user['user_id']})
-    #books = mdb.orders.find( { } )
-    # for order in order_list:
-        # print(order['order_cnt'])
+    order_list = mdb.orders.find({'user_id': user['user_id']})
     return order_list
 
 def show_order_user_from_db(mdb, update, order_num):
     user = search_or_save_user(mdb, update.effective_user, update.message)
-    order_list = mdb.orders.find({'user_id' : user['user_id'],'_id': order_num})
-    #order1 = {}
-    for order1 in order_list:
-        print(order1)
-    return order1
+    order = mdb.orders.find_one({'user_id': user['user_id'], 'order_cnt': order_num})
+    print(order)
+    return order['order']
 
 def edit_order_user_from_db(mdb, update, order_num, param, value):
     user = search_or_save_user(mdb, update.effective_user, update.message)
-    order_list = mdb.orders.find({'user_id' : user['user_id'],'_id': order_num})
-    for order in order_list:
-        print(order[str(order_num)])
-    mdb.order.update_one({'user_id' : user['user_id'],'_id': order_num},{'$set':{order_num:{ param : value }}})
+    finish = mdb.orders.update_one(
+        {'user_id': user['user_id'], 'order_cnt': order_num},
+        {'$set': {'order.'+param: value}})
+    print(finish)
 
 
 
@@ -176,25 +169,3 @@ def save_like_dislike(mdb, query, data):
             mdb.photography.update_one(
                 {'file_id': file_id},
                 {'$set': {'dislike': new_dislike}, '$addToSet': {'user_id': query.message.chat.id}})
-
-"""
-new_show = {
-    "name": "FRIENDS",
-    "year": 1994
-}
-print(insert_document(series_collection, new_show))
-
-result = find_document(series_collection, {'name': 'FRIENDS'})
-print(result)
-
-new_show = {
-    "name": "FRIENDS",
-    "year": 1995
-}
-id_ = insert_document(series_collection, new_show)
-
-update_document(series_collection, {'_id': id_}, {'name': 'F.R.I.E.N.D.S'})
-
-result = find_document(series_collection, {'_id': id_})
-print(result)
-"""
