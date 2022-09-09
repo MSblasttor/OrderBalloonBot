@@ -268,7 +268,8 @@ def show_list_order(update: Update, context: CallbackContext) -> int:
         state_machine = ORDER_CHANGE
         #print(state_machine)
     else:
-        logger.info("Пользователь %s попал в else", user.first_name)
+        logger.info("Пользователь %s попал в else в функции show_list_order", user.first_name)
+        context.user_data['last_msg'] = update.message.text
         state_machine = ORDER_CHANGE
     return state_machine
 
