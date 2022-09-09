@@ -365,8 +365,39 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         else:
             text = "Введите номер телефона в формате +7 999 123 44 55"
             update.message.reply_text(text)
+    elif state_machine == ORDER_EDIT and update.message.text == 'Дата и время':
+        logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать дату и время", user.first_name, context.user_data['select_order'])
+        context.user_data['last_msg'] = update.message.text
+        text = "Введите новые дату и время"
+        update.message.reply_text(text)
+    elif state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'Дата и время':
+        if re.fullmatch(r'[0-3]?[0-9].[0-3]?[0-9].(?:[0-9]{2})?[0-9]{2} (?:[01][0-9]|2[0-3]):[0-5][0-9]', update.message.text):
+            logger.info("Пользователь %s выбрал заказ %d и отредактировал %s", user.first_name, context.user_data['select_order'], context.user_data['last_msg'])
+            #Сюда вставить функцию по изменению ФИО (Телефон, Дата, Место) в заказе
+            edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'date', update.message.text)
+            context.user_data['last_msg'] = update.message.text
+            text = "В заказе №"+str(context.user_data['select_order'])+" дата и время изменена на "+update.message.text
+            update.message.reply_text(text)
+            state_machine = CHANGE
+            change(update, context)
+        else:
+            text = "Введите дату мероприятия в формате дд-мм-гг ЧЧ:ММ"
+            update.message.reply_text(text)
+    elif state_machine == ORDER_EDIT and update.message.text == 'Адрес':
+        logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать адрес", user.first_name, context.user_data['select_order'])
+        context.user_data['last_msg'] = update.message.text
+        text = "Введите новый адрес"
+        update.message.reply_text(text)
+    elif state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'Адрес':
+        logger.info("Пользователь %s выбрал заказ %d и отредактировал %s", user.first_name, context.user_data['select_order'], context.user_data['last_msg'])
+        #Сюда вставить функцию по изменению ФИО (Телефон, Дата, Место) в заказе
+        edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'location', update.message.text)
+        context.user_data['last_msg'] = update.message.text
+        text = "В заказе №"+str(context.user_data['select_order'])+" адрес изменен на "+update.message.text
+        update.message.reply_text(text)
+        state_machine = CHANGE
+        change(update, context)
     #else
-        
     return state_machine
 
 def remove_order(update: Update, context: CallbackContext) -> int:
