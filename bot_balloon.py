@@ -335,7 +335,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     elif state_machine == ORDER_EDIT and update.message.text == 'ФИО':
         logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать ФИО", user.first_name, context.user_data['select_order'])
-        context.user_data['last_msg'] = "ФИО"
+        context.user_data['last_msg'] = update.message.text
         text = "Введите новые ФИО"
         update.message.reply_text(text)
     elif state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'ФИО':
@@ -344,6 +344,20 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'fio', update.message.text)
         context.user_data['last_msg'] = update.message.text
         text = "В заказе №"+str(context.user_data['select_order'])+" фамилия изменена на "+update.message.text
+        update.message.reply_text(text)
+        state_machine = CHANGE
+        change(update, context)
+    elif state_machine == ORDER_EDIT and update.message.text == 'Телефон':
+        logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать Телефон", user.first_name, context.user_data['select_order'])
+        context.user_data['last_msg'] = update.message.text
+        text = "Введите новые телефон заказчика"
+        update.message.reply_text(text)
+    elif state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'Телефон':
+        logger.info("Пользователь %s выбрал заказ %d и отредактировал %s", user.first_name, context.user_data['select_order'], context.user_data['last_msg'])
+        #Сюда вставить функцию по изменению ФИО (Телефон, Дата, Место) в заказе
+        edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'tel', update.message.text)
+        context.user_data['last_msg'] = update.message.text
+        text = "В заказе №"+str(context.user_data['select_order'])+" телефон изменен на "+update.message.text
         update.message.reply_text(text)
         state_machine = CHANGE
         change(update, context)
@@ -1070,7 +1084,7 @@ def main() -> None:
             ORDER: [MessageHandler(Filters.regex('^(Добавить новый заказ)$'), order), MessageHandler(Filters.regex('^(Редактировать заказ)$'), show_list_order), MessageHandler(Filters.regex('^(Удалить заказ)$'), remove_order),  MessageHandler(Filters.regex('^(Вывести список заказов)$'), show_list_order), MessageHandler(Filters.regex('^(Вернуться назад)$'), start)], # Выбор манипуляций с заказом
             ORDER_CHANGE: [MessageHandler(Filters.regex('^[1-9][0-9]*$'), select_order), MessageHandler(Filters.regex('^(Состав заказа|Изменить заказ|Удалить заказ)$'), select_order ), MessageHandler(Filters.regex('^(Вернуться назад)$'), start)], # Выбор манипуляций с заказом
             ORDER_REMOVE: [MessageHandler(Filters.regex('^(Добавить новый заказ)$'), order), MessageHandler(Filters.regex('^(Редактировать заказ)$'), order), MessageHandler(Filters.regex('^(Удалить заказ)$'), remove_order), MessageHandler(Filters.regex('^[1-9][0-9]*$'), remove_order), MessageHandler(Filters.regex('^(Вывести список заказов)$'), show_list_order), MessageHandler(Filters.regex('^(Вернуться назад)$'), start)], # Выбор манипуляций с заказом
-            ORDER_EDIT: [MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), edit_order), MessageHandler(Filters.regex('^(ФИО|Телефон|Дата и время|Адрес|Состав заказа)$'), edit_order),  MessageHandler(Filters.regex('^(Вернуться назад)$'), start)], # Выбор манипуляций с заказом
+            ORDER_EDIT: [MessageHandler(Filters.regex('^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$') & ~Filters.command, edit_order), MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), edit_order), MessageHandler(Filters.regex('^(ФИО|Телефон|Дата и время|Адрес|Состав заказа)$'), edit_order),  MessageHandler(Filters.regex('^(Вернуться назад)$'), start)], # Выбор манипуляций с заказом
             ORDER_SHOW: [MessageHandler(Filters.regex('^(Добавить новый заказ)$'), order), MessageHandler(Filters.regex('^(Редактировать заказ)$'), order), MessageHandler(Filters.regex('^(Удалить заказ)$'), remove_order), MessageHandler(Filters.regex('^[1-9][0-9]*$'), remove_order), MessageHandler(Filters.regex('^(Вывести список заказов)$'), show_list_order), MessageHandler(Filters.regex('^(Вернуться назад)$'), start)], # Выбор манипуляций с заказом
             ORDER_ADD_ITEMS: [MessageHandler(Filters.regex('^(Латекс)$'), latex), MessageHandler(Filters.regex('^(Фольга)$'), foil), MessageHandler(Filters.regex('^(Баблс)$'), bubl), MessageHandler(Filters.regex('^(Надпись)$'), label), MessageHandler(Filters.regex('^(Стойка)$'), stand), CommandHandler('end', end), CommandHandler('add', order_insert), CommandHandler('remove', remove_items_from_order), MessageHandler(Filters.regex('^[1-9][0-9]*$'), remove_items_from_order), CommandHandler('finish', finish), CommandHandler('comment', comment)], # Выбор продукции для заказа
 
