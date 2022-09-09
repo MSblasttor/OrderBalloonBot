@@ -241,10 +241,9 @@ def list_order_view(update: Update, context: CallbackContext) -> int:
     
 
 def list_order(update: Update, context: CallbackContext) -> int:
-    global state_machine
     user = update.message.from_user
-    print(update.message.text)
-    print(state_machine)
+    #print(update.message.text)
+    #print(state_machine)
     logger.info("Пользователь %s запросил список заказов", user.first_name)
     order_list = list_order_from_db(mdb, update)
     reply_keyboard = [[],[]]
@@ -255,15 +254,23 @@ def list_order(update: Update, context: CallbackContext) -> int:
         reply_text += "%d\n" % order['order_cnt']
         reply_keyboard[0].append(str(order['order_cnt']))
     reply_keyboard[1].append('Вернуться назад')
+    update.message.reply_text(reply_text,reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+    return cnt
+
+def show_list_order(update: Update, context: CallbackContext) -> int:
+    global state_machine
+    user = update.message.from_user
+    list_order(update, context)
     if update.message.text == "Редактировать заказ" or state_machine != ORDER:
         logger.info("Пользователь %s запросил список заказов для редактирования", user.first_name)
         context.user_data['last_msg'] = update.message.text
+        #print(context.user_data)
         state_machine = ORDER_CHANGE
+        #print(state_machine)
     else:
         logger.info("Пользователь %s попал в else", user.first_name)
-        state_machine = ORDER_EDIT
-    update.message.reply_text(reply_text,reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
-    return cnt
+        state_machine = ORDER_CHANGE
+    return state_machine
 
 def select_order(update: Update, context: CallbackContext) -> int:
     global state_machine
@@ -287,6 +294,8 @@ def select_order(update: Update, context: CallbackContext) -> int:
         context.user_data['select_order'] = int(update.message.text)
         logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать", user.first_name, context.user_data['select_order'])
         edit_order(update, context)
+    else:
+        logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать, но попал в else в этот момент был state_machine =%d", user.first_name, context.user_data['select_order'],state_machine)
     return state_machine
 
 def show_order(update: Update, context: CallbackContext) -> int:
@@ -1058,11 +1067,11 @@ def main() -> None:
                 CommandHandler('skip', skip),
             ],
             #Блок получения данных для формирования состава заказа
-            ORDER: [MessageHandler(Filters.regex('^(Добавить новый заказ)$'), order), MessageHandler(Filters.regex('^(Редактировать заказ)$'), list_order), MessageHandler(Filters.regex('^(Удалить заказ)$'), remove_order),  MessageHandler(Filters.regex('^(Вывести список заказов)$'), list_order_view), MessageHandler(Filters.regex('^(Вернуться назад)$'), start)], # Выбор манипуляций с заказом
+            ORDER: [MessageHandler(Filters.regex('^(Добавить новый заказ)$'), order), MessageHandler(Filters.regex('^(Редактировать заказ)$'), show_list_order), MessageHandler(Filters.regex('^(Удалить заказ)$'), remove_order),  MessageHandler(Filters.regex('^(Вывести список заказов)$'), show_list_order), MessageHandler(Filters.regex('^(Вернуться назад)$'), start)], # Выбор манипуляций с заказом
             ORDER_CHANGE: [MessageHandler(Filters.regex('^[1-9][0-9]*$'), select_order), MessageHandler(Filters.regex('^(Состав заказа|Изменить заказ|Удалить заказ)$'), select_order ), MessageHandler(Filters.regex('^(Вернуться назад)$'), start)], # Выбор манипуляций с заказом
-            ORDER_REMOVE: [MessageHandler(Filters.regex('^(Добавить новый заказ)$'), order), MessageHandler(Filters.regex('^(Редактировать заказ)$'), order), MessageHandler(Filters.regex('^(Удалить заказ)$'), remove_order), MessageHandler(Filters.regex('^[1-9][0-9]*$'), remove_order), MessageHandler(Filters.regex('^(Вывести список заказов)$'), list_order_view), MessageHandler(Filters.regex('^(Вернуться назад)$'), start)], # Выбор манипуляций с заказом
+            ORDER_REMOVE: [MessageHandler(Filters.regex('^(Добавить новый заказ)$'), order), MessageHandler(Filters.regex('^(Редактировать заказ)$'), order), MessageHandler(Filters.regex('^(Удалить заказ)$'), remove_order), MessageHandler(Filters.regex('^[1-9][0-9]*$'), remove_order), MessageHandler(Filters.regex('^(Вывести список заказов)$'), show_list_order), MessageHandler(Filters.regex('^(Вернуться назад)$'), start)], # Выбор манипуляций с заказом
             ORDER_EDIT: [MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), edit_order), MessageHandler(Filters.regex('^(ФИО|Телефон|Дата и время|Адрес|Состав заказа)$'), edit_order),  MessageHandler(Filters.regex('^(Вернуться назад)$'), start)], # Выбор манипуляций с заказом
-            ORDER_SHOW: [MessageHandler(Filters.regex('^(Добавить новый заказ)$'), order), MessageHandler(Filters.regex('^(Редактировать заказ)$'), order), MessageHandler(Filters.regex('^(Удалить заказ)$'), remove_order), MessageHandler(Filters.regex('^[1-9][0-9]*$'), remove_order), MessageHandler(Filters.regex('^(Вывести список заказов)$'), list_order_view), MessageHandler(Filters.regex('^(Вернуться назад)$'), start)], # Выбор манипуляций с заказом
+            ORDER_SHOW: [MessageHandler(Filters.regex('^(Добавить новый заказ)$'), order), MessageHandler(Filters.regex('^(Редактировать заказ)$'), order), MessageHandler(Filters.regex('^(Удалить заказ)$'), remove_order), MessageHandler(Filters.regex('^[1-9][0-9]*$'), remove_order), MessageHandler(Filters.regex('^(Вывести список заказов)$'), show_list_order), MessageHandler(Filters.regex('^(Вернуться назад)$'), start)], # Выбор манипуляций с заказом
             ORDER_ADD_ITEMS: [MessageHandler(Filters.regex('^(Латекс)$'), latex), MessageHandler(Filters.regex('^(Фольга)$'), foil), MessageHandler(Filters.regex('^(Баблс)$'), bubl), MessageHandler(Filters.regex('^(Надпись)$'), label), MessageHandler(Filters.regex('^(Стойка)$'), stand), CommandHandler('end', end), CommandHandler('add', order_insert), CommandHandler('remove', remove_items_from_order), MessageHandler(Filters.regex('^[1-9][0-9]*$'), remove_items_from_order), CommandHandler('finish', finish), CommandHandler('comment', comment)], # Выбор продукции для заказа
 
             LATEX_SIZE: [MessageHandler(Filters.text & ~Filters.command, latex), CommandHandler('skip', skip)], # Шары из латекса
