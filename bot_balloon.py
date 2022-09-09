@@ -101,7 +101,7 @@ def change(update: Update, context: CallbackContext) -> int: # Сюда прил
             logger.info("%s приступил к оформлению -  %s", user.first_name, update.message.text)
             #update.message.reply_text('Отлично вы решил оформить заказ. Введите ФИО заказчика ') # Здесь написать операции с заказами
             reply_text="Так давай выберем что будем делать"
-            reply_keyboard = [['Добавить новый заказ', 'Редактировать заказ', 'Удалить заказ'],['Вывести список заказов','Вернуться назад']]
+            reply_keyboard = [['Добавить новый заказ', 'Редактировать заказ', 'Удалить заказ'],['Вывести список заказов'],['Архив'],['Вернуться назад']]
             update.message.reply_text(
             reply_text,
             reply_markup=ReplyKeyboardMarkup(
@@ -275,10 +275,10 @@ def show_list_order(update: Update, context: CallbackContext) -> int:
 def select_order(update: Update, context: CallbackContext) -> int:
     global state_machine
     user = update.message.from_user
-    if state_machine == ORDER_CHANGE and (update.message.text != 'Состав заказа' and update.message.text != 'Изменить заказ' and update.message.text != 'Удалить заказ' and context.user_data['last_msg'] != "Редактировать заказ"):
+    if state_machine == ORDER_CHANGE and (update.message.text != 'Состав заказа' and update.message.text != 'Изменить заказ' and update.message.text != 'Удалить заказ' and update.message.text != 'В архив' and context.user_data['last_msg'] != "Редактировать заказ"):
         logger.info("Пользователь %s выбрал заказ %d", user.first_name, int(update.message.text))
         context.user_data['select_order'] = int(update.message.text)
-        reply_keyboard = [['Состав заказа', 'Изменить заказ','Удалить заказ'],['Вернуться назад']]
+        reply_keyboard = [['Состав заказа', 'Изменить заказ','Удалить заказ'],['В архив'],['Вернуться назад']]
         reply_text = "Выберите что сделать с заказом: \n"
         update.message.reply_text(reply_text,reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     elif state_machine == ORDER_CHANGE and update.message.text == 'Состав заказа':
@@ -290,6 +290,9 @@ def select_order(update: Update, context: CallbackContext) -> int:
     elif state_machine == ORDER_CHANGE and update.message.text == 'Удалить заказ':
         logger.info("Пользователь %s выбрал заказ %d чтобы удалить", user.first_name, context.user_data['select_order'])
         remove_order(update, context)
+    elif state_machine == ORDER_CHANGE and update.message.text == 'В архив':
+        logger.info("Пользователь %s выбрал заказ %d чтобы отправить в архив", user.first_name, context.user_data['select_order'])
+        #show_order(update, context)
     elif state_machine == ORDER_CHANGE and context.user_data['last_msg'] == "Редактировать заказ":
         context.user_data['select_order'] = int(update.message.text)
         logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать", user.first_name, context.user_data['select_order'])
@@ -326,13 +329,13 @@ def show_order(update: Update, context: CallbackContext) -> int:
 def edit_order(update: Update, context: CallbackContext) -> int:
     global state_machine
     user = update.message.from_user
-    if (state_machine == ORDER or state_machine == ORDER_CHANGE) and (update.message.text != 'ФИО' and update.message.text != 'Телефон' and update.message.text != 'Дата и время' and update.message.text != 'Состав заказа'):
+    if (state_machine == ORDER or state_machine == ORDER_CHANGE) and (update.message.text != 'ФИО' and update.message.text != 'Телефон' and update.message.text != 'Дата и время' and update.message.text != 'Состав заказа' and update.message.text != 'Архив' and update.message.text != 'Оплата'):
         state_machine = ORDER_EDIT
         # Сюда вставить функцию редактирования заказа из БД
         logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать", user.first_name, context.user_data['select_order'])
-        reply_keyboard = [['ФИО', 'Телефон','Дата и время', 'Адрес'],['Состав заказа'],['Вернуться назад']]
+        reply_keyboard_edit_order = [['ФИО', 'Телефон','Дата и время', 'Адрес'],['Оплата'],['Состав заказа'],['В архив'],['Вернуться назад']]  #TODO: Сделать функцию по редактированию заказа в части оплаты и отправки заказов в архив.
         reply_text = "Выберите что изменить: \n"
-        update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+        update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard_edit_order, one_time_keyboard=True))
     elif state_machine == ORDER_EDIT and update.message.text == 'ФИО':
         logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать ФИО", user.first_name, context.user_data['select_order'])
         context.user_data['last_msg'] = update.message.text
@@ -1117,9 +1120,9 @@ def main() -> None:
             ],
             #Блок получения данных для формирования состава заказа
             ORDER: [MessageHandler(Filters.regex('^(Добавить новый заказ)$'), order), MessageHandler(Filters.regex('^(Редактировать заказ)$'), show_list_order), MessageHandler(Filters.regex('^(Удалить заказ)$'), remove_order),  MessageHandler(Filters.regex('^(Вывести список заказов)$'), show_list_order), MessageHandler(Filters.regex('^(Вернуться назад)$'), start)], # Выбор манипуляций с заказом
-            ORDER_CHANGE: [MessageHandler(Filters.regex('^[1-9][0-9]*$'), select_order), MessageHandler(Filters.regex('^(Состав заказа|Изменить заказ|Удалить заказ)$'), select_order ), MessageHandler(Filters.regex('^(Вернуться назад)$'), start)], # Выбор манипуляций с заказом
+            ORDER_CHANGE: [MessageHandler(Filters.regex('^[1-9][0-9]*$'), select_order), MessageHandler(Filters.regex('^(Состав заказа|Изменить заказ|Удалить заказ|В архив)$'), select_order ), MessageHandler(Filters.regex('^(Вернуться назад)$'), start)], # Выбор манипуляций с заказом
             ORDER_REMOVE: [MessageHandler(Filters.regex('^(Добавить новый заказ)$'), order), MessageHandler(Filters.regex('^(Редактировать заказ)$'), order), MessageHandler(Filters.regex('^(Удалить заказ)$'), remove_order), MessageHandler(Filters.regex('^[1-9][0-9]*$'), remove_order), MessageHandler(Filters.regex('^(Вывести список заказов)$'), show_list_order), MessageHandler(Filters.regex('^(Вернуться назад)$'), start)], # Выбор манипуляций с заказом
-            ORDER_EDIT: [MessageHandler(Filters.regex('^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$') & ~Filters.command, edit_order), MessageHandler(Filters.regex('^[1-9][0-9]*$'), edit_order), MessageHandler(Filters.regex('^(ФИО|Телефон|Дата и время|Адрес|Состав заказа)$'), edit_order),  MessageHandler(Filters.regex('^(Вернуться назад)$'), start)], # Выбор манипуляций с заказом
+            ORDER_EDIT: [MessageHandler(Filters.regex('^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$') & ~Filters.command, edit_order), MessageHandler(Filters.regex('^[1-9][0-9]*$'), edit_order), MessageHandler(Filters.regex('^(ФИО|Телефон|Дата и время|Адрес|Состав заказа)$'), edit_order),  MessageHandler(Filters.regex('^(Вернуться назад)$'), start)], # Выбор манипуляций с заказом  # TODO: внести изменение чтобы функция отрабатывала комманду "в архив"
             ORDER_SHOW: [MessageHandler(Filters.regex('^(Добавить новый заказ)$'), order), MessageHandler(Filters.regex('^(Редактировать заказ)$'), order), MessageHandler(Filters.regex('^(Удалить заказ)$'), remove_order), MessageHandler(Filters.regex('^[1-9][0-9]*$'), remove_order), MessageHandler(Filters.regex('^(Вывести список заказов)$'), show_list_order), MessageHandler(Filters.regex('^(Вернуться назад)$'), start)], # Выбор манипуляций с заказом
             ORDER_ADD_ITEMS: [MessageHandler(Filters.regex('^(Латекс)$'), latex), MessageHandler(Filters.regex('^(Фольга)$'), foil), MessageHandler(Filters.regex('^(Баблс)$'), bubl), MessageHandler(Filters.regex('^(Надпись)$'), label), MessageHandler(Filters.regex('^(Стойка)$'), stand), CommandHandler('end', end), CommandHandler('add', order_insert), CommandHandler('remove', remove_items_from_order), MessageHandler(Filters.regex('^[1-9][0-9]*$'), remove_items_from_order), CommandHandler('finish', finish), CommandHandler('comment', comment)], # Выбор продукции для заказа
 
