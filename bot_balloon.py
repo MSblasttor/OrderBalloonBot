@@ -501,9 +501,6 @@ def remove_items_from_order(update: Update, context: CallbackContext) -> int:
     user = update.message.from_user
     logger.info("Пользователь %s приступил к редактированию заказа. Удаление ", user.first_name)
     if state_machine == ORDER_ADD_ITEMS and update.message.text != '/remove':
-        """Usage: /remove № items"""
-        # Seperate ID from command
-        #key = int(context.args[0])
         key = int(update.message.text)
         if key <= len(context.user_data['order_list']):
             context.user_data['order_list'].pop(key - 1)
@@ -513,8 +510,15 @@ def remove_items_from_order(update: Update, context: CallbackContext) -> int:
             update.message.reply_text(msg)
     else:
         if len(context.user_data['order_list']) != 0:
+            reply_keyboard = [[], []]
+            reply_text = "Вот список ваших заказов: \n"
+            cnt = 0
+            for cnt in len(context.user_data['order_list']):
+                reply_keyboard[0].append(str(cnt))
+            reply_keyboard[1].append('Вернуться назад')
             msg = 'Введите номер позиции от 1 до %d которую хотите убрать из заказа' % len(context.user_data['order_list'])
-            update.message.reply_text(msg)
+            update.message.reply_text(reply_text,
+                                      reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
         else:
             update.message.reply_text('Похоже в вашем заказе пусто. Удалять нечего. \nДля продолжения введите одну из следующих команд:\n/add - чтобы добавить в заказ еще позиции\n/remove - чтобы удалить из списка заказа позицию\n/edit - чтобы откорректировать позицию из списка заказа\n/comment - добавить коментарий к заказу\n/finish - чтобы завершить оформление')
     return state_machine
