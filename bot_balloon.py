@@ -443,14 +443,14 @@ def edit_order(update: Update, context: CallbackContext) -> int:
     elif state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'Состав заказа':
         logger.info("Пользователь %s выбрал заказ %d и решил %s позицию", user.first_name,
                     context.user_data['select_order'], update.message.text)
+        order_num = context.user_data['select_order']
+        order = show_order_user_from_db(mdb, update, order_num)
+        context.user_data['order_list'] = order['order']['order_list']
         if update.message.text == 'Добавить':
             print("Добавить")
             state_machine = order_insert(update,context)
         elif update.message.text == 'Удалить':
-
-            order_num = context.user_data['select_order']
-            order = show_order_user_from_db(mdb, update, order_num)
-            text = make_msg_order_list(order)
+            state_machine = remove_items_from_order(update, context)
         else:
             reply_keyboard = [['Добавить', 'Удалить', 'Вернуться назад']]
             text = "Выберите дейстивие ДОБАВИТЬ или УДАЛИТЬ, либо ВЕРНУТЬСЯ НАЗАД"
