@@ -1009,15 +1009,8 @@ def end(update: Update, context: CallbackContext) -> int: # Здесь обра�
     if 'select_order' in context.user_data:
         user = search_or_save_user(mdb, update.effective_user, update.message)
         order = mdb.orders.find_one({'user_id': user['user_id'], 'order_cnt': context.user_data['select_order']})
-        print(context.user_data)
-        print('/n/n/nOld:---->>>>/n/n/n')
-        print(order)
-        result_order = context.user_data['order_list']+order['order']['order_list']
-        print('/n/n/nNew:---->>>>/n/n/n')
-        print(result_order)
+        result_order = context.user_data['order_list']+order['order']['order_list'] # Объеденяем данные вновь добвленые и те что были в базе данных
         order['order']['order_list'] = result_order
-        print('/n/n/n---------FINISH--->>>>/n/n/n')
-        print(order)
         msg = make_msg_order_list(order['order'])
     else:
         msg = make_msg_order_list(context.user_data)
