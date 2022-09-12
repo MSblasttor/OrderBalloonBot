@@ -63,9 +63,7 @@ def save_user_order(mdb, update, user_data):
     if 'select_order' in user_data:
         user = search_or_save_user(mdb, update.effective_user, update.message)
         order = mdb.orders.find_one({'user_id': user['user_id'], 'order_cnt': user_data['select_order']})
-        #print(order)
-        #print(order['order']['order_list'])
-        result_order_list = order['order']['order_list']+user_data['order_list']
+        result_order_list = user_data['order_list']
         finish = mdb.orders.update_one(
             {'user_id': user['user_id'], 'order_cnt': user_data['select_order']},
             {'$set': {'order.order_list' : result_order_list}})
