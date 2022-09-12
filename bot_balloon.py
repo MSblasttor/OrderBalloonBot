@@ -944,7 +944,12 @@ def label(update: Update, context: CallbackContext) -> int: # Здесь пол�
     user = update.message.from_user
     if state_machine == ORDER_ADD_ITEMS:
         """Пользователь выбрал НАДПИСЬ"""
-        # Сохраняем значение типа 
+        #Добавляем во внутрь словаря пользователя новый словарь с карточкой заказа
+        key = 'order_dict'
+        order_dict = {'type':0,'size':0,'color':0,'name':0,'count':0,'price':0,'summa':0,'comment':0}
+        value = order_dict
+        context.user_data[key] = value
+        # Сохраняем значение типа
         key = 'type'
         value = 'label'
         context.user_data['order_dict'][key] = value
