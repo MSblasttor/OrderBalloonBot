@@ -513,7 +513,7 @@ def remove_items_from_order(update: Update, context: CallbackContext) -> int:
             reply_keyboard = [[], []]
             reply_text = "Вот список ваших заказов: \n"
             cnt = 0
-            for cnt in len(context.user_data['order_list']):
+            for cnt in range(len(context.user_data['order_list'])):
                 reply_keyboard[0].append(str(cnt))
             reply_keyboard[1].append('Вернуться назад')
             msg = 'Введите номер позиции от 1 до %d которую хотите убрать из заказа' % len(context.user_data['order_list'])
