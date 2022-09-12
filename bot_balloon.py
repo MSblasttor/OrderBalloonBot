@@ -433,6 +433,24 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         update.message.reply_text(text)
         state_machine = CHANGE
         change(update, context)
+    elif state_machine == ORDER_EDIT and update.message.text == 'Состав заказа':
+        logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать cостав", user.first_name,
+                    context.user_data['select_order'])
+        context.user_data['last_msg'] = update.message.text
+        reply_keyboard = [['Добавить', 'Удалить', 'Вернуться назад']]
+        text = "Что вы хотите сделать?"
+        update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+    elif state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'Состав заказа':
+        logger.info("Пользователь %s выбрал заказ %d и решил %s позицию", user.first_name,
+                    context.user_data['select_order'], update.message.text)
+        if update.message.text == 'Добавить':
+            print("Добавить")
+        elif update.message.text == 'Удалить':
+            print("Удалить")
+        else:
+            reply_keyboard = [['Добавить', 'Удалить', 'Вернуться назад']]
+            text = "Выберите дейстивие ДОБАВИТЬ или УДАЛИТЬ, либо ВЕРНУТЬСЯ НАЗАД"
+            update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     #else
     return state_machine
 
