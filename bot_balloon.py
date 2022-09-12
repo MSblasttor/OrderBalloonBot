@@ -1022,7 +1022,15 @@ def make_msg_order_list(user_data) -> str:
             message +='\n\nКомментарий: %s' % user_data['comment']
         user_data['summa'] = summa
         message +='\n\nИтого сумма заказа без учета доставки: %d руб.' % summa
-        message +='\nНеобходимая предоплата: %d руб.' % (summa // 2)
+        if 'predoplata' in user_data:
+            if summa - user_data['predoplata'] > 0:
+                message += '\nПредоплата: %d ' % user_data['predoplata']
+                message +='\nОсталось доплатить %d' % (summa - user_data['predoplata'])
+            else:
+                message += '\nВсе оплачено'
+        else:
+            message +='\nНеобходимая предоплата: %d руб.' % (summa // 2)
+
     print(message)
     return message
 
