@@ -122,7 +122,7 @@ def list_order_from_db(mdb, update):
 def show_order_user_from_db(mdb, update, order_num):
     user = search_or_save_user(mdb, update.effective_user, update.message)
     order = mdb.orders.find_one({'user_id': user['user_id'], 'order_cnt': order_num})
-    print(order)
+    #print(order)
     return order['order']
 
 def edit_order_user_from_db(mdb, update, order_num, param, value):

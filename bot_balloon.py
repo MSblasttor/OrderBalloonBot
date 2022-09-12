@@ -444,8 +444,10 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         logger.info("Пользователь %s выбрал заказ %d и решил %s позицию", user.first_name,
                     context.user_data['select_order'], update.message.text)
         order_num = context.user_data['select_order']
+        #print(order_num)
         order = show_order_user_from_db(mdb, update, order_num)
-        context.user_data['order_list'] = order['order']['order_list']
+        #print(order)
+        context.user_data['order_list'] = order['order_list']
         if update.message.text == 'Добавить':
             print("Добавить")
             state_machine = order_insert(update,context)
@@ -1006,14 +1008,7 @@ def end(update: Update, context: CallbackContext) -> int: # Здесь обра�
     """Пользователь завершил заполнение формы"""
     user = update.message.from_user
     logger.info("Пользователь %s завершил заполнение форм", user.first_name)
-    if 'select_order' in context.user_data:
-        user = search_or_save_user(mdb, update.effective_user, update.message)
-        order = mdb.orders.find_one({'user_id': user['user_id'], 'order_cnt': context.user_data['select_order']})
-        result_order = context.user_data['order_list']+order['order']['order_list'] # Объеденяем данные вновь добвленые и те что были в базе данных
-        order['order']['order_list'] = result_order
-        msg = make_msg_order_list(order['order'])
-    else:
-        msg = make_msg_order_list(context.user_data)
+    msg = make_msg_order_list(context.user_data)
     update.message.reply_text('Итак давай посмотрим что получается')
     update.message.reply_text(msg)
     update.message.reply_text('Введите одну из следующих команд:\n/add - чтобы добавить в заказ еще позиции\n/remove - чтобы удалить из списка заказа позицию \n/edit - чтобы откорректировать позицию из списка заказа\n/comment - добавить коментарий к заказу\n/finish - чтобы завершить оформление')
