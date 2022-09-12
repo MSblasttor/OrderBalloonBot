@@ -60,47 +60,58 @@ def search_or_save_user(mdb, effective_user, message):
     return user
 
 def save_user_order(mdb, update, user_data):
-    if user_data['summa'] != 0:
-        user = search_or_save_user(mdb, update.effective_user, update.message)  # получаем данные из базы данных
-        mdb.users.update_one(
-            {'_id': user['_id']},
-            {'$set': {'order_cnt': (user['order_cnt'] + 1) }}
-        )
-        order = mdb.orders.find_one({"user_id": user['user_id']})   # поиск в коллекции orders по user.id
-        if not order:  # если такого нет, создаем словарь с данными
-            order = {
-                'order_cnt': user['order_cnt'] + 1,
-                'user_id': user['user_id'],
-                'order': {
-                    "fio": user_data['fio'],
-                    "tel": user_data['tel'],
-                    "from": user_data['from'],
-                    "date": user_data['date'],
-                    "location": user_data['location'],
-                    "order_list": user_data['order_list'],
-                    "comment": user_data['comment'],
-                    "summa": user_data['summa']
-                }            
-            }
-            mdb.orders.insert_one(order)   # сохраняем в коллекцию orders
-        else:
-            order = {
-                'order_cnt': user['order_cnt'] + 1,
-                'user_id': user['user_id'],
-                'order': {
-                    "fio": user_data['fio'],
-                    "tel": user_data['tel'],
-                    "from": user_data['from'],
-                    "date": user_data['date'],
-                    "location": user_data['location'],
-                    "order_list": user_data['order_list'],
-                    "comment": user_data['comment'],
-                    "summa": user_data['summa']
-                }            
-            }
-            mdb.orders.insert_one(order)   # сохраняем в коллекцию orders
+    if 'select_order' in user_data:
+        user = search_or_save_user(mdb, update.effective_user, update.message)
+        order = mdb.orders.find_one({'user_id': user['user_id'], 'order_cnt': user_data['select_order']})
+        #print(order)
+        #print(order['order']['order_list'])
+        result_order_list = order['order']['order_list']+user_data['order_list']
+        finish = mdb.orders.update_one(
+            {'user_id': user['user_id'], 'order_cnt': user_data['select_order']},
+            {'$set': {'order.order_list' : result_order_list}})
+        print(finish)
     else:
-        order = 0
+        if user_data['summa'] != 0:
+            user = search_or_save_user(mdb, update.effective_user, update.message)  # получаем данные из базы данных
+            mdb.users.update_one(
+                {'_id': user['_id']},
+                {'$set': {'order_cnt': (user['order_cnt'] + 1) }}
+            )
+            order = mdb.orders.find_one({"user_id": user['user_id']})   # поиск в коллекции orders по user.id
+            if not order:  # если такого нет, создаем словарь с данными
+                order = {
+                    'order_cnt': user['order_cnt'] + 1,
+                    'user_id': user['user_id'],
+                    'order': {
+                        "fio": user_data['fio'],
+                        "tel": user_data['tel'],
+                        "from": user_data['from'],
+                        "date": user_data['date'],
+                        "location": user_data['location'],
+                        "order_list": user_data['order_list'],
+                        "comment": user_data['comment'],
+                        "summa": user_data['summa']
+                    }
+                }
+                mdb.orders.insert_one(order)   # сохраняем в коллекцию orders
+            else:
+                order = {
+                    'order_cnt': user['order_cnt'] + 1,
+                    'user_id': user['user_id'],
+                    'order': {
+                        "fio": user_data['fio'],
+                        "tel": user_data['tel'],
+                        "from": user_data['from'],
+                        "date": user_data['date'],
+                        "location": user_data['location'],
+                        "order_list": user_data['order_list'],
+                        "comment": user_data['comment'],
+                        "summa": user_data['summa']
+                    }
+                }
+                mdb.orders.insert_one(order)   # сохраняем в коллекцию orders
+        else:
+            order = 0
     return order
 
 def list_order_from_db(mdb, update):
