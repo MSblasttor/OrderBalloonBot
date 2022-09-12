@@ -401,6 +401,32 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         update.message.reply_text(text)
         state_machine = CHANGE
         change(update, context)
+    elif state_machine == ORDER_EDIT and update.message.text == 'Оплата':
+        logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать оплату", user.first_name, context.user_data['select_order'])
+        context.user_data['last_msg'] = update.message.text
+        reply_keyboard = [['100%','50%','Другая сумма']]
+        text = "Введите сумму предоплаты"
+        update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+        #update.message.reply_text(text)
+    elif state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'Оплата':
+        logger.info("Пользователь %s выбрал заказ %d и отредактировал %s", user.first_name, context.user_data['select_order'], context.user_data['last_msg'])
+        #Сюда вставить функцию по изменению ФИО (Телефон, Дата, Место) в заказе
+        order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
+        if update.message.text == '100%':
+            predoplata = order['summa']
+        elif update.message.text == '50%':
+            predoplata = order['summa'] // 2
+        elif update.message.text == 'Другая сумма':
+            text = "Введите сумму предоплаты цифрами:"
+            update.message.reply_text(text)
+        else:
+            predoplata = int(update.message.text)
+        edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'predoplata', predoplata)
+        context.user_data['last_msg'] = update.message.text
+        text = "В заказе №"+str(context.user_data['select_order'])+" внесена предоплата в размере "+update.message.text
+        update.message.reply_text(text)
+        state_machine = CHANGE
+        change(update, context)
     #else
     return state_machine
 
