@@ -1,10 +1,10 @@
-from icalendar import Calendar, Event, vCalAddress, vText
+from icalendar import Calendar, Event, vCalAddress, vText, vDatetime
 import pytz
 from datetime import datetime
 import os
 from pathlib import Path
 
-def make_ical_from_order(order):
+def make_ical_from_order(order, msg):
     cal = Calendar()
     # Some properties are required to be compliant
     cal.add('prodid', '-//My calendar product//example.com//')
@@ -13,31 +13,35 @@ def make_ical_from_order(order):
 
     # Add subcomponents
     event = Event()
-    event.add('name', 'Awesome Meeting')
-    event.add('description', 'Define the roadmap of our awesome project')
-    event.add('dtstart', datetime(2022, 1, 25, 8, 0, 0, tzinfo=pytz.utc))
-    event.add('dtend', datetime(2022, 1, 25, 10, 0, 0, tzinfo=pytz.utc))
+    event.add('name', 'Заказ №'+str(order['order_cnt']))
+    event.add('description', msg)
+
+    #event.add('dtstart', datetime(2022, 1, 25, 8, 0, 0, tzinfo=pytz.utc))
+    #event.add('dtend', datetime(2022, 1, 25, 10, 0, 0, tzinfo=pytz.utc))
+    start_time = datetime.strptime(order['order']['date'], '%d.%m.%y %H:%M')
+    event.add('dtstart', vDatetime(start_time))
+    event.add('dtend', vDatetime(start_time))
 
     # Add the organizer
     organizer = vCalAddress('MAILTO:jdoe@example.com')
 
     # Add parameters of the event
-    organizer.params['name'] = vText('John Doe')
-    organizer.params['role'] = vText('CEO')
-    event['organizer'] = organizer
-    event['location'] = vText('New York, USA')
+    #organizer.params['name'] = vText('John Doe')
+    #organizer.params['role'] = vText('CEO')
+    #event['organizer'] = organizer
+    event['location'] = vText(order['order']['location'])
 
-    event['uid'] = '2022125T111010/272356262376@example.com'
-    event.add('priority', 5)
-    attendee = vCalAddress('MAILTO:rdoe@example.com')
-    attendee.params['name'] = vText('Richard Roe')
-    attendee.params['role'] = vText('REQ-PARTICIPANT')
-    event.add('attendee', attendee, encode=0)
+    #event['uid'] = '2022125T111010/272356262376@example.com'
+    #event.add('priority', 5)
+    #attendee = vCalAddress('MAILTO:rdoe@example.com')
+    #attendee.params['name'] = vText('Richard Roe')
+    #attendee.params['role'] = vText('REQ-PARTICIPANT')
+    #event.add('attendee', attendee, encode=0)
 
-    attendee = vCalAddress('MAILTO:jsmith@example.com')
-    attendee.params['name'] = vText('John Smith')
-    attendee.params['role'] = vText('REQ-PARTICIPANT')
-    event.add('attendee', attendee, encode=0)
+    #attendee = vCalAddress('MAILTO:jsmith@example.com')
+    #attendee.params['name'] = vText('John Smith')
+    #attendee.params['role'] = vText('REQ-PARTICIPANT')
+    #event.add('attendee', attendee, encode=0)
 
     # Add the event to the calendar
     cal.add_component(event)

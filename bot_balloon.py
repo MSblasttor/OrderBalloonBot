@@ -1177,7 +1177,8 @@ def finish(update: Update,
     user = update.message.from_user
     logger.info("Пользователь %s завершил оформление заказ", user.first_name)
     order = save_user_order(mdb, update, context.user_data)  # Сохраняем заказ в базу данных
-    make_ical_from_order(order)
+    msg = make_msg_order_list(context.user_data)
+    make_ical_from_order(order, msg)
     if order != 0:
         text = """Заказ сохранён!
             Его номер: <b>%d</b>
@@ -1191,7 +1192,6 @@ def finish(update: Update,
     #context.user_data = None
     state_machine = ConversationHandler.END  # выходим из диалога
     return state_machine
-
 
 def error_input(update: Update,
                 context: CallbackContext) -> int:  # Здесь обрабатываются недопустимые значения вводимые пользователем при заполнении форм
