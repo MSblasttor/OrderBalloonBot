@@ -37,6 +37,8 @@ from settings import TG_TOKEN
 
 from keyboars import *
 
+from ical import make_ical_from_order
+
 # Enable logging
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
@@ -75,9 +77,6 @@ def start(update: Update, context: CallbackContext) -> int:
 def other(update: Update, context: CallbackContext) -> int:
     """Тестовая функция. Сюда пользователь попадает когда  нажимает в ответ боту - > Другое"""
     user = update.message.from_user
-    logger.info(
-        "Location of %s: %s", user.first_name, update.message.text
-    )
     keyboard = [
         [
             InlineKeyboardButton("Option 1", callback_data='1'),
@@ -90,7 +89,7 @@ def other(update: Update, context: CallbackContext) -> int:
         'Данный раздел в разработке. Отправь команду /cancel чтобы начать сначала',
         reply_markup=reply_markup
     )
-    with open("myevents.ics", 'rb') as tmp:
+    with open("example.ics", 'rb') as tmp:
         obj = BytesIO(tmp.read())
         obj.name = 'myevents.ics'
         context.bot.send_document(update.message.from_user.id, document=obj, caption='myevents.ics')
@@ -1178,6 +1177,7 @@ def finish(update: Update,
     user = update.message.from_user
     logger.info("Пользователь %s завершил оформление заказ", user.first_name)
     order = save_user_order(mdb, update, context.user_data)  # Сохраняем заказ в базу данных
+    make_ical_from_order(order)
     if order != 0:
         text = """Заказ сохранён!
             Его номер: <b>%d</b>
@@ -1185,7 +1185,10 @@ def finish(update: Update,
     else:
         text = "Заказ не сохранен так как нечего сохранять. Попробуй заново /start"
     update.message.reply_text(text, parse_mode=ParseMode.HTML)  # текстовое сообщение с форматированием HTML
-    context.user_data = None
+    #text += " По ссылке ниже можешь добавить заказ в календарь: "
+    text = "<b><a href=\"http://msblast-home.ru/download?user_id="+str(order['user_id'])+"&order_cnt="+str(order['order_cnt'])+"\">Добавить заказ в календарь</a></b>"
+    update.message.reply_text(text, parse_mode=ParseMode.HTML)
+    #context.user_data = None
     state_machine = ConversationHandler.END  # выходим из диалога
     return state_machine
 
