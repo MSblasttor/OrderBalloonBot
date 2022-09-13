@@ -1157,6 +1157,8 @@ def make_msg_order_list(user_data) -> str:
         message += '\n\nИтого сумма заказа без учета доставки: %d руб.' % summa
         if 'dostavka' in user_data:
             message += '\nДоставка: %d' % user_data['dostavka']
+            user_data['summa'] = summa + user_data['dostavka']
+            summa = user_data['summa']
         if 'predoplata' in user_data:
             if summa - user_data['predoplata'] > 0:
                 message += '\nПредоплата: %d ' % user_data['predoplata']
