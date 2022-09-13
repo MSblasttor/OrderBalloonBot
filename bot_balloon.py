@@ -348,7 +348,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
     global state_machine
     user = update.message.from_user
     if (state_machine == ORDER or state_machine == ORDER_CHANGE) and (
-            update.message.text != 'ФИО' and update.message.text != 'Телефон' and update.message.text != 'Дата и время' and update.message.text != 'Состав заказа' and update.message.text != 'Архив' and update.message.text != 'Оплата'):
+            update.message.text != 'ФИО' and update.message.text != 'Телефон' and update.message.text != 'Дата и время' and update.message.text != 'Состав заказа' and update.message.text != 'Архив' and update.message.text != 'Оплата' and update.message.text != 'Доставка'):
         state_machine = ORDER_EDIT
         # Сюда вставить функцию редактирования заказа из БД
         logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать", user.first_name,
@@ -491,6 +491,22 @@ def edit_order(update: Update, context: CallbackContext) -> int:
             reply_keyboard = [['Добавить', 'Удалить', 'Вернуться назад']]
             text = "Выберите дейстивие ДОБАВИТЬ или УДАЛИТЬ, либо ВЕРНУТЬСЯ НАЗАД"
             update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+    elif state_machine == ORDER_EDIT and update.message.text == 'Доставка':
+        logger.info("Пользователь %s выбрал заказ %d чтобы внести стоимость доставки", user.first_name,
+                    context.user_data['select_order'])
+        context.user_data['last_msg'] = update.message.text
+        order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
+        text = "Введите сумму доставки до адреса" + order['location']
+        update.message.reply_text(text)
+    elif state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'Доставка':
+        logger.info("Пользователь %s выбрал заказ %d чтобы внести стоимость доставки", user.first_name,
+                    context.user_data['select_order'])
+        context.user_data['last_msg'] = update.message.text
+        edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'dostavka', int(update.message.text))
+        text = "В заказе №" + str(context.user_data['select_order']) + " внесена сумма доставки в размере " + update.message.text
+        update.message.reply_text(text)
+        state_machine = CHANGE
+        change(update, context)
     # else
     return state_machine
 
