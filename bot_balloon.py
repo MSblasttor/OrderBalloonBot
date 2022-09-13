@@ -1294,7 +1294,7 @@ def main() -> None:
                 MessageHandler(Filters.regex('^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$') & ~Filters.command,
                                edit_order), MessageHandler(Filters.regex('^[1-9][0-9]*$'), edit_order), MessageHandler(
                     Filters.regex(
-                        '^(ФИО|Телефон|Дата и время|Адрес|Состав заказа|Оплата|100%|50%|Другая сумма|Добавить|Удалить)$'),
+                        '^(ФИО|Телефон|Дата и время|Адрес|Состав заказа|Оплата|Доставка|100%|50%|Другая сумма|Добавить|Удалить)$'),
                     edit_order), MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],
             # Выбор манипуляций с заказом  # TODO: внести изменение чтобы функция отрабатывала комманду "в архив"
             ORDER_SHOW: [MessageHandler(Filters.regex('^(Добавить новый заказ)$'), order),
