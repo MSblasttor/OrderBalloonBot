@@ -1322,10 +1322,7 @@ def main() -> None:
                            MessageHandler(Filters.regex('^(Вывести список заказов)$'), show_list_order),
                            MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],  # Выбор манипуляций с заказом
             ORDER_EDIT: [MessageHandler(Filters.contact, edit_order),
-                MessageHandler(Filters.regex('^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$') & ~Filters.command,
-                               edit_order), MessageHandler(Filters.regex(
-                '[0-3]?[0-9].[0-3]?[0-9].(?:[0-9]{2})?[0-9]{2} (?:[01][0-9]|2[0-3]):[0-5][0-9]') & ~Filters.command,
-                                  edit_order), MessageHandler(Filters.regex('^[1-9][0-9]*$'), edit_order), MessageHandler(
+                MessageHandler(Filters.text & ~Filters.command, edit_order), MessageHandler(
                     Filters.regex(
                         '^(ФИО|Телефон|Дата и время|Адрес|Состав заказа|Оплата|Доставка|100%|50%|Другая сумма|Добавить|Удалить)$'),
                     edit_order), MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],
