@@ -152,10 +152,13 @@ def order(update: Update, context: CallbackContext) -> int:  # Здесь пол
         state_machine = TEL
     elif state_machine == TEL:
         """Сохраняем телефон заказчика"""
-        logger.info("Номер телефона Заказчика of %s: %s", user.first_name, update.message.text)
         # Сохраняем значение
+        phone = update.message.text
+        if update.message.contact.phone_number != None:
+            phone = update.message.contact.phone_number
+        logger.info("Номер телефона Заказчика of %s: %s", user.first_name, phone)
         key = 'tel'
-        value = update.message.text
+        value = phone
         context.user_data[key] = value
         reply_text = 'Хорошо. Теперь выберете откуда заказчик о вас узнал \n или отправь /skip если ты не знаешь'
         reply_keyboard = [['Инстаграм', 'Авито', 'ВКонтакте', 'Telegram', 'WhatshApp', 'Viber'], ['Другое'], ['/skip']]
@@ -379,13 +382,17 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         text = "Введите новые телефон заказчика"
         update.message.reply_text(text)
     elif state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'Телефон':
-        if re.fullmatch(r'((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}', update.message.text):
+        phone = update.message.text
+        if update.message.contact.phone_number != None:
+            phone = update.message.contact.phone_number
+        #print(update.message.contact.phone_number)
+        if re.fullmatch(r'((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}', phone):
             logger.info("Пользователь %s выбрал заказ %d и отредактировал %s", user.first_name,
                         context.user_data['select_order'], context.user_data['last_msg'])
             # Сюда вставить функцию по изменению ФИО (Телефон, Дата, Место) в заказе
-            edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'tel', update.message.text)
+            edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'tel', phone)
             context.user_data['last_msg'] = update.message.text
-            text = "В заказе №" + str(context.user_data['select_order']) + " телефон изменен на " + update.message.text
+            text = "В заказе №" + str(context.user_data['select_order']) + " телефон изменен на " + phone
             update.message.reply_text(text)
             state_machine = CHANGE
             change(update, context)
@@ -516,13 +523,13 @@ def remove_order(update: Update, context: CallbackContext) -> int:
     logger.info("Пользователь %s приступил к редактированию заказов. Удаление ", user.first_name)
     if state_machine == ORDER_REMOVE:
         state_machine = CHANGE
-        # Сюда вставить функцию удаления заказа из БД
+        # Сюда вставить функцию удаления заказа из БД #TODO: Вставить функцию удаления заказа из БД
         text = "Заказ " + update.message.text + " удален."
         update.message.reply_text(text)
         change(update, context)
     elif state_machine == ORDER_CHANGE:
         state_machine = CHANGE
-        # Сюда вставить функцию удаления заказа из БД
+        # Сюда вставить функцию удаления заказа из БД #TODO: Вставить функцию удаления заказа из БД
         text = "Заказ " + str(context.user_data['select_order']) + " удален."
         update.message.reply_text(text)
         change(update, context)
@@ -582,17 +589,29 @@ def skip(update: Update, context: CallbackContext) -> int:  # Здесь пол�
     user = update.message.from_user
     global state_machine
     if update.message.text == '/skip' and state_machine == TEL:
-        state_machine = DATE
+        state_machine = FROM
+        # Сохраняем значение
+        key = 'tel'
+        value = 0
+        context.user_data[key] = value
         logger.info("Пользователь %s не прислал номер телефона заказчика", user.first_name)
         reply_text = 'Плохо что нет номера заказчика, лучше уточнить на будушее. Теперь пришли дату мероприятия, или отправь /skip.'
         update.message.reply_text(reply_text)
     if update.message.text == '/skip' and state_machine == FROM:
         state_machine = DATE
+        # Сохраняем значение
+        key = 'from'
+        value = 0
+        context.user_data[key] = value
         logger.info("Пользователь %s не прислал откуда заказчик", user.first_name)
         reply_text = 'Плохо что неизвестно откуда заказчик, лучше уточнить на будушее. Теперь пришли дату мероприятия, или отправь /skip.'
         update.message.reply_text(reply_text)
     elif update.message.text == '/skip' and state_machine == DATE:
         state_machine = LOCATION
+        # Сохраняем значение
+        key = 'date'
+        value = 0
+        context.user_data[key] = value
         logger.info("Пользователь %s не прислал дату", user.first_name)
         reply_text = 'Неопределенность всегда плохо, лучше уточнить на будушее. Теперь пришли место проведения или доставки, или отправь /skip.'
         update.message.reply_text(reply_text)
@@ -1178,18 +1197,19 @@ def finish(update: Update,
     logger.info("Пользователь %s завершил оформление заказ", user.first_name)
     order = save_user_order(mdb, update, context.user_data)  # Сохраняем заказ в базу данных
     msg = make_msg_order_list(context.user_data)
-    make_ical_from_order(order, msg)
+
     if order != 0:
+        make_ical_from_order(order, msg)
         text = """Заказ сохранён!
             Его номер: <b>%d</b>
             Я надеюсь тебе все понравилось и ты вернешься в следующий раз""" % (order['order_cnt'])
+        update.message.reply_text(text, parse_mode=ParseMode.HTML)  # текстовое сообщение с форматированием HTML
+        text = "<b><a href=\"http://msblast-home.ru/download?user_id=" + str(order['user_id']) + "&order_cnt=" + str(
+            order['order_cnt']) + "\">Добавить заказ в календарь</a></b>"
+        update.message.reply_text(text, parse_mode=ParseMode.HTML)
     else:
         text = "Заказ не сохранен так как нечего сохранять. Попробуй заново /start"
-    update.message.reply_text(text, parse_mode=ParseMode.HTML)  # текстовое сообщение с форматированием HTML
-    #text += " По ссылке ниже можешь добавить заказ в календарь: "
-    text = "<b><a href=\"http://msblast-home.ru/download?user_id="+str(order['user_id'])+"&order_cnt="+str(order['order_cnt'])+"\">Добавить заказ в календарь</a></b>"
-    update.message.reply_text(text, parse_mode=ParseMode.HTML)
-    #context.user_data = None
+    context.user_data.clear() #Очищаем данные пользователя после сохранения заказа
     state_machine = ConversationHandler.END  # выходим из диалога
     return state_machine
 
@@ -1268,7 +1288,7 @@ def main() -> None:
             # Блок получение данных для заполнения карточки заказа
             FIO: [MessageHandler(Filters.text & ~Filters.command, order), CommandHandler('skip', skip)],
             TEL: [
-                MessageHandler(Filters.regex('^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$') & ~Filters.command,
+                MessageHandler(Filters.contact, order), MessageHandler(Filters.regex('^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$') & ~Filters.command,
                                order), MessageHandler(Filters.text & ~Filters.command, error_input),
                 CommandHandler('skip', skip)],
             FROM: [MessageHandler(Filters.text & ~Filters.command, order), CommandHandler('skip', skip)],
@@ -1295,7 +1315,7 @@ def main() -> None:
                            MessageHandler(Filters.regex('^[1-9][0-9]*$'), remove_order),
                            MessageHandler(Filters.regex('^(Вывести список заказов)$'), show_list_order),
                            MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],  # Выбор манипуляций с заказом
-            ORDER_EDIT: [
+            ORDER_EDIT: [MessageHandler(Filters.contact, edit_order),
                 MessageHandler(Filters.regex('^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$') & ~Filters.command,
                                edit_order), MessageHandler(Filters.regex('^[1-9][0-9]*$'), edit_order), MessageHandler(
                     Filters.regex(
