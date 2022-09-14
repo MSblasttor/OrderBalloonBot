@@ -335,10 +335,10 @@ def show_order(update: Update, context: CallbackContext) -> int:
         order = show_order_user_from_db(mdb, update, order_num)
         # print(show_order_user_from_db(mdb, update, order_num))
         text = "Заказ № " + str(context.user_data['select_order']) + ":\n"
-        text += "ФИО:" + order['order']['fio'] + "\n"
-        text += "Телефон:" + order['order']['tel'] + "\n"
-        text += "Дата:" + order['order']['date'] + "\n"
-        text += "Адрес:" + order['order']['location'] + "\n"
+        text += "ФИО:" + order['fio'] + "\n"
+        text += "Телефон:" + order['tel'] + "\n"
+        text += "Дата:" + order['date'] + "\n"
+        text += "Адрес:" + order['location'] + "\n"
         text += make_msg_order_list(order['order'])
         update.message.reply_text(text)
         update.message.text = order_num
@@ -1323,7 +1323,9 @@ def main() -> None:
                            MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],  # Выбор манипуляций с заказом
             ORDER_EDIT: [MessageHandler(Filters.contact, edit_order),
                 MessageHandler(Filters.regex('^((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}$') & ~Filters.command,
-                               edit_order), MessageHandler(Filters.regex('^[1-9][0-9]*$'), edit_order), MessageHandler(
+                               edit_order), MessageHandler(Filters.regex(
+                '[0-3]?[0-9].[0-3]?[0-9].(?:[0-9]{2})?[0-9]{2} (?:[01][0-9]|2[0-3]):[0-5][0-9]') & ~Filters.command,
+                                  edit_order), MessageHandler(Filters.regex('^[1-9][0-9]*$'), edit_order), MessageHandler(
                     Filters.regex(
                         '^(ФИО|Телефон|Дата и время|Адрес|Состав заказа|Оплата|Доставка|100%|50%|Другая сумма|Добавить|Удалить)$'),
                     edit_order), MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],
