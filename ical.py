@@ -1,6 +1,6 @@
-from icalendar import Calendar, Event, vCalAddress, vText, vDatetime
+from icalendar import Calendar, Event, vCalAddress, vText, vDatetime, Alarm
 import pytz
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 from pathlib import Path
 
@@ -21,30 +21,27 @@ def make_ical_from_order(order, msg):
     start_time = datetime.strptime(order['order']['date'], '%d.%m.%y %H:%M')
     event.add('dtstart', vDatetime(start_time))
     event.add('dtend', vDatetime(start_time))
-
-    # Add the organizer
-    organizer = vCalAddress('MAILTO:jdoe@example.com')
-
-    # Add parameters of the event
-    #organizer.params['name'] = vText('John Doe')
-    #organizer.params['role'] = vText('CEO')
-    #event['organizer'] = organizer
     event['location'] = vText(order['order']['location'])
-
-    #event['uid'] = '2022125T111010/272356262376@example.com'
-    #event.add('priority', 5)
-    #attendee = vCalAddress('MAILTO:rdoe@example.com')
-    #attendee.params['name'] = vText('Richard Roe')
-    #attendee.params['role'] = vText('REQ-PARTICIPANT')
-    #event.add('attendee', attendee, encode=0)
-
-    #attendee = vCalAddress('MAILTO:jsmith@example.com')
-    #attendee.params['name'] = vText('John Smith')
-    #attendee.params['role'] = vText('REQ-PARTICIPANT')
-    #event.add('attendee', attendee, encode=0)
-
     # Add the event to the calendar
     cal.add_component(event)
+
+    alarm = Alarm()
+    alarm.add('trigger', timedelta(hours=-2))
+    #alarm.add('trigger', timedelta(days=-2))
+    alarm.add('action', 'display')
+    #desc = " in 5 minutes"
+    #alarm.add('description', desc)
+    event.add_component(alarm)
+
+    alarm = Alarm()
+    #alarm.add('trigger', timedelta(hours=-2))
+    alarm.add('trigger', timedelta(days=-2))
+    alarm.add('action', 'display')
+    # desc = " in 5 minutes"
+    # alarm.add('description', desc)
+    event.add_component(alarm)
+
+
 
     # Write to disk
     directory = Path.cwd() / Path(str(order['user_id']))

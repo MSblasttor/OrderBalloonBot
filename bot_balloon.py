@@ -335,11 +335,11 @@ def show_order(update: Update, context: CallbackContext) -> int:
         order = show_order_user_from_db(mdb, update, order_num)
         # print(show_order_user_from_db(mdb, update, order_num))
         text = "Заказ № " + str(context.user_data['select_order']) + ":\n"
-        text += "ФИО:" + order['fio'] + "\n"
-        text += "Телефон:" + order['tel'] + "\n"
-        text += "Дата:" + order['date'] + "\n"
-        text += "Адрес:" + order['location'] + "\n"
-        text += make_msg_order_list(order)
+        text += "ФИО:" + order['order']['fio'] + "\n"
+        text += "Телефон:" + order['order']['tel'] + "\n"
+        text += "Дата:" + order['order']['date'] + "\n"
+        text += "Адрес:" + order['order']['location'] + "\n"
+        text += make_msg_order_list(order['order'])
         update.message.reply_text(text)
         update.message.text = order_num
         select_order(update, context)
@@ -1196,10 +1196,16 @@ def finish(update: Update,
     user = update.message.from_user
     logger.info("Пользователь %s завершил оформление заказ", user.first_name)
     order = save_user_order(mdb, update, context.user_data)  # Сохраняем заказ в базу данных
-    msg = make_msg_order_list(context.user_data)
+    #msg = make_msg_order_list(context.user_data)
 
     if order != 0:
-        make_ical_from_order(order, msg)
+        text = "Заказ № " + str(order['order_cnt']) + ":\n"
+        text += "ФИО:" + order['order']['fio'] + "\n"
+        text += "Телефон:" + order['order']['tel'] + "\n"
+        text += "Дата:" + order['order']['date'] + "\n"
+        text += "Адрес:" + order['order']['location'] + "\n"
+        text += make_msg_order_list(order['order'])
+        make_ical_from_order(order, text)
         text = """Заказ сохранён!
             Его номер: <b>%d</b>
             Я надеюсь тебе все понравилось и ты вернешься в следующий раз""" % (order['order_cnt'])
