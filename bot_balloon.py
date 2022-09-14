@@ -339,7 +339,7 @@ def show_order(update: Update, context: CallbackContext) -> int:
         text += "Телефон:" + order['tel'] + "\n"
         text += "Дата:" + order['date'] + "\n"
         text += "Адрес:" + order['location'] + "\n"
-        text += make_msg_order_list(order['order'])
+        text += make_msg_order_list(order)
         update.message.reply_text(text)
         update.message.text = order_num
         select_order(update, context)
