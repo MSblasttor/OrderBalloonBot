@@ -338,7 +338,7 @@ def show_order(update: Update, context: CallbackContext) -> int:
         text += "ФИО:" + order['fio'] + "\n"
         text += "Телефон:" + order['tel'] + "\n"
         text += "Дата:" + order['date'] + "\n"
-        text += "Адрес:" + order['location'] + "\n"
+        text += "Адрес:" + order['location'] + "\n\n"
         text += make_msg_order_list(order)
         update.message.reply_text(text)
         update.message.text = order_num
@@ -1114,7 +1114,7 @@ def make_msg_order_list(user_data) -> str:
     # Создаем сообщение с выводом состава заказа
     count = 0
     summa = 0
-    message = ''
+    message = 'Состав заказ:\n'
     for element in user_data['order_list']:
         result = user_data['order_list'][count]["type"]
         if result == 'latex':
@@ -1174,19 +1174,19 @@ def make_msg_order_list(user_data) -> str:
         user_data['summa'] = summa
         message += '\n\nИтого сумма заказа без учета доставки: %d руб.' % summa
         if 'dostavka' in user_data:
-            message += '\nДоставка: %d' % user_data['dostavka']
+            message += '\nДоставка: %d руб.' % user_data['dostavka']
             user_data['summa'] = summa + user_data['dostavka']
             summa = user_data['summa']
         if 'predoplata' in user_data:
             if summa - user_data['predoplata'] > 0:
-                message += '\nПредоплата: %d ' % user_data['predoplata']
-                message += '\nОсталось доплатить %d' % (summa - user_data['predoplata'])
+                message += '\nПредоплата: %d руб.' % user_data['predoplata']
+                message += '\nОсталось доплатить %d руб.' % (summa - user_data['predoplata'])
             else:
                 message += '\nВсе оплачено'
         else:
             message += '\nНеобходимая предоплата: %d руб.' % (summa // 2)
 
-    print(message)
+    #print(message)
     return message
 
 

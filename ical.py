@@ -9,11 +9,13 @@ def make_ical_from_order(order, msg):
     # Some properties are required to be compliant
     cal.add('prodid', '-//My calendar product//example.com//')
     cal.add('version', '2.0')
-    cal.add('attendee', 'MAILTO:abc@example.com')
+    #cal.add('attendee', 'MAILTO:abc@example.com')
+
 
     # Add subcomponents
     event = Event()
     event.add('name', 'Заказ №'+str(order['order_cnt']))
+    event.add('summary', 'Заказ №' + str(order['order_cnt']))
     event.add('description', msg)
 
     #event.add('dtstart', datetime(2022, 1, 25, 8, 0, 0, tzinfo=pytz.utc))
