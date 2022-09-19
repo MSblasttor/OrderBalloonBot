@@ -83,9 +83,9 @@ def make_image_order(order):
     try:
         directory_order.mkdir(parents=True, exist_ok=False)
     except FileExistsError:
-        print("Folder already exists")
+        print("Folder for pic: "+str(order['user_id'])+" already exists")
     else:
-        print("Folder was created")
+        print("Folder for pic: "+str(order['user_id'])+" was created")
     path_img ="/root/OrderBalloonBot/img/"+str(order['user_id'])+"/"+str(order['order_cnt'])+".png"
 
     im.save(path_img)
