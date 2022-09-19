@@ -18,7 +18,7 @@ import copy
 import re
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ParseMode, \
-    Update
+    Update, Bot
 from telegram.ext import (
     Updater,
     CommandHandler,
@@ -38,6 +38,8 @@ from settings import TG_TOKEN
 from keyboars import *
 
 from ical import make_ical_from_order
+
+from make_image import make_image_order
 
 # Enable logging
 logging.basicConfig(
@@ -1210,6 +1212,8 @@ def finish(update: Update,
             Его номер: <b>%d</b>
             Я надеюсь тебе все понравилось и ты вернешься в следующий раз""" % (order['order_cnt'])
         update.message.reply_text(text, parse_mode=ParseMode.HTML)  # текстовое сообщение с форматированием HTML
+        PHOTO_PATH ="/img/order/new_pic1.png"
+        update.bot.send_photo(photo=open(PHOTO_PATH, 'rb'))
         text = "<b><a href=\"http://msblast-home.ru/download?user_id=" + str(order['user_id']) + "&order_cnt=" + str(
             order['order_cnt']) + "\">Добавить заказ в календарь</a></b>"
         update.message.reply_text(text, parse_mode=ParseMode.HTML)
