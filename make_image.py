@@ -1,5 +1,5 @@
 from PIL import Image, ImageDraw, ImageFont
-from bot_balloon import make_msg_order_list
+
 
 font_path = "fonts/Steclo.otf"
 
