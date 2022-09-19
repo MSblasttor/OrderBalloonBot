@@ -12,7 +12,7 @@ def make_image_order(order):
     template.close()
     #Заполняем поле номер заказа
     txt = str(order['order_cnt'])
-    make_txt(im, 220, 80, txt, "centr", 60)
+    make_txt(im, 260, 80, txt, "centr", 60)
     #Заполняем поле ФИО
     txt = str(order['order']['fio'])
     make_txt(im, 220, 180, txt, "left")
