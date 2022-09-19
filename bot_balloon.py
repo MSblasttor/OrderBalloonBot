@@ -1213,8 +1213,8 @@ def finish(update: Update,
             Я надеюсь тебе все понравилось и ты вернешься в следующий раз""" % (order['order_cnt'])
         update.message.reply_text(text, parse_mode=ParseMode.HTML)  # текстовое сообщение с форматированием HTML
         make_image_order(order)
-        PHOTO_PATH ="/img/order/new_pic1.png"
-        update.bot.send_photo(photo=open(PHOTO_PATH, 'rb'))
+        PHOTO_PATH ="/root/OrderBalloonBot/img/order/new_pic1.png"
+        context.bot.send_photo(chat_id=update.message.chat_id, photo=open(PHOTO_PATH, 'rb'))
         text = "<b><a href=\"http://msblast-home.ru/download?user_id=" + str(order['user_id']) + "&order_cnt=" + str(
             order['order_cnt']) + "\">Добавить заказ в календарь</a></b>"
         update.message.reply_text(text, parse_mode=ParseMode.HTML)
