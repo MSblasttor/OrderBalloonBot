@@ -1,4 +1,5 @@
 from PIL import Image, ImageDraw, ImageFont
+from pathlib import Path
 
 
 font_path = "fonts/Steclo.otf"
@@ -80,7 +81,7 @@ def make_image_order(order):
     # Сохраняем изображение
     directory_order = Path('/root/OrderBalloonBot/img/' + str(order['user_id']))
     try:
-        directory_flask.mkdir(parents=True, exist_ok=False)
+        directory_order.mkdir(parents=True, exist_ok=False)
     except FileExistsError:
         print("Folder already exists")
     else:
