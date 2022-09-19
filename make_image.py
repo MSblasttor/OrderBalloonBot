@@ -78,9 +78,17 @@ def make_image_order(order):
         count += 1
         make_txt(im, 50, 320+count*30, message, "left")
     # Сохраняем изображение
-    print("Save pic order")
-    im.save('img/order/new_pic1.png')
+    directory_order = Path('/root/OrderBalloonBot/img/' + str(order['user_id']))
+    try:
+        directory_flask.mkdir(parents=True, exist_ok=False)
+    except FileExistsError:
+        print("Folder already exists")
+    else:
+        print("Folder was created")
+    path_img ="/root/OrderBalloonBot/img/"+str(order['user_id'])+"/"+str(order['order_cnt'])+".png"
 
+    im.save(path_img)
+    print("Save pic order")
     return
 
 def make_txt(image, x, y, txt, align="centr", font_size=30, font_path="fonts/Steclo.otf", fill='#1C0606'):
