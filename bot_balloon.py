@@ -1207,13 +1207,13 @@ def finish(update: Update,
         text += "Дата:" + order['order']['date'] + "\n"
         text += "Адрес:" + order['order']['location'] + "\n"
         text += make_msg_order_list(order['order'])
-        make_ical_from_order(order, text)
         text = """Заказ сохранён!
             Его номер: <b>%d</b>
             Я надеюсь тебе все понравилось и ты вернешься в следующий раз""" % (order['order_cnt'])
         update.message.reply_text(text, parse_mode=ParseMode.HTML)  # текстовое сообщение с форматированием HTML
         PHOTO_PATH ="/img/order/new_pic1.png"
         update.bot.send_photo(photo=open(PHOTO_PATH, 'rb'))
+        make_ical_from_order(order, text)
         text = "<b><a href=\"http://msblast-home.ru/download?user_id=" + str(order['user_id']) + "&order_cnt=" + str(
             order['order_cnt']) + "\">Добавить заказ в календарь</a></b>"
         update.message.reply_text(text, parse_mode=ParseMode.HTML)
@@ -1329,7 +1329,7 @@ def main() -> None:
                 MessageHandler(Filters.text & ~Filters.command, edit_order), MessageHandler(
                     Filters.regex(
                         '^(ФИО|Телефон|Дата и время|Адрес|Состав заказа|Оплата|Доставка|100%|50%|Другая сумма|Добавить|Удалить)$'),
-                    edit_order), MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],
+                    edit_order), MessageHandler(Filters.regex('^(Вернуться назад)$'), start), MessageHandler(Filters.regex('^(В календарь)$'), finish)],
             # Выбор манипуляций с заказом  # TODO: внести изменение чтобы функция отрабатывала комманду "в архив"
             ORDER_SHOW: [MessageHandler(Filters.regex('^(Добавить новый заказ)$'), order),
                          MessageHandler(Filters.regex('^(Редактировать заказ)$'), order),
