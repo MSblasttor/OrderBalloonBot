@@ -95,7 +95,7 @@ def other(update: Update, context: CallbackContext) -> int:
     #     obj = BytesIO(tmp.read())
     #     obj.name = 'myevents.ics'
     #     context.bot.send_document(update.message.from_user.id, document=obj, caption='myevents.ics')
-    move_to_archive(mdb, update, 1022)
+    #move_to_archive(mdb, update, 1022)
     update.message.reply_text('Данный раздел в разработке. Отправь команду /cancel чтобы начать сначала')
     return ORDER_ADD_ITEMS
 
@@ -316,6 +316,10 @@ def select_order(update: Update, context: CallbackContext) -> int:
         logger.info("Пользователь %s выбрал заказ %d чтобы отправить в архив", user.first_name,
                     context.user_data['select_order'])
         # show_order(update, context)
+        move_to_archive(mdb, update, context.user_data['select_order'])
+        reply_keyboard = [['Вернуться назад']]
+        reply_text = "Заказ №" + str(context.user_data['select_order']) + " отправлен в АРХИВ"
+        update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     elif state_machine == ORDER_CHANGE and context.user_data['last_msg'] == "Редактировать заказ":
         context.user_data['select_order'] = int(update.message.text)
         logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать", user.first_name,
@@ -472,7 +476,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'predoplata', predoplata)
         context.user_data['last_msg'] = update.message.text
         text = "В заказе №" + str(
-            context.user_data['select_order']) + " внесена предоплата в размере " + update.message.text
+            context.user_data['select_order']) + " внесена предоплата в размере " + update.message.text + " руб."
         update.message.reply_text(text)
         state_machine = CHANGE
         change(update, context)
@@ -506,14 +510,14 @@ def edit_order(update: Update, context: CallbackContext) -> int:
                     context.user_data['select_order'])
         context.user_data['last_msg'] = update.message.text
         order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
-        text = "Введите сумму доставки до адреса" + order['location']
+        text = "Введите сумму доставки до адреса: " + order['location']
         update.message.reply_text(text)
     elif state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'Доставка':
         logger.info("Пользователь %s выбрал заказ %d чтобы внести стоимость доставки", user.first_name,
                     context.user_data['select_order'])
         context.user_data['last_msg'] = update.message.text
         edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'dostavka', int(update.message.text))
-        text = "В заказе №" + str(context.user_data['select_order']) + " внесена сумма доставки в размере " + update.message.text
+        text = "В заказе №" + str(context.user_data['select_order']) + " внесена сумма доставки в размере " + update.message.text + " руб."
         update.message.reply_text(text)
         state_machine = CHANGE
         change(update, context)
