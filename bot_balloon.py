@@ -315,7 +315,6 @@ def select_order(update: Update, context: CallbackContext) -> int:
     elif state_machine == ORDER_CHANGE and update.message.text == 'В архив':
         logger.info("Пользователь %s выбрал заказ %d чтобы отправить в архив", user.first_name,
                     context.user_data['select_order'])
-        # show_order(update, context)
         move_to_archive(update, context)
     elif state_machine == ORDER_CHANGE and context.user_data['last_msg'] == "Редактировать заказ":
         context.user_data['select_order'] = int(update.message.text)
@@ -441,7 +440,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         logger.info("Пользователь %s выбрал заказ %d чтобы отправить его в архив", user.first_name,
                     context.user_data['select_order'])
         context.user_data['last_msg'] = update.message.text
-
+        move_to_archive(update, context)
     elif state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'Адрес':
         logger.info("Пользователь %s выбрал заказ %d и отредактировал %s", user.first_name,
                     context.user_data['select_order'], context.user_data['last_msg'])
