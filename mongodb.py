@@ -150,5 +150,6 @@ def save_user_anketa(mdb, user, user_data):
 def move_to_archive(mdb, update, order_num):
     user = search_or_save_user(mdb, update.effective_user, update.message)
     archive = mdb.orders.find_one({'user_id': user['user_id'], 'order_cnt': order_num})
-    mdb.archives.insert_one(archive)  # сохраняем в коллекцию orders
+    mdb.archives.insert_one(archive)  # сохраняем в коллекцию archives
+    mdb.orders.remove({'user_id': user['user_id'], 'order_cnt': order_num}) # удаляем заказ из колекции orders
     return
