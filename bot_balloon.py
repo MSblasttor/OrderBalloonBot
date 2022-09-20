@@ -78,23 +78,25 @@ def start(update: Update, context: CallbackContext) -> int:
 
 def other(update: Update, context: CallbackContext) -> int:
     """Тестовая функция. Сюда пользователь попадает когда  нажимает в ответ боту - > Другое"""
-    user = update.message.from_user
-    keyboard = [
-        [
-            InlineKeyboardButton("Option 1", callback_data='1'),
-            InlineKeyboardButton("Option 2", callback_data='2'),
-        ],
-        [InlineKeyboardButton("Option 3", callback_data='3')],
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    update.message.reply_text(
-        'Данный раздел в разработке. Отправь команду /cancel чтобы начать сначала',
-        reply_markup=reply_markup
-    )
-    with open("example.ics", 'rb') as tmp:
-        obj = BytesIO(tmp.read())
-        obj.name = 'myevents.ics'
-        context.bot.send_document(update.message.from_user.id, document=obj, caption='myevents.ics')
+    # user = update.message.from_user
+    # keyboard = [
+    #     [
+    #         InlineKeyboardButton("Option 1", callback_data='1'),
+    #         InlineKeyboardButton("Option 2", callback_data='2'),
+    #     ],
+    #     [InlineKeyboardButton("Option 3", callback_data='3')],
+    # ]
+    # reply_markup = InlineKeyboardMarkup(keyboard)
+    # update.message.reply_text(
+    #     'Данный раздел в разработке. Отправь команду /cancel чтобы начать сначала',
+    #     reply_markup=reply_markup
+    # )
+    # with open("example.ics", 'rb') as tmp:
+    #     obj = BytesIO(tmp.read())
+    #     obj.name = 'myevents.ics'
+    #     context.bot.send_document(update.message.from_user.id, document=obj, caption='myevents.ics')
+    move_to_archive(mdb, update, 1022)
+    update.message.reply_text('Данный раздел в разработке. Отправь команду /cancel чтобы начать сначала')
     return ORDER_ADD_ITEMS
 
 
