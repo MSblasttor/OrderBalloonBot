@@ -1,3 +1,23 @@
+def archive(update: Update, context: CallbackContext) -> int:
+    global state_machine
+    user = update.message.from_user
+    if state_machine == ARCHIVES and (update.message.text != 'Состав заказа' and update.message.text != 'Восстановить'):
+        logger.info("Пользователь %s выбрал заказ %d из архива", user.first_name, int(update.message.text))
+        context.user_data['select_order'] = int(update.message.text)
+        reply_keyboard = [['Состав заказа', 'Восстановить'], ['Вернуться назад']]
+        reply_text = "Выберите что сделать с заказом из архива: \n"
+        update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+    elif state_machine == ARCHIVES and update.message.text == 'Состав заказа':
+        logger.info("Пользователь %s выбрал заказ %d из архива чтобы посмотреть состав", user.first_name,
+                    context.user_data['select_order'])
+        show_archive(update, context)
+    elif state_machine == ARCHIVES and update.message.text == 'Восстановить':
+        logger.info("Пользователь %s выбрал заказ %d из архива чтобы восстановить", user.first_name,
+                    context.user_data['select_order'])
+        #show_archive(update, context) ----> Добавить функцию по восстановлению заказа.
+    else:
+
+    return state_machine
 def move_to_archive(update, context):
     move_to_archive_from_orders(mdb, update, context.user_data['select_order'])
     reply_keyboard = [['Вернуться назад']]
