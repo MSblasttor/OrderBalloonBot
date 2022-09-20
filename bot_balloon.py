@@ -39,6 +39,8 @@ from keyboars import *
 
 from ical import make_ical_from_order
 
+from archives import *
+
 from make_image import make_image_order
 
 # Enable logging
@@ -48,12 +50,11 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-START, CHANGE, FIO, TEL, FROM, DATE, LOCATION, ORDER, ORDER_CHANGE, ORDER_REMOVE, ORDER_EDIT, ORDER_SHOW, ORDER_ADD_ITEMS, LATEX, LATEX_SIZE, LATEX_COLOR, LATEX_COUNT, LATEX_PRICE, FOIL, FOIL_CHANGE, FOIL_FIG, FOIL_FIG_NAME, FOIL_FIG_COLOR, FOIL_FIG_PRICE, FOIL_NUM, FOIL_NUM_NAME, FOIL_NUM_COLOR, FOIL_NUM_PRICE, BUBL_COLOR, BUBL_INSERT, BUBL_PRICE, BUBL_SIZE, LABEL_NAME, LABEL_COLOR, LABEL_PRICE, STAND_NAME, STAND_PRICE, COMMENT = range(
-    38)
+START, CHANGE, FIO, TEL, FROM, DATE, LOCATION, ORDER, ORDER_CHANGE, ORDER_REMOVE, ORDER_EDIT, ORDER_SHOW, ORDER_ADD_ITEMS, ARCHIVE, LATEX, LATEX_SIZE, LATEX_COLOR, LATEX_COUNT, LATEX_PRICE, FOIL, FOIL_CHANGE, FOIL_FIG, FOIL_FIG_NAME, FOIL_FIG_COLOR, FOIL_FIG_PRICE, FOIL_NUM, FOIL_NUM_NAME, FOIL_NUM_COLOR, FOIL_NUM_PRICE, BUBL_COLOR, BUBL_INSERT, BUBL_PRICE, BUBL_SIZE, LABEL_NAME, LABEL_COLOR, LABEL_PRICE, STAND_NAME, STAND_PRICE, COMMENT = range(
+    39)
 
 state_machine = START
 order_cnt = 0
-
 
 def start(update: Update, context: CallbackContext) -> int:
     user = update.message.from_user
@@ -75,28 +76,28 @@ def start(update: Update, context: CallbackContext) -> int:
     state_machine = CHANGE
     return CHANGE
 
-
 def other(update: Update, context: CallbackContext) -> int:
     """Тестовая функция. Сюда пользователь попадает когда  нажимает в ответ боту - > Другое"""
-    user = update.message.from_user
-    keyboard = [
-        [
-            InlineKeyboardButton("Option 1", callback_data='1'),
-            InlineKeyboardButton("Option 2", callback_data='2'),
-        ],
-        [InlineKeyboardButton("Option 3", callback_data='3')],
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    update.message.reply_text(
-        'Данный раздел в разработке. Отправь команду /cancel чтобы начать сначала',
-        reply_markup=reply_markup
-    )
-    with open("example.ics", 'rb') as tmp:
-        obj = BytesIO(tmp.read())
-        obj.name = 'myevents.ics'
-        context.bot.send_document(update.message.from_user.id, document=obj, caption='myevents.ics')
+    # user = update.message.from_user
+    # keyboard = [
+    #     [
+    #         InlineKeyboardButton("Option 1", callback_data='1'),
+    #         InlineKeyboardButton("Option 2", callback_data='2'),
+    #     ],
+    #     [InlineKeyboardButton("Option 3", callback_data='3')],
+    # ]
+    # reply_markup = InlineKeyboardMarkup(keyboard)
+    # update.message.reply_text(
+    #     'Данный раздел в разработке. Отправь команду /cancel чтобы начать сначала',
+    #     reply_markup=reply_markup
+    # )
+    # with open("example.ics", 'rb') as tmp:
+    #     obj = BytesIO(tmp.read())
+    #     obj.name = 'myevents.ics'
+    #     context.bot.send_document(update.message.from_user.id, document=obj, caption='myevents.ics')
+    #move_to_archive(mdb, update, 1022)
+    update.message.reply_text('Данный раздел в разработке. Отправь команду /cancel чтобы начать сначала')
     return ORDER_ADD_ITEMS
-
 
 def change(update: Update,
            context: CallbackContext) -> int:  # Сюда прилетают результаты выбора пользователя после старта
@@ -129,7 +130,6 @@ def change(update: Update,
         )
         state_machine = ORDER_ADD_ITEMS
     return state_machine
-
 
 def order(update: Update, context: CallbackContext) -> int:  # Здесь пользователь выбрал оформление заказа
     global state_machine
@@ -247,13 +247,11 @@ def order(update: Update, context: CallbackContext) -> int:  # Здесь пол
         state_machine = ORDER_ADD_ITEMS
     return state_machine
 
-
 def list_order_view(update: Update, context: CallbackContext) -> int:
     global state_machine
     list_order(update, context)
     state_machine = ORDER_CHANGE
     return state_machine
-
 
 def list_order(update: Update, context: CallbackContext) -> int:
     user = update.message.from_user
@@ -270,7 +268,6 @@ def list_order(update: Update, context: CallbackContext) -> int:
     update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     return cnt
 
-
 def show_list_order(update: Update, context: CallbackContext) -> int:
     global state_machine
     user = update.message.from_user
@@ -286,7 +283,6 @@ def show_list_order(update: Update, context: CallbackContext) -> int:
         context.user_data['last_msg'] = update.message.text
         state_machine = ORDER_CHANGE
     return state_machine
-
 
 def select_order(update: Update, context: CallbackContext) -> int:
     global state_machine
@@ -313,7 +309,7 @@ def select_order(update: Update, context: CallbackContext) -> int:
     elif state_machine == ORDER_CHANGE and update.message.text == 'В архив':
         logger.info("Пользователь %s выбрал заказ %d чтобы отправить в архив", user.first_name,
                     context.user_data['select_order'])
-        # show_order(update, context)
+        move_to_archive(update, context)
     elif state_machine == ORDER_CHANGE and context.user_data['last_msg'] == "Редактировать заказ":
         context.user_data['select_order'] = int(update.message.text)
         logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать", user.first_name,
@@ -324,7 +320,6 @@ def select_order(update: Update, context: CallbackContext) -> int:
             "Пользователь %s выбрал заказ %d чтобы отредактировать, но попал в else в этот момент был state_machine =%d",
             user.first_name, context.user_data['select_order'], state_machine)
     return state_machine
-
 
 def show_order(update: Update, context: CallbackContext) -> int:
     global state_machine
@@ -347,12 +342,11 @@ def show_order(update: Update, context: CallbackContext) -> int:
         select_order(update, context)
     return state_machine
 
-
 def edit_order(update: Update, context: CallbackContext) -> int:
     global state_machine
     user = update.message.from_user
     if (state_machine == ORDER or state_machine == ORDER_CHANGE) and (
-            update.message.text != 'ФИО' and update.message.text != 'Телефон' and update.message.text != 'Дата и время' and update.message.text != 'Состав заказа' and update.message.text != 'Архив' and update.message.text != 'Оплата' and update.message.text != 'Доставка'):
+            update.message.text != 'ФИО' and update.message.text != 'Телефон' and update.message.text != 'Дата и время' and update.message.text != 'Состав заказа' and update.message.text != 'В архив' and update.message.text != 'Оплата' and update.message.text != 'Доставка'):
         state_machine = ORDER_EDIT
         # Сюда вставить функцию редактирования заказа из БД
         logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать", user.first_name,
@@ -429,6 +423,11 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         context.user_data['last_msg'] = update.message.text
         text = "Введите новый адрес"
         update.message.reply_text(text)
+    elif state_machine == ORDER_EDIT and update.message.text == 'В архив':
+        logger.info("Пользователь %s выбрал заказ %d чтобы отправить его в архив", user.first_name,
+                    context.user_data['select_order'])
+        context.user_data['last_msg'] = update.message.text
+        move_to_archive(update, context)
     elif state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'Адрес':
         logger.info("Пользователь %s выбрал заказ %d и отредактировал %s", user.first_name,
                     context.user_data['select_order'], context.user_data['last_msg'])
@@ -470,7 +469,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'predoplata', predoplata)
         context.user_data['last_msg'] = update.message.text
         text = "В заказе №" + str(
-            context.user_data['select_order']) + " внесена предоплата в размере " + update.message.text
+            context.user_data['select_order']) + " внесена предоплата в размере " + update.message.text + " руб."
         update.message.reply_text(text)
         state_machine = CHANGE
         change(update, context)
@@ -504,20 +503,19 @@ def edit_order(update: Update, context: CallbackContext) -> int:
                     context.user_data['select_order'])
         context.user_data['last_msg'] = update.message.text
         order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
-        text = "Введите сумму доставки до адреса" + order['location']
+        text = "Введите сумму доставки до адреса: " + order['location']
         update.message.reply_text(text)
     elif state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'Доставка':
         logger.info("Пользователь %s выбрал заказ %d чтобы внести стоимость доставки", user.first_name,
                     context.user_data['select_order'])
         context.user_data['last_msg'] = update.message.text
         edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'dostavka', int(update.message.text))
-        text = "В заказе №" + str(context.user_data['select_order']) + " внесена сумма доставки в размере " + update.message.text
+        text = "В заказе №" + str(context.user_data['select_order']) + " внесена сумма доставки в размере " + update.message.text + " руб."
         update.message.reply_text(text)
         state_machine = CHANGE
         change(update, context)
     # else
     return state_machine
-
 
 def remove_order(update: Update, context: CallbackContext) -> int:
     global state_machine
@@ -545,7 +543,6 @@ def remove_order(update: Update, context: CallbackContext) -> int:
             update.message.reply_text('Похоже нет заказов. Удалять нечего.')
     return state_machine
 
-
 def order_insert(update: Update, context: CallbackContext) -> int:
     """Функция для добавления в заказ еще позиций"""
     global state_machine
@@ -553,7 +550,6 @@ def order_insert(update: Update, context: CallbackContext) -> int:
     update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard_order_insert, one_time_keyboard=True))
     state_machine = ORDER_ADD_ITEMS
     return state_machine
-
 
 def remove_items_from_order(update: Update, context: CallbackContext) -> int:
     global state_machine
@@ -584,7 +580,6 @@ def remove_items_from_order(update: Update, context: CallbackContext) -> int:
             update.message.reply_text(
                 'Похоже в вашем заказе пусто. Удалять нечего. \nДля продолжения введите одну из следующих команд:\n/add - чтобы добавить в заказ еще позиции\n/remove - чтобы удалить из списка заказа позицию\n/edit - чтобы откорректировать позицию из списка заказа\n/comment - добавить коментарий к заказу\n/finish - чтобы завершить оформление')
     return state_machine
-
 
 def skip(update: Update, context: CallbackContext) -> int:  # Здесь пользователь пропускает шаги
     """Skips the location and asks for info about the user."""
@@ -644,7 +639,6 @@ def skip(update: Update, context: CallbackContext) -> int:  # Здесь пол�
             state_machine = ORDER_ADD_ITEMS
         )
     return state_machine
-
 
 def latex(update: Update, context: CallbackContext) -> int:  # Здесь пользователь выбрал добавить в заказ латекс
     global state_machine
@@ -729,7 +723,6 @@ def latex(update: Update, context: CallbackContext) -> int:  # Здесь пол
         reply_text = "Как ты сюда попал? Введи команду /cancel и попробуем снова"
         update.message.reply_text(reply_text)
     return state_machine
-
 
 def foil(update: Update, context: CallbackContext) -> int:  # Здесь пользователь выбрал добавить в заказ фольгу
     global state_machine
@@ -886,7 +879,6 @@ def foil(update: Update, context: CallbackContext) -> int:  # Здесь пол�
         update.message.reply_text(reply_text)
     return state_machine
 
-
 def bubl(update: Update, context: CallbackContext) -> int:  # Здесь пользователь выбрал добавить в заказ баблс
     global state_machine
     user = update.message.from_user
@@ -973,7 +965,6 @@ def bubl(update: Update, context: CallbackContext) -> int:  # Здесь пол�
         update.message.reply_text(reply_text)
     return state_machine
 
-
 def stand(update: Update, context: CallbackContext) -> int:  # Здесь пользователь выбрал добавить в заказ стойка
     global state_machine
     user = update.message.from_user
@@ -1025,7 +1016,6 @@ def stand(update: Update, context: CallbackContext) -> int:  # Здесь пол
         state_machine = order_insert(update, context)
     return state_machine
 
-
 def label(update: Update, context: CallbackContext) -> int:  # Здесь пользователь выбрать добавить в заказ надпись
     global state_machine
     user = update.message.from_user
@@ -1067,7 +1057,6 @@ def label(update: Update, context: CallbackContext) -> int:  # Здесь пол
         state_machine = order_insert(update, context)
     return state_machine
 
-
 def comment(update: Update, context: CallbackContext) -> int:  # Здесь пользователь выбрать добавить в заказ комментарий
     global state_machine
     user = update.message.from_user
@@ -1087,7 +1076,6 @@ def comment(update: Update, context: CallbackContext) -> int:  # Здесь по
         state_machine = end(update, context)
     return state_machine
 
-
 def cancel(update: Update, context: CallbackContext) -> int:  # Здесь прекращается общение с ботом.
     """Cancels and ends the conversation."""
     user = update.message.from_user
@@ -1097,7 +1085,6 @@ def cancel(update: Update, context: CallbackContext) -> int:  # Здесь пр�
     )
 
     return ConversationHandler.END
-
 
 def end(update: Update,
         context: CallbackContext) -> int:  # Здесь обрабатываются смета и выводится предварительный состав заказ
@@ -1110,7 +1097,6 @@ def end(update: Update,
     update.message.reply_text(
         'Введите одну из следующих команд:\n/add - чтобы добавить в заказ еще позиции\n/remove - чтобы удалить из списка заказа позицию \n/edit - чтобы откорректировать позицию из списка заказа\n/comment - добавить коментарий к заказу\n/finish - чтобы завершить оформление')
     return ORDER_ADD_ITEMS
-
 
 def make_msg_order_list(user_data) -> str:
     # Создаем сообщение с выводом состава заказа
@@ -1191,7 +1177,6 @@ def make_msg_order_list(user_data) -> str:
     #print(message)
     return message
 
-
 def finish(update: Update,
            context: CallbackContext) -> int:  # Здесь финализируется каточка заказа и сохраняется в базу данных MongoDB
     global state_machine
@@ -1244,7 +1229,6 @@ def error_input(update: Update,
 
     return state_machine
 
-
 def callback_button_pressed(update: Update, context: CallbackContext) -> None:
     global state_machine
     query = update.callback_query  # данные которые приходят после нажатия кнопки
@@ -1279,7 +1263,6 @@ def callback_button_pressed(update: Update, context: CallbackContext) -> None:
         state_machine = CHANGE
         change(update, context)
     # return state_machine
-
 
 def main() -> None:
     """Run the bot."""
@@ -1316,6 +1299,7 @@ def main() -> None:
                     MessageHandler(Filters.regex('^(Редактировать заказ)$'), show_list_order),
                     MessageHandler(Filters.regex('^(Удалить заказ)$'), remove_order),
                     MessageHandler(Filters.regex('^(Вывести список заказов)$'), show_list_order),
+                    MessageHandler(Filters.regex('^(Архив)$'), show_archive),
                     MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],  # Выбор манипуляций с заказом
             ORDER_CHANGE: [MessageHandler(Filters.regex('^[1-9][0-9]*$'), select_order), MessageHandler(
                 Filters.regex('^(Состав заказа|Изменить заказ|Удалить заказ|Оплата|В архив)$'), select_order),
@@ -1329,7 +1313,7 @@ def main() -> None:
             ORDER_EDIT: [MessageHandler(Filters.contact, edit_order),
                 MessageHandler(Filters.text & ~Filters.command, edit_order), MessageHandler(
                     Filters.regex(
-                        '^(ФИО|Телефон|Дата и время|Адрес|Состав заказа|Оплата|Доставка|100%|50%|Другая сумма|Добавить|Удалить)$'),
+                        '^(ФИО|Телефон|Дата и время|Адрес|Состав заказа|Оплата|Доставка|100%|50%|Другая сумма|Добавить|Удалить|В архив)$'),
                     edit_order), MessageHandler(Filters.regex('^(Вернуться назад)$'), start), MessageHandler(Filters.regex('^(В календарь)$'), finish)],
             # Выбор манипуляций с заказом  # TODO: внести изменение чтобы функция отрабатывала комманду "в архив"
             ORDER_SHOW: [MessageHandler(Filters.regex('^(Добавить новый заказ)$'), order),
@@ -1349,6 +1333,10 @@ def main() -> None:
                               MessageHandler(Filters.regex('^[1-9][0-9]*$'), remove_items_from_order),
                               CommandHandler('finish', finish), CommandHandler('comment', comment),
                               MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],
+            ARCHIVE: [MessageHandler(Filters.regex('^(Состав заказа|Восстановить)$'), archive),
+                      MessageHandler(Filters.regex('^[1-9][0-9]*$'), archive),
+                      MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), archive),
+                      MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],
             # Выбор продукции для заказа
 
             LATEX_SIZE: [MessageHandler(Filters.text & ~Filters.command, latex), CommandHandler('skip', skip)],

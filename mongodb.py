@@ -117,11 +117,21 @@ def list_order_from_db(mdb, update):
     order_list = mdb.orders.find({'user_id': user['user_id']})
     return order_list
 
+def list_archive_from_db(mdb, update):
+    user = search_or_save_user(mdb, update.effective_user, update.message)
+    order_list = mdb.archives.find({'user_id': user['user_id']})
+    return order_list
 def show_order_user_from_db(mdb, update, order_num):
     user = search_or_save_user(mdb, update.effective_user, update.message)
     order = mdb.orders.find_one({'user_id': user['user_id'], 'order_cnt': order_num})
     #print(order)
     return order['order']
+
+def show_archive_user_from_db(mdb, update, order_num):
+    user = search_or_save_user(mdb, update.effective_user, update.message)
+    archive = mdb.archives.find_one({'user_id': user['user_id'], 'order_cnt': order_num})
+    #print(order)
+    return archive['order']
 
 def edit_order_user_from_db(mdb, update, order_num, param, value):
     user = search_or_save_user(mdb, update.effective_user, update.message)
@@ -147,34 +157,9 @@ def save_user_anketa(mdb, user, user_data):
     )
     return user
 
-
-# сохраняем название картинки
-def save_picture_name(mdb, picture):
-    photo = mdb.photography.find_one({'name': picture})  # поиск картинки по названию файла
-    if not photo:  # если такого нет, создаем словарь с данными
-        photo = {'name': picture,
-                 'file_id': None,
-                 'like': 0,
-                 'dislike': 0,
-                 'user_id': []
-                 }
-        mdb.photography.insert_one(photo)  # сохраняем словарь в коллекцию photography
-    return photo
-
-
-
-# счетчик like и dislike
-def save_like_dislike(mdb, query, data):
-    file_id = query.message.photo[0].file_id  # получаем file_id
-    photo = mdb.photography.find_one({'file_id': file_id})  # поиск картинки по file_id
-    if query.message.chat.id not in photo['user_id']:
-        if data == 1:
-            new_like = photo['like'] + data
-            mdb.photography.update_one(
-                {'file_id': file_id},
-                {'$set': {'like': new_like}, '$addToSet': {'user_id': query.message.chat.id}})
-        else:
-            new_dislike = photo['dislike'] - data
-            mdb.photography.update_one(
-                {'file_id': file_id},
-                {'$set': {'dislike': new_dislike}, '$addToSet': {'user_id': query.message.chat.id}})
+def move_to_archive_from_orders(mdb, update, order_num):
+    user = search_or_save_user(mdb, update.effective_user, update.message)
+    archive = mdb.orders.find_one({'user_id': user['user_id'], 'order_cnt': order_num})
+    mdb.archives.insert_one(archive)  # сохраняем в коллекцию archives
+    mdb.orders.delete_one({'user_id': user['user_id'], 'order_cnt': order_num}) # удаляем заказ из колекции orders
+    return
