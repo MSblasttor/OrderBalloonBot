@@ -316,10 +316,7 @@ def select_order(update: Update, context: CallbackContext) -> int:
         logger.info("Пользователь %s выбрал заказ %d чтобы отправить в архив", user.first_name,
                     context.user_data['select_order'])
         # show_order(update, context)
-        move_to_archive(mdb, update, context.user_data['select_order'])
-        reply_keyboard = [['Вернуться назад']]
-        reply_text = "Заказ №" + str(context.user_data['select_order']) + " отправлен в АРХИВ"
-        update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+        move_to_archive(update, context)
     elif state_machine == ORDER_CHANGE and context.user_data['last_msg'] == "Редактировать заказ":
         context.user_data['select_order'] = int(update.message.text)
         logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать", user.first_name,
@@ -331,7 +328,12 @@ def select_order(update: Update, context: CallbackContext) -> int:
             user.first_name, context.user_data['select_order'], state_machine)
     return state_machine
 
-
+def move_to_archive(update, context):
+    move_to_archive(mdb, update, context.user_data['select_order'])
+    reply_keyboard = [['Вернуться назад']]
+    reply_text = "Заказ №" + str(context.user_data['select_order']) + " отправлен в АРХИВ"
+    update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+    return
 def show_order(update: Update, context: CallbackContext) -> int:
     global state_machine
     order = {}
@@ -358,7 +360,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
     global state_machine
     user = update.message.from_user
     if (state_machine == ORDER or state_machine == ORDER_CHANGE) and (
-            update.message.text != 'ФИО' and update.message.text != 'Телефон' and update.message.text != 'Дата и время' and update.message.text != 'Состав заказа' and update.message.text != 'Архив' and update.message.text != 'Оплата' and update.message.text != 'Доставка'):
+            update.message.text != 'ФИО' and update.message.text != 'Телефон' and update.message.text != 'Дата и время' and update.message.text != 'Состав заказа' and update.message.text != 'В архив' and update.message.text != 'Оплата' and update.message.text != 'Доставка'):
         state_machine = ORDER_EDIT
         # Сюда вставить функцию редактирования заказа из БД
         logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать", user.first_name,
@@ -435,6 +437,11 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         context.user_data['last_msg'] = update.message.text
         text = "Введите новый адрес"
         update.message.reply_text(text)
+    elif state_machine == ORDER_EDIT and update.message.text == 'В архив':
+        logger.info("Пользователь %s выбрал заказ %d чтобы отправить его в архив", user.first_name,
+                    context.user_data['select_order'])
+        context.user_data['last_msg'] = update.message.text
+
     elif state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'Адрес':
         logger.info("Пользователь %s выбрал заказ %d и отредактировал %s", user.first_name,
                     context.user_data['select_order'], context.user_data['last_msg'])
