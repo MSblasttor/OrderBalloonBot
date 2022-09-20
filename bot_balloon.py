@@ -39,6 +39,8 @@ from keyboars import *
 
 from ical import make_ical_from_order
 
+from archives import *
+
 from make_image import make_image_order
 
 # Enable logging
@@ -48,8 +50,8 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-START, CHANGE, FIO, TEL, FROM, DATE, LOCATION, ORDER, ORDER_CHANGE, ORDER_REMOVE, ORDER_EDIT, ORDER_SHOW, ORDER_ADD_ITEMS, LATEX, LATEX_SIZE, LATEX_COLOR, LATEX_COUNT, LATEX_PRICE, FOIL, FOIL_CHANGE, FOIL_FIG, FOIL_FIG_NAME, FOIL_FIG_COLOR, FOIL_FIG_PRICE, FOIL_NUM, FOIL_NUM_NAME, FOIL_NUM_COLOR, FOIL_NUM_PRICE, BUBL_COLOR, BUBL_INSERT, BUBL_PRICE, BUBL_SIZE, LABEL_NAME, LABEL_COLOR, LABEL_PRICE, STAND_NAME, STAND_PRICE, COMMENT = range(
-    38)
+START, CHANGE, FIO, TEL, FROM, DATE, LOCATION, ORDER, ORDER_CHANGE, ORDER_REMOVE, ORDER_EDIT, ORDER_SHOW, ORDER_ADD_ITEMS, ARCHIVE, LATEX, LATEX_SIZE, LATEX_COLOR, LATEX_COUNT, LATEX_PRICE, FOIL, FOIL_CHANGE, FOIL_FIG, FOIL_FIG_NAME, FOIL_FIG_COLOR, FOIL_FIG_PRICE, FOIL_NUM, FOIL_NUM_NAME, FOIL_NUM_COLOR, FOIL_NUM_PRICE, BUBL_COLOR, BUBL_INSERT, BUBL_PRICE, BUBL_SIZE, LABEL_NAME, LABEL_COLOR, LABEL_PRICE, STAND_NAME, STAND_PRICE, COMMENT = range(
+    39)
 
 state_machine = START
 order_cnt = 0
@@ -327,12 +329,6 @@ def select_order(update: Update, context: CallbackContext) -> int:
             user.first_name, context.user_data['select_order'], state_machine)
     return state_machine
 
-def move_to_archive(update, context):
-    move_to_archive_from_orders(mdb, update, context.user_data['select_order'])
-    reply_keyboard = [['Вернуться назад']]
-    reply_text = "Заказ №" + str(context.user_data['select_order']) + " отправлен в АРХИВ"
-    update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
-    return
 def show_order(update: Update, context: CallbackContext) -> int:
     global state_machine
     order = {}
@@ -1327,6 +1323,7 @@ def main() -> None:
                     MessageHandler(Filters.regex('^(Редактировать заказ)$'), show_list_order),
                     MessageHandler(Filters.regex('^(Удалить заказ)$'), remove_order),
                     MessageHandler(Filters.regex('^(Вывести список заказов)$'), show_list_order),
+                    MessageHandler(Filters.regex('^(Архив)$'), show_archive),
                     MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],  # Выбор манипуляций с заказом
             ORDER_CHANGE: [MessageHandler(Filters.regex('^[1-9][0-9]*$'), select_order), MessageHandler(
                 Filters.regex('^(Состав заказа|Изменить заказ|Удалить заказ|Оплата|В архив)$'), select_order),
@@ -1360,6 +1357,10 @@ def main() -> None:
                               MessageHandler(Filters.regex('^[1-9][0-9]*$'), remove_items_from_order),
                               CommandHandler('finish', finish), CommandHandler('comment', comment),
                               MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],
+            ARCHIVE: [MessageHandler(Filters.regex('^(Состав заказа|Восстановить)$'), archive),
+                      MessageHandler(Filters.regex('^[1-9][0-9]*$'), archive),
+                      MessageHandler(Filters.text & ~Filters.command, archive),
+                      MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],
             # Выбор продукции для заказа
 
             LATEX_SIZE: [MessageHandler(Filters.text & ~Filters.command, latex), CommandHandler('skip', skip)],

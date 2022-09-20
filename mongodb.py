@@ -117,11 +117,21 @@ def list_order_from_db(mdb, update):
     order_list = mdb.orders.find({'user_id': user['user_id']})
     return order_list
 
+def list_archive_from_db(mdb, update):
+    user = search_or_save_user(mdb, update.effective_user, update.message)
+    order_list = mdb.archives.find({'user_id': user['user_id']})
+    return order_list
 def show_order_user_from_db(mdb, update, order_num):
     user = search_or_save_user(mdb, update.effective_user, update.message)
     order = mdb.orders.find_one({'user_id': user['user_id'], 'order_cnt': order_num})
     #print(order)
     return order['order']
+
+def show_archive_user_from_db(mdb, update, order_num):
+    user = search_or_save_user(mdb, update.effective_user, update.message)
+    archive = mdb.archives.find_one({'user_id': user['user_id'], 'order_cnt': order_num})
+    #print(order)
+    return archive['order']
 
 def edit_order_user_from_db(mdb, update, order_num, param, value):
     user = search_or_save_user(mdb, update.effective_user, update.message)
