@@ -2,12 +2,12 @@ from PIL import Image, ImageDraw, ImageFont
 from pathlib import Path
 
 
-font_path = "fonts/Steclo.otf"
+font_path = "/root/OrderBalloonBot/fonts/Steclo.otf"
 
 def make_image_order(order):
     pagesize_w, pagesize_h = (744, 1052)
     im = Image.new('RGB', (pagesize_w, pagesize_h), color=('#FAACAC'))
-    template = Image.open('img/order_templ.png')
+    template = Image.open('/root/OrderBalloonBot/img/order_templ.png')
     im.paste(template, (0, 0))
     template.close()
     #Заполняем поле номер заказа
@@ -122,7 +122,7 @@ def make_image_order(order):
     print("Save pic order")
     return
 
-def make_txt(image, x, y, txt, align="centr", font_size=30, font_path="fonts/Steclo.otf", fill='#1C0606'):
+def make_txt(image, x, y, txt, align="centr", font_size=30, font_path="/root/OrderBalloonBot/fonts/Steclo.otf", fill='#1C0606'):
     font = ImageFont.truetype(font_path, font_size)
     draw_text = ImageDraw.Draw(image)
     left, top, right, bottom = font.getbbox(txt)
