@@ -329,7 +329,7 @@ def select_order(update: Update, context: CallbackContext) -> int:
     return state_machine
 
 def move_to_archive(update, context):
-    move_to_archive(mdb, update, context.user_data['select_order'])
+    move_to_archive_from_orders(mdb, update, context.user_data['select_order'])
     reply_keyboard = [['Вернуться назад']]
     reply_text = "Заказ №" + str(context.user_data['select_order']) + " отправлен в АРХИВ"
     update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
