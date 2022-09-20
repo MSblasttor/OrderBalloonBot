@@ -1334,7 +1334,7 @@ def main() -> None:
             ORDER_EDIT: [MessageHandler(Filters.contact, edit_order),
                 MessageHandler(Filters.text & ~Filters.command, edit_order), MessageHandler(
                     Filters.regex(
-                        '^(ФИО|Телефон|Дата и время|Адрес|Состав заказа|Оплата|Доставка|100%|50%|Другая сумма|Добавить|Удалить)$'),
+                        '^(ФИО|Телефон|Дата и время|Адрес|Состав заказа|Оплата|Доставка|100%|50%|Другая сумма|Добавить|Удалить|В архив)$'),
                     edit_order), MessageHandler(Filters.regex('^(Вернуться назад)$'), start), MessageHandler(Filters.regex('^(В календарь)$'), finish)],
             # Выбор манипуляций с заказом  # TODO: внести изменение чтобы функция отрабатывала комманду "в архив"
             ORDER_SHOW: [MessageHandler(Filters.regex('^(Добавить новый заказ)$'), order),
