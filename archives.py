@@ -1,22 +1,33 @@
+from telegram import ReplyKeyboardMarkup, Update
+from telegram.ext import CallbackContext
+from mongodb import *
+from bot_balloon import state_machine, ARCHIVE, ORDER, make_msg_order_list
+import logging
+
+
+# Enable logging
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO
+)
+
+logger = logging.getLogger(__name__)
 def archive(update: Update, context: CallbackContext) -> int:
     global state_machine
     user = update.message.from_user
-    if state_machine == ARCHIVES and (update.message.text != 'Состав заказа' and update.message.text != 'Восстановить'):
+    if state_machine == ARCHIVE and (update.message.text != 'Состав заказа' and update.message.text != 'Восстановить'):
         logger.info("Пользователь %s выбрал заказ %d из архива", user.first_name, int(update.message.text))
         context.user_data['select_order'] = int(update.message.text)
         reply_keyboard = [['Состав заказа', 'Восстановить'], ['Вернуться назад']]
         reply_text = "Выберите что сделать с заказом из архива: \n"
         update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
-    elif state_machine == ARCHIVES and update.message.text == 'Состав заказа':
+    elif state_machine == ARCHIVE and update.message.text == 'Состав заказа':
         logger.info("Пользователь %s выбрал заказ %d из архива чтобы посмотреть состав", user.first_name,
                     context.user_data['select_order'])
         show_archive(update, context)
-    elif state_machine == ARCHIVES and update.message.text == 'Восстановить':
+    elif state_machine == ARCHIVE and update.message.text == 'Восстановить':
         logger.info("Пользователь %s выбрал заказ %d из архива чтобы восстановить", user.first_name,
                     context.user_data['select_order'])
         #show_archive(update, context) ----> Добавить функцию по восстановлению заказа.
-    else:
-
     return state_machine
 def move_to_archive(update, context):
     move_to_archive_from_orders(mdb, update, context.user_data['select_order'])
@@ -29,10 +40,11 @@ def show_archive(update: Update, context: CallbackContext) -> int:
     global state_machine
     user = update.message.from_user
     list_archive_order(update, context)
-    if update.message.text == "Редактировать заказ" or state_machine != ORDER:
-        logger.info("Пользователь %s запросил список заказов для редактирования", user.first_name)
+    if update.message.text == "Состав заказа" or state_machine != ORDER:
+        logger.info("Пользователь %s запросил список заказов из архива отображения состава", user.first_name)
         context.user_data['last_msg'] = update.message.text
         # print(context.user_data)
+        show_archive_order(update, context)
         state_machine = ARCHIVE
         # print(state_machine)
     else:
@@ -61,7 +73,6 @@ def show_archive_order(update: Update, context: CallbackContext) -> int:
     order = {}
     user = update.message.from_user
     if state_machine == ARCHIVE:
-        # state_machine = CHANGE
         # Сюда вставить функцию вывода состава заказа из БД
         order_num = context.user_data['select_order']
         archive = show_archive_user_from_db(mdb, update, order_num)

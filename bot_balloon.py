@@ -1334,7 +1334,7 @@ def main() -> None:
                               MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],
             ARCHIVE: [MessageHandler(Filters.regex('^(Состав заказа|Восстановить)$'), archive),
                       MessageHandler(Filters.regex('^[1-9][0-9]*$'), archive),
-                      MessageHandler(Filters.text & ~Filters.command, archive),
+                      MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), archive),
                       MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],
             # Выбор продукции для заказа
 
