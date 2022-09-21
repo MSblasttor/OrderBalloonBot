@@ -6,7 +6,6 @@ client = MongoClient('localhost', 27017)
 # Connect to our database
 mdb = client['orderballoonbot']
 
-
 #from settings import client, mdb
 # Fetch our series collection
 series_collection = mdb['user_id']
@@ -44,7 +43,6 @@ def delete_document(collection, query):
     """ Function to delete a single document from a collection.
     """
     collection.delete_one(query)
-
 
 def search_or_save_user(mdb, effective_user, message):
     user = mdb.users.find_one({"user_id": effective_user.id})  # поиск в коллекции users по user.id
@@ -139,9 +137,6 @@ def edit_order_user_from_db(mdb, update, order_num, param, value):
         {'user_id': user['user_id'], 'order_cnt': order_num},
         {'$set': {'order.'+param: value}})
     print(finish)
-
-
-
 
 # сохраняем - обновляем результаты анкеты и возвращаем результат
 def save_user_anketa(mdb, user, user_data):

@@ -149,21 +149,22 @@ def order(update: Update, context: CallbackContext) -> int:  # Здесь пол
         context.user_data[key] = value
         update.message.reply_text(
             'ОК. Теперь введи номер телефона заказчика'
-            'или отправь /skip если ты его не знаешь',
+            ' или отправь /skip если ты его не знаешь',
         )
         state_machine = TEL
     elif state_machine == TEL:
         """Сохраняем телефон заказчика"""
         # Сохраняем значение
         phone = update.message.text
-        if update.message.contact.phone_number != None:
+        #print(update.message.contact.phone_number)
+        if update.message.contact is not None:
             phone = update.message.contact.phone_number
         logger.info("Номер телефона Заказчика of %s: %s", user.first_name, phone)
         key = 'tel'
         value = phone
         context.user_data[key] = value
         reply_text = 'Хорошо. Теперь выберете откуда заказчик о вас узнал \n или отправь /skip если ты не знаешь'
-        reply_keyboard = [['Инстаграм', 'Авито', 'ВКонтакте', 'Telegram', 'WhatshApp', 'Viber'], ['Другое'], ['/skip']]
+        reply_keyboard = [['Инстаграм', 'Авито', 'ВКонтакте'], ['Telegram', 'WhatshApp', 'Viber'], ['Другое'], ['/skip']]
         update.message.reply_text(
             reply_text,
             reply_markup=ReplyKeyboardMarkup(
@@ -181,15 +182,15 @@ def order(update: Update, context: CallbackContext) -> int:  # Здесь пол
         context.user_data[key] = value
         update.message.reply_text(
             'Отлично. Теперь введи дату и время когда планируется мероприятие (доставка)'
-            'или отправь /skip если ты не знаешь или требует уточнения',
+            ' или отправь /skip если ты не знаешь или требует уточнения',
         )
         state_machine = DATE
     elif state_machine == FROM and update.message.text == 'Другое':
         """Сохраняем откуда заказчика"""
         logger.info("Заказчик пришел of %s: %s", user.first_name, update.message.text)
         update.message.reply_text(
-            'Вы выбрали вариант \'Другое\'/n Укажите откуда заказчик'
-            'или отправь /skip если ты не знаешь',
+            'Вы выбрали вариант "Другое" \n Укажите откуда заказчик'
+            ' или отправь /skip если ты не знаешь',
         )
         state_machine = FROM
     elif state_machine == FROM and not (
@@ -202,7 +203,7 @@ def order(update: Update, context: CallbackContext) -> int:  # Здесь пол
         context.user_data[key] = value
         update.message.reply_text(
             'Отлично. Теперь введи дату и время когда планируется мероприятие (доставка)'
-            'или отправь /skip если ты не знаешь или требует уточнения',
+            ' или отправь /skip если ты не знаешь или требует уточнения',
         )
         state_machine = DATE
     elif state_machine == DATE:
@@ -214,7 +215,7 @@ def order(update: Update, context: CallbackContext) -> int:  # Здесь пол
         context.user_data[key] = value
         update.message.reply_text(
             'Отметь на карте геопозицию адреса доставки'
-            'или отправь /skip заказ заберут самостоятельно',
+            ' или отправь /skip заказ заберут самостоятельно',
         )
         state_machine = LOCATION
     elif state_machine == LOCATION:
@@ -225,11 +226,11 @@ def order(update: Update, context: CallbackContext) -> int:  # Здесь пол
         value = update.message.text
         context.user_data[key] = value
         reply_text = "Отлично давай прикинем смету. Что будут заказывать?"
-        reply_keyboard = [['Латекс', 'Фольга', 'Баблс'], ['Стойка', 'Надпись', 'Акссесуары'], ['Другое']]
+        #reply_keyboard = [['Латекс', 'Фольга', 'Баблс'], ['Стойка', 'Надпись', 'Акссесуары'], ['Другое']]
         update.message.reply_text(
             reply_text,
             reply_markup=ReplyKeyboardMarkup(
-                reply_keyboard, one_time_keyboard=True
+                reply_keyboard_order_insert, one_time_keyboard=True
             ),
         )
         state_machine = ORDER_ADD_ITEMS
@@ -237,11 +238,11 @@ def order(update: Update, context: CallbackContext) -> int:  # Здесь пол
         """Пользователь приступил к оформлению сметы. Выводим предложение составить заказ"""
         logger.info("%s выбрала оформление сметы", user.first_name)
         reply_text = "Отлично давай прикинем смету. Что будут заказывать?"
-        reply_keyboard = [['Латекс', 'Фольга', 'Баблс'], ['Стойка', 'Надпись', 'Акссесуары'], ['Другое']]
+        #reply_keyboard = [['Латекс', 'Фольга', 'Баблс'], ['Стойка', 'Надпись', 'Акссесуары'], ['Другое']]
         update.message.reply_text(
             reply_text,
             reply_markup=ReplyKeyboardMarkup(
-                reply_keyboard, one_time_keyboard=True
+                reply_keyboard_order_insert, one_time_keyboard=True
             ),
         )
         state_machine = ORDER_ADD_ITEMS
@@ -379,7 +380,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         update.message.reply_text(text)
     elif state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'Телефон':
         phone = update.message.text
-        if update.message.contact.phone_number != None:
+        if update.message.contact is not None:
             phone = update.message.contact.phone_number
         #print(update.message.contact.phone_number)
         if re.fullmatch(r'((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}', phone):
@@ -1040,7 +1041,13 @@ def label(update: Update, context: CallbackContext) -> int:  # Здесь пол
         key = 'name'
         value = update.message.text
         context.user_data['order_dict'][key] = value
-        update.message.reply_text("Укажи цвет надписи")
+
+        update.message.reply_text(
+            'Укажи цвет надписи\n (выберите из списка или введите вручную)',
+            reply_markup=ReplyKeyboardMarkup(
+                reply_keyboard_label_color, one_time_keyboard=True, input_field_placeholder='Цвет надписи ...'
+            ),
+        )
         state_machine = LABEL_COLOR
     elif state_machine == LABEL_COLOR:
         """Пользователь указал цвет НАДПИСИ"""
@@ -1332,7 +1339,7 @@ def main() -> None:
                               CommandHandler('remove', remove_items_from_order),
                               MessageHandler(Filters.regex('^[1-9][0-9]*$'), remove_items_from_order),
                               CommandHandler('finish', finish), CommandHandler('comment', comment),
-                              MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],
+                              MessageHandler(Filters.regex('^(Вернуться назад)$'), order_insert)],
             ARCHIVE: [MessageHandler(Filters.regex('^(Состав заказа|Восстановить)$'), archive),
                       MessageHandler(Filters.regex('^[1-9][0-9]*$'), archive),
                       MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), archive),
