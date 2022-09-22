@@ -1088,7 +1088,7 @@ def accessories(update: Update, context: CallbackContext) -> int:  # Здесь 
         value = 'accessories'
         context.user_data['order_dict'][key] = value  # order_dict[key] = value
         logger.info("%s: %s", user.first_name, update.message.text)
-        reply_keyboard = [['Грузик'], ['Тассел'], ['Упаковочный пакет'],['/end']]
+        reply_keyboard = [['Грузик'], ['Тассел'], ['Упаковочный пакет'], ['Паетки'], ['Дисплей'], ['/end']]
         update.message.reply_text(
             'Выберите акссесуар из предложенных или впишите вручную',
             reply_markup=ReplyKeyboardMarkup(
