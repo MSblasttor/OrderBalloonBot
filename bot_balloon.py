@@ -50,7 +50,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-START, CHANGE, FIO, TEL, FROM, DATE, LOCATION, ORDER, ORDER_CHANGE, ORDER_REMOVE, ORDER_EDIT, ORDER_SHOW, ORDER_ADD_ITEMS, ARCHIVE, LATEX, LATEX_SIZE, LATEX_COLOR, LATEX_COUNT, LATEX_PRICE, FOIL, FOIL_CHANGE, FOIL_FIG, FOIL_FIG_NAME, FOIL_FIG_COLOR, FOIL_FIG_PRICE, FOIL_NUM, FOIL_NUM_NAME, FOIL_NUM_COLOR, FOIL_NUM_PRICE, BUBL_COLOR, BUBL_INSERT, BUBL_PRICE, BUBL_SIZE, LABEL_NAME, LABEL_COLOR, LABEL_PRICE, STAND_NAME, STAND_PRICE, COMMENT = range(
+START, CHANGE, FIO, TEL, FROM, DATE, LOCATION, ORDER, ORDER_CHANGE, ORDER_REMOVE, ORDER_EDIT, ORDER_SHOW, ORDER_ADD_ITEMS, ARCHIVE, LATEX, LATEX_SIZE, LATEX_COLOR, LATEX_COUNT, LATEX_PRICE, FOIL, FOIL_CHANGE, FOIL_FIG, FOIL_FIG_NAME, FOIL_FIG_COLOR, FOIL_FIG_PRICE, FOIL_NUM, FOIL_NUM_NAME, FOIL_NUM_COLOR, FOIL_NUM_PRICE, BUBL_COLOR, BUBL_INSERT, BUBL_PRICE, BUBL_SIZE, LABEL_NAME, LABEL_COLOR, LABEL_PRICE, STAND_NAME, STAND_PRICE, ACCESSORIES, COMMENT = range(
     39)
 
 state_machine = START
@@ -1064,6 +1064,31 @@ def label(update: Update, context: CallbackContext) -> int:  # Здесь пол
         state_machine = order_insert(update, context)
     return state_machine
 
+def accessories(update: Update, context: CallbackContext) -> int:  # Здесь пользователь выбрать добавить в аксессуары
+    global state_machine
+    user = update.message.from_user
+    if state_machine == ORDER_ADD_ITEMS:
+        """Пользователь выбрал аксессуары"""
+        # Добавляем во внутрь словаря пользователя новый словарь с карточкой заказа
+        key = 'order_dict'
+        order_dict = {'type': 0, 'size': 0, 'color': 0, 'name': 0, 'count': 0, 'price': 0, 'summa': 0, 'comment': 0}
+        value = order_dict
+        context.user_data[key] = value
+        # Сохраняем значение типа
+        key = 'type'
+        value = 'accessories'
+        context.user_data['order_dict'][key] = value  # order_dict[key] = value
+        logger.info("%s: %s", user.first_name, update.message.text)
+        reply_keyboard = [['Грузик'], ['Тассел'], ['Упаковочный пакет'],['/end']]
+        update.message.reply_text(
+            'Выберите акссесуар из предложенных или впишите вручную',
+            reply_markup=ReplyKeyboardMarkup(
+                reply_keyboard, one_time_keyboard=True, input_field_placeholder='Аксессуар ...'
+            ),
+        )
+        state_machine = ACCESSORIES
+    return state_machine
+
 def comment(update: Update, context: CallbackContext) -> int:  # Здесь пользователь выбрать добавить в заказ комментарий
     global state_machine
     user = update.message.from_user
@@ -1333,7 +1358,9 @@ def main() -> None:
                               MessageHandler(Filters.regex('^(Фольга)$'), foil),
                               MessageHandler(Filters.regex('^(Баблс)$'), bubl),
                               MessageHandler(Filters.regex('^(Надпись)$'), label),
-                              MessageHandler(Filters.regex('^(Стойка)$'), stand), CommandHandler('end', end),
+                              MessageHandler(Filters.regex('^(Стойка)$'), stand),
+                              MessageHandler(Filters.regex('^(Аксессуары)$'), accessories),
+                              CommandHandler('end', end),
                               CommandHandler('add', order_insert),
                               MessageHandler(Filters.regex('^(Добавить)$'), order_insert),
                               CommandHandler('remove', remove_items_from_order),
@@ -1382,11 +1409,12 @@ def main() -> None:
             LABEL_COLOR: [MessageHandler(Filters.text & ~Filters.command, label), CommandHandler('skip', skip)],
             LABEL_PRICE: [MessageHandler(Filters.regex('^\d+$') & ~Filters.command, label),
                           MessageHandler(Filters.text & ~Filters.command, error_input), CommandHandler('skip', skip)],
-
-            STAND_NAME: [MessageHandler(Filters.text & ~Filters.command, stand), CommandHandler('skip', skip)],
             # Стойка
+            STAND_NAME: [MessageHandler(Filters.text & ~Filters.command, stand), CommandHandler('skip', skip)],
             STAND_PRICE: [MessageHandler(Filters.regex('^\d+$') & ~Filters.command, stand),
                           MessageHandler(Filters.text & ~Filters.command, error_input), CommandHandler('skip', skip)],
+            #Аксессуары
+            ACCESSORIES: [MessageHandler(Filters.text & ~Filters.command, accessories), CommandHandler('skip', skip),CommandHandler('end', end)],
 
             COMMENT: [MessageHandler(Filters.text & ~Filters.command, comment), CommandHandler('skip', skip)],
             # Комментарий
