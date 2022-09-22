@@ -458,9 +458,8 @@ def edit_order(update: Update, context: CallbackContext) -> int:
                         context.user_data['select_order'], context.user_data['last_msg'])
             order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
         else:
-            logger.info("Пользователь %s выбрал внесение предоплаты", user.first_name)
-            order = dict
-            order['summa'] = context.user_data['summa']
+            logger.info("Пользователь %s внес предоплату в размере %s", user.first_name, update.message.text)
+            order = {'summa' : context.user_data['summa']}
         predoplata = 0
         if update.message.text == '100%':
             predoplata = order['summa']
@@ -569,7 +568,7 @@ def remove_items_from_order(update: Update, context: CallbackContext) -> int:
     # global order_list
     user = update.message.from_user
     logger.info("Пользователь %s приступил к редактированию заказа. Удаление ", user.first_name)
-    if state_machine == ORDER_ADD_ITEMS and update.message.text != '/remove' and update.message.text != 'Удалить':
+    if state_machine == ORDER_ADD_ITEMS and update.message.text != '/remove' and update.message.text != 'Удалить' and context.user_data['last_msg'] != '/predoplata':
         key = int(update.message.text)
         if key <= len(context.user_data['order_list']):
             context.user_data['order_list'].pop(key - 1)
@@ -577,6 +576,10 @@ def remove_items_from_order(update: Update, context: CallbackContext) -> int:
         else:
             msg = 'Не верное значение! Введите номер позиции от 1 до %d' % len(context.user_data['order_list'])
             update.message.reply_text(msg)
+    elif context.user_data['last_msg'] == '/predoplata':
+        print('Функция remove_items_from_order')
+        print(state_machine)
+        edit_order(update, context)
     else:
         if len(context.user_data['order_list']) != 0:
             reply_keyboard = [[], []]
@@ -1453,6 +1456,7 @@ def main() -> None:
                               MessageHandler(Filters.regex('^(Добавить)$'), order_insert),
                               CommandHandler('remove', remove_items_from_order),
                               MessageHandler(Filters.regex('^[1-9][0-9]*$'), remove_items_from_order),
+                              MessageHandler(Filters.regex('^|100%|50%|Другая сумма)$'), edit_order),
                               CommandHandler('predoplata', edit_order),
                               CommandHandler('finish', finish),
                               CommandHandler('comment', comment),
