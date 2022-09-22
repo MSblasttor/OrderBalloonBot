@@ -1456,7 +1456,7 @@ def main() -> None:
                               MessageHandler(Filters.regex('^(Добавить)$'), order_insert),
                               CommandHandler('remove', remove_items_from_order),
                               MessageHandler(Filters.regex('^[1-9][0-9]*$'), remove_items_from_order),
-                              MessageHandler(Filters.regex('^|100%|50%|Другая сумма)$'), edit_order),
+                              MessageHandler(Filters.regex('^(100%|50%|Другая сумма)$'), edit_order),
                               CommandHandler('predoplata', edit_order),
                               CommandHandler('finish', finish),
                               CommandHandler('comment', comment),
