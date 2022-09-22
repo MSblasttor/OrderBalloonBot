@@ -50,8 +50,8 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-START, CHANGE, FIO, TEL, FROM, DATE, LOCATION, ORDER, ORDER_CHANGE, ORDER_REMOVE, ORDER_EDIT, ORDER_SHOW, ORDER_ADD_ITEMS, ARCHIVE, LATEX, LATEX_SIZE, LATEX_COLOR, LATEX_COUNT, LATEX_PRICE, FOIL, FOIL_CHANGE, FOIL_FIG, FOIL_FIG_NAME, FOIL_FIG_COLOR, FOIL_FIG_PRICE, FOIL_NUM, FOIL_NUM_NAME, FOIL_NUM_COLOR, FOIL_NUM_PRICE, BUBL_COLOR, BUBL_INSERT, BUBL_PRICE, BUBL_SIZE, LABEL_NAME, LABEL_COLOR, LABEL_PRICE, STAND_NAME, STAND_PRICE, ACCESSORIES, ACCESSORIES_CNT, ACCESSORIES_PRICE, COMMENT = range(
-    42)
+START, CHANGE, FIO, TEL, FROM, DATE, LOCATION, ORDER, ORDER_CHANGE, ORDER_REMOVE, ORDER_EDIT, ORDER_SHOW, ORDER_ADD_ITEMS, ARCHIVE, LATEX, LATEX_SIZE, LATEX_COLOR, LATEX_COUNT, LATEX_PRICE, FOIL, FOIL_CHANGE, FOIL_FIG, FOIL_FIG_NAME, FOIL_FIG_COLOR, FOIL_FIG_PRICE, FOIL_NUM, FOIL_NUM_NAME, FOIL_NUM_COLOR, FOIL_NUM_PRICE, BUBL_COLOR, BUBL_INSERT, BUBL_PRICE, BUBL_SIZE, LABEL_NAME, LABEL_COLOR, LABEL_PRICE, STAND_NAME, STAND_PRICE, ACCESSORIES, ACCESSORIES_CNT, ACCESSORIES_PRICE, ACCESSORIES_COMMENT, COMMENT = range(
+    43)
 
 state_machine = START
 order_cnt = 0
@@ -625,6 +625,15 @@ def skip(update: Update, context: CallbackContext) -> int:  # Здесь пол�
             reply_text,
             reply_markup=ReplyKeyboardMarkup(
                 reply_keyboard_order_insert, one_time_keyboard=True))
+    elif update.message.text == '/skip' and state_machine == ACCESSORIES_COMMENT:
+        state_machine = ACCESSORIES_CNT
+        # Сохраняем значение
+        key = 'comment'
+        value = 0
+        context.user_data[key] = value
+        logger.info("Пользователь %s не прислал комментарий к аксессуару", user.first_name)
+        reply_text = 'Ок. Теперь пришли колличество аксессуаров: ' + context.user_data['order_dict']['name']
+        update.message.reply_text(reply_text)
     elif update.message.text == '/skip':
         logger.info("%s команда /skip", user.first_name)
         reply_text = "Как ты сюда попал? Введи команду /cancel и попробуем снова"
@@ -1094,7 +1103,16 @@ def accessories(update: Update, context: CallbackContext) -> int:  # Здесь 
         key = 'name'
         value = update.message.text
         context.user_data['order_dict'][key] = value
-        update.message.reply_text('Укажи кол-во '+ value)
+        update.message.reply_text('Укажи комментарий к ' + value + ' (цвет, форма и т.д.). Или /skip, чтобы пропустить')
+        state_machine = ACCESSORIES_COMMENT
+    elif state_machine == ACCESSORIES_COMMENT:
+        """Пользователь указал коментарий"""
+        logger.info("%s: %s", user.first_name, update.message.text)
+        # Сохраняем название фигуры
+        key = 'comment'
+        value = update.message.text
+        context.user_data['order_dict'][key] = value
+        update.message.reply_text('Укажи кол-во: '+ context.user_data['order_dict']['name'])
         state_machine = ACCESSORIES_CNT
     elif state_machine == ACCESSORIES_CNT:
         """Пользователь выбрал кол-во аксессуаров"""
@@ -1462,6 +1480,7 @@ def main() -> None:
                           MessageHandler(Filters.text & ~Filters.command, error_input), CommandHandler('skip', skip)],
             #Аксессуары
             ACCESSORIES: [MessageHandler(Filters.text & ~Filters.command, accessories), CommandHandler('end', end)],
+            ACCESSORIES_COMMENT: [MessageHandler(Filters.text & ~Filters.command, accessories), CommandHandler('skip', skip), CommandHandler('end', end)],
             ACCESSORIES_CNT: [MessageHandler(Filters.regex('^\d+$') & ~Filters.command, accessories),
                           MessageHandler(Filters.text & ~Filters.command, error_input), CommandHandler('end', end)],
             ACCESSORIES_PRICE: [MessageHandler(Filters.regex('^\d+$') & ~Filters.command, accessories),
