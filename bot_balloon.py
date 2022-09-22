@@ -447,11 +447,15 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         text = "Введите сумму предоплаты"
         update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
         # update.message.reply_text(text)
-    elif state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'Оплата':
-        logger.info("Пользователь %s выбрал заказ %d и отредактировал %s", user.first_name,
-                    context.user_data['select_order'], context.user_data['last_msg'])
-        # Сюда вставить функцию по изменению ФИО (Телефон, Дата, Место) в заказе
-        order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
+    elif (state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'Оплата') or update.message.text == '/predoplata':
+        if update.message.text != '/predoplata':
+            logger.info("Пользователь %s выбрал заказ %d и отредактировал %s", user.first_name,
+                        context.user_data['select_order'], context.user_data['last_msg'])
+            order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
+        else:
+            logger.info("Пользователь %s выбрал внесение предоплаты", user.first_name)
+            order = dict
+            order['summa'] = context.user_data['summa']
         predoplata = 0
         if update.message.text == '100%':
             predoplata = order['summa']
@@ -467,7 +471,10 @@ def edit_order(update: Update, context: CallbackContext) -> int:
                 text = "Введите сумму предоплаты цифрами не больше %d:" % order['summa']
                 update.message.reply_text(text)
                 return state_machine
-        edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'predoplata', predoplata)
+        if update.message.text != '/predoplata':
+            edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'predoplata', predoplata)
+        else:
+            context.user_data['predoplata'] = predoplata
         context.user_data['last_msg'] = update.message.text
         text = "В заказе №" + str(
             context.user_data['select_order']) + " внесена предоплата в размере " + update.message.text + " руб."
@@ -1186,8 +1193,17 @@ def end(update: Update,
     msg = make_msg_order_list(context.user_data)
     update.message.reply_text('Итак давай посмотрим что получается')
     update.message.reply_text(msg)
+    reply_keyboard = [['/add'], ['/remove'], ['/predoplata'], ['/dostavka'], ['/comment'], ['/finish']]
+    text = "Выберите дейстивие ДОБАВИТЬ или УДАЛИТЬ, либо ВЕРНУТЬСЯ НАЗАД"
+    update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     update.message.reply_text(
-        'Введите одну из следующих команд:\n/add - чтобы добавить в заказ еще позиции\n/remove - чтобы удалить из списка заказа позицию \n/edit - чтобы откорректировать позицию из списка заказа\n/comment - добавить коментарий к заказу\n/finish - чтобы завершить оформление')
+        'Введите одну из следующих команд:\n'
+        '/add - чтобы добавить в заказ еще позиции\n'
+        '/remove - чтобы удалить из списка заказа позицию \n'
+        '/predoplata - чтобы указать сумму предоплаты \n'
+        '/dostavka - чтобы указать сумму доставки'
+        '/comment - добавить коментарий к заказу\n'
+        '/finish - чтобы завершить оформление')
     return ORDER_ADD_ITEMS
 
 def make_msg_order_list(user_data) -> str:
