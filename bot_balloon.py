@@ -475,7 +475,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
                 text = "Введите сумму предоплаты цифрами не больше %d:" % order['summa']
                 update.message.reply_text(text)
                 return state_machine
-        if update.message.text != '/predoplata':
+        if context.user_data['last_msg'] != '/predoplata':
             edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'predoplata', predoplata)
         else:
             context.user_data['predoplata'] = predoplata
