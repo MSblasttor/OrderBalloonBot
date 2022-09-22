@@ -439,16 +439,19 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         update.message.reply_text(text)
         state_machine = CHANGE
         change(update, context)
-    elif state_machine == ORDER_EDIT and update.message.text == 'Оплата':
-        logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать оплату", user.first_name,
-                    context.user_data['select_order'])
+    elif state_machine == ORDER_EDIT and (update.message.text == 'Оплата' or update.message.text == '/predoplata'):
+        if update.message.text != '/predoplata':
+            logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать %s", user.first_name,
+                        context.user_data['select_order'], update.message.text)
+        else:
+            logger.info("Пользователь %s выбрал внесение предоплаты", user.first_name)
         context.user_data['last_msg'] = update.message.text
         reply_keyboard = [['100%', '50%', 'Другая сумма']]
         text = "Введите сумму предоплаты"
         update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
         # update.message.reply_text(text)
-    elif (state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'Оплата') or update.message.text == '/predoplata':
-        if update.message.text != '/predoplata':
+    elif state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'Оплата':
+        if context.user_data['last_msg'] != '/predoplata':
             logger.info("Пользователь %s выбрал заказ %d и отредактировал %s", user.first_name,
                         context.user_data['select_order'], context.user_data['last_msg'])
             order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
