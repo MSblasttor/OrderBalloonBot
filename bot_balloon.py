@@ -121,11 +121,11 @@ def change(update: Update,
         """Пользователь приступил к оформлению сметы. Выводим предложение составить заказ"""
         logger.info("%s выбрала оформление сметы", user.first_name)
         reply_text = "Отлично давай прикинем смету. Что будут заказывать?"
-        reply_keyboard = [['Латекс', 'Фольга', 'Баблс'], ['Стойка', 'Надпись', 'Другое'], ['/end']]
+        #reply_keyboard = [['Латекс', 'Фольга', 'Баблс'], ['Стойка', 'Надпись', 'Другое'], ['/end']]
         update.message.reply_text(
             reply_text,
             reply_markup=ReplyKeyboardMarkup(
-                reply_keyboard, one_time_keyboard=True
+                reply_keyboard_order_insert, one_time_keyboard=True
             ),
         )
         state_machine = ORDER_ADD_ITEMS
