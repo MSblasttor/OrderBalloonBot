@@ -158,3 +158,10 @@ def move_to_archive_from_orders(mdb, update, order_num):
     mdb.archives.insert_one(archive)  # сохраняем в коллекцию archives
     mdb.orders.delete_one({'user_id': user['user_id'], 'order_cnt': order_num}) # удаляем заказ из колекции orders
     return
+
+def recovery_from_archive_to_orders(mdb, update, order_num):
+    user = search_or_save_user(mdb, update.effective_user, update.message)
+    order = mdb.archives.find_one({'user_id': user['user_id'], 'order_cnt': order_num})
+    mdb.orders.insert_one(order)  # сохраняем в коллекцию orders
+    mdb.archives.delete_one({'user_id': user['user_id'], 'order_cnt': order_num}) # удаляем заказ из колекции orders
+    return
