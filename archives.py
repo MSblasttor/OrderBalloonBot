@@ -27,12 +27,19 @@ def archive(update: Update, context: CallbackContext) -> int:
     elif state_machine == ARCHIVE and update.message.text == 'Восстановить':
         logger.info("Пользователь %s выбрал заказ %d из архива чтобы восстановить", user.first_name,
                     context.user_data['select_order'])
-        #show_archive(update, context) ----> Добавить функцию по восстановлению заказа.
+        recovery_from_archive(update, context)
+
     return state_machine
 def move_to_archive(update, context):
     move_to_archive_from_orders(mdb, update, context.user_data['select_order'])
     reply_keyboard = [['Вернуться назад']]
     reply_text = "Заказ №" + str(context.user_data['select_order']) + " отправлен в АРХИВ"
+    update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+    return
+def recovery_from_archive(update, context):
+    recovery_from_archive_to_orders(mdb, update, context.user_data['select_order'])
+    reply_keyboard = [['Вернуться назад']]
+    reply_text = "Заказ №" + str(context.user_data['select_order']) + " восстановлен из АРХИВА"
     update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     return
 
