@@ -1401,7 +1401,7 @@ def main() -> None:
                               MessageHandler(Filters.regex('^(Баблс)$'), bubl),
                               MessageHandler(Filters.regex('^(Надпись)$'), label),
                               MessageHandler(Filters.regex('^(Стойка)$'), stand),
-                              MessageHandler(Filters.regex('^(Аксессуары)$'), accessories),
+                              MessageHandler(Filters.regex('^(Аксеcсуары)$'), accessories),
                               CommandHandler('end', end),
                               CommandHandler('add', order_insert),
                               MessageHandler(Filters.regex('^(Добавить)$'), order_insert),
