@@ -451,6 +451,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         reply_keyboard = [['100%', '50%', 'Другая сумма']]
         text = "Введите сумму предоплаты"
         update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+        return state_machine
         # update.message.reply_text(text)
     elif (state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'Оплата') or (state_machine == ORDER_ADD_ITEMS and context.user_data['last_msg'] == '/predoplata'):
         if context.user_data['last_msg'] != '/predoplata':
@@ -486,10 +487,10 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         else:
             context.user_data['predoplata'] = predoplata
             context.user_data['last_msg'] = update.message.text
-            text = "Внесена предоплата в размере " + update.message.text + " руб."
+            text = "Внесена предоплата в размере " + str(predoplata) + " руб."
             end(update, context)
             update.message.reply_text(text)
-
+            return state_machine
     elif state_machine == ORDER_EDIT and update.message.text == 'Состав заказа':
         logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать cостав", user.first_name,
                     context.user_data['select_order'])
