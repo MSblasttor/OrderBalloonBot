@@ -1295,7 +1295,7 @@ def error_input(update: Update,
         update.message.reply_text('Введите дату мероприятия в формате дд-мм-гг ЧЧ:ММ')
     elif state_machine == LATEX_COUNT:
         update.message.reply_text('Введите колличество шаров ЦИФРАМИ')
-    elif state_machine == LATEX_PRICE or state_machine == FOIL_NUM_PRICE or state_machine == FOIL_FIG_PRICE or state_machine == BUBL_PRICE or state_machine == STAND_PRICE:
+    elif state_machine == LATEX_PRICE or state_machine == FOIL_NUM_PRICE or state_machine == FOIL_FIG_PRICE or state_machine == BUBL_PRICE or state_machine == STAND_PRICE or state_machine == ACCESSORIES_PRICE:
         update.message.reply_text('Введите стоимость ЦИФРАМИ')
     elif state_machine == START or state_machine == ConversationHandler.END:
         update.message.reply_text('Чтобы начать разговор введите команду /start')
@@ -1456,7 +1456,11 @@ def main() -> None:
             STAND_PRICE: [MessageHandler(Filters.regex('^\d+$') & ~Filters.command, stand),
                           MessageHandler(Filters.text & ~Filters.command, error_input), CommandHandler('skip', skip)],
             #Аксессуары
-            ACCESSORIES: [MessageHandler(Filters.text & ~Filters.command, accessories), CommandHandler('skip', skip),CommandHandler('end', end)],
+            ACCESSORIES: [MessageHandler(Filters.text & ~Filters.command, accessories), CommandHandler('end', end)],
+            ACCESSORIES_CNT: [MessageHandler(Filters.regex('^\d+$') & ~Filters.command, accessories),
+                          MessageHandler(Filters.text & ~Filters.command, error_input), CommandHandler('end', end)],
+            ACCESSORIES_PRICE: [MessageHandler(Filters.regex('^\d+$') & ~Filters.command, accessories),
+                          MessageHandler(Filters.text & ~Filters.command, error_input), CommandHandler('end', end)],
 
             COMMENT: [MessageHandler(Filters.text & ~Filters.command, comment), CommandHandler('skip', skip)],
             # Комментарий
