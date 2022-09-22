@@ -477,14 +477,19 @@ def edit_order(update: Update, context: CallbackContext) -> int:
                 return state_machine
         if context.user_data['last_msg'] != '/predoplata':
             edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'predoplata', predoplata)
+            context.user_data['last_msg'] = update.message.text
+            text = "В заказе №" + str(
+                context.user_data['select_order']) + " внесена предоплата в размере " + update.message.text + " руб."
+            update.message.reply_text(text)
+            state_machine = CHANGE
+            change(update, context)
         else:
             context.user_data['predoplata'] = predoplata
-        context.user_data['last_msg'] = update.message.text
-        text = "В заказе №" + str(
-            context.user_data['select_order']) + " внесена предоплата в размере " + update.message.text + " руб."
-        update.message.reply_text(text)
-        state_machine = CHANGE
-        change(update, context)
+            context.user_data['last_msg'] = update.message.text
+            text = "Внесена предоплата в размере " + update.message.text + " руб."
+            end(update, context)
+            update.message.reply_text(text)
+
     elif state_machine == ORDER_EDIT and update.message.text == 'Состав заказа':
         logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать cостав", user.first_name,
                     context.user_data['select_order'])
