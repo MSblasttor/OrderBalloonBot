@@ -1087,6 +1087,14 @@ def accessories(update: Update, context: CallbackContext) -> int:  # Здесь 
             ),
         )
         state_machine = ACCESSORIES
+    elif state_machine == ACCESSORIES and (
+                update.message.text == 'Грузик' or update.message.text == 'Тассел' or update.message.text == 'Упаковочный пакет'):
+        """Пользователь указал тип аксессуара"""
+        logger.info("%s: %s", user.first_name, update.message.text)
+        # Сохраняем название фигуры
+        key = 'name'
+        value = update.message.text
+        context.user_data['order_dict'][key] = value  # order_dict[key] = value
     return state_machine
 
 def comment(update: Update, context: CallbackContext) -> int:  # Здесь пользователь выбрать добавить в заказ комментарий
