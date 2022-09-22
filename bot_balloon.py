@@ -346,6 +346,7 @@ def show_order(update: Update, context: CallbackContext) -> int:
 def edit_order(update: Update, context: CallbackContext) -> int:
     global state_machine
     user = update.message.from_user
+    print(update.message.text) #TODO убрать после теста
     if (state_machine == ORDER or state_machine == ORDER_CHANGE) and (
             update.message.text != 'ФИО' and update.message.text != 'Телефон' and update.message.text != 'Дата и время' and update.message.text != 'Состав заказа' and update.message.text != 'В архив' and update.message.text != 'Оплата' and update.message.text != 'Доставка' and update.message.text != '/predoplata' and update.message.text != '/dostavka'):
         state_machine = ORDER_EDIT
