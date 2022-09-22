@@ -50,8 +50,8 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-START, CHANGE, FIO, TEL, FROM, DATE, LOCATION, ORDER, ORDER_CHANGE, ORDER_REMOVE, ORDER_EDIT, ORDER_SHOW, ORDER_ADD_ITEMS, ARCHIVE, LATEX, LATEX_SIZE, LATEX_COLOR, LATEX_COUNT, LATEX_PRICE, FOIL, FOIL_CHANGE, FOIL_FIG, FOIL_FIG_NAME, FOIL_FIG_COLOR, FOIL_FIG_PRICE, FOIL_NUM, FOIL_NUM_NAME, FOIL_NUM_COLOR, FOIL_NUM_PRICE, BUBL_COLOR, BUBL_INSERT, BUBL_PRICE, BUBL_SIZE, LABEL_NAME, LABEL_COLOR, LABEL_PRICE, STAND_NAME, STAND_PRICE, ACCESSORIES, COMMENT = range(
-    39)
+START, CHANGE, FIO, TEL, FROM, DATE, LOCATION, ORDER, ORDER_CHANGE, ORDER_REMOVE, ORDER_EDIT, ORDER_SHOW, ORDER_ADD_ITEMS, ARCHIVE, LATEX, LATEX_SIZE, LATEX_COLOR, LATEX_COUNT, LATEX_PRICE, FOIL, FOIL_CHANGE, FOIL_FIG, FOIL_FIG_NAME, FOIL_FIG_COLOR, FOIL_FIG_PRICE, FOIL_NUM, FOIL_NUM_NAME, FOIL_NUM_COLOR, FOIL_NUM_PRICE, BUBL_COLOR, BUBL_INSERT, BUBL_PRICE, BUBL_SIZE, LABEL_NAME, LABEL_COLOR, LABEL_PRICE, STAND_NAME, STAND_PRICE, ACCESSORIES, ACCESSORIES_CNT, ACCESSORIES_PRICE, COMMENT = range(
+    42)
 
 state_machine = START
 order_cnt = 0
@@ -1087,14 +1087,48 @@ def accessories(update: Update, context: CallbackContext) -> int:  # Здесь 
             ),
         )
         state_machine = ACCESSORIES
-    elif state_machine == ACCESSORIES and (
-                update.message.text == 'Грузик' or update.message.text == 'Тассел' or update.message.text == 'Упаковочный пакет'):
+    elif state_machine == ACCESSORIES:
         """Пользователь указал тип аксессуара"""
         logger.info("%s: %s", user.first_name, update.message.text)
         # Сохраняем название фигуры
         key = 'name'
         value = update.message.text
-        context.user_data['order_dict'][key] = value  # order_dict[key] = value
+        context.user_data['order_dict'][key] = value
+        update.message.reply_text('Укажи кол-во '+ value)
+        state_machine = ACCESSORIES_CNT
+    elif state_machine == ACCESSORIES_CNT:
+        """Пользователь выбрал кол-во аксессуаров"""
+        logger.info("%s: %s", user.first_name, update.message.text)
+        # Сохраняем значение количества
+        key = 'count'
+        value = int(update.message.text)
+        context.user_data['order_dict'][key] = value
+        update.message.reply_text('Укажи стоимость аксессуара: ' + context.user_data['order_dict']['name'])
+        state_machine = ACCESSORIES_PRICE
+    elif state_machine == ACCESSORIES_PRICE:
+        """Пользователь указал цену аксессуаров"""
+        logger.info("%s: %s", user.first_name, update.message.text)
+        # Сохраняем значение цены
+        key = 'price'
+        value = int(update.message.text)
+        context.user_data['order_dict'][key] = value
+        key = 'count'
+        value_cnt = context.user_data['order_dict'][key]
+        summa = value * value_cnt
+        key = 'summa'
+        context.user_data['order_dict'][key] = summa
+        #print(context.user_data)
+        dict2 = copy.deepcopy(context.user_data['order_dict'])
+        order_list = context.user_data['order_list']
+        order_list.append(dict2)
+        #print(order_list)
+        context.user_data['order_list'] = order_list
+        state_machine = order_insert(update, context)
+    else:
+        """Сюда попадаем если не подошло не одно из значений"""
+        # logger.info("%s команда /skip", user.first_name)
+        reply_text = "Как ты сюда попал? Введи команду /cancel и попробуем снова"
+        update.message.reply_text(reply_text)
     return state_machine
 
 def comment(update: Update, context: CallbackContext) -> int:  # Здесь пользователь выбрать добавить в заказ комментарий
