@@ -469,7 +469,6 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         elif update.message.text == 'Другая сумма':
             text = "Введите сумму предоплаты цифрами:"
             update.message.reply_text(text)
-            return state_machine
         else:
             predoplata = int(update.message.text)
             if predoplata > order['summa']:
@@ -490,7 +489,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
             text = "Внесена предоплата в размере " + str(predoplata) + " руб."
             end(update, context)
             update.message.reply_text(text)
-            return state_machine
+        return state_machine
     elif state_machine == ORDER_EDIT and update.message.text == 'Состав заказа':
         logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать cостав", user.first_name,
                     context.user_data['select_order'])
