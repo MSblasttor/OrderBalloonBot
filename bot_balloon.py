@@ -1219,6 +1219,11 @@ def make_msg_order_list(user_data) -> str:
             # print (msg_str)
             message += '%d. ' % (count + 1)
             message += msg_str
+        elif result == 'accessories':
+            msg_str = '%(name)s Кол-во - %(count)d шт. Цена %(price)d руб.\n' % user_data['order_list'][count]
+            # print (msg_str)
+            message += '%d. ' % (count + 1)
+            message += msg_str
         elif result == 'other':
             msg_str = 'Другое: %(comment)s. Цена %(price)d руб. \n' % user_data['order_list'][count]
             # print (msg_str)
