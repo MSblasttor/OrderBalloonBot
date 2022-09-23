@@ -450,7 +450,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         text = "Введите сумму предоплаты"
         update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     elif (state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'Оплата') or (state_machine == ORDER_ADD_ITEMS and context.user_data['last_msg'] == '/predoplata'):
-        if context.user_data['last_msg'] != '/predoplata' or context.user_data['select_order'] != 0:
+        if context.user_data['last_msg'] != '/predoplata' or context.user_data['select_order'] is not None:
             logger.info("Пользователь %s выбрал заказ %d и отредактировал %s", user.first_name,
                         context.user_data['select_order'], context.user_data['last_msg'])
             order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
@@ -522,7 +522,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         text = "Введите сумму доставки до адреса: " + order['location']
         update.message.reply_text(text)
     elif (state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'Доставка') or (state_machine == ORDER_ADD_ITEMS and context.user_data['last_msg'] == '/dostavka'):
-        if context.user_data['last_msg'] != '/dostavka' or context.user_data['select_order'] != 0:
+        if context.user_data['last_msg'] != '/dostavka' or context.user_data['select_order'] is not None:
             logger.info("Пользователь %s выбрал заказ %d и внес стоимость доставки", user.first_name, context.user_data['select_order'])
             context.user_data['last_msg'] = update.message.text
             edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'dostavka', int(update.message.text))
