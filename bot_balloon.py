@@ -1447,7 +1447,7 @@ def main() -> None:
                          MessageHandler(Filters.regex('^(ФИО|Телефон|Дата и время|Адрес|'
                                                       'Состав заказа|Оплата|Доставка|100%|50%|Другая сумма'
                                                       '|Добавить|Удалить|В архив)$'), edit_order),
-                         MessageHandler(Filters.regex('^(Вернуться назад)$'), edit_order),
+                         MessageHandler(Filters.regex('^(Вернуться назад)$'), start),
                          MessageHandler(Filters.regex('^(В календарь)$'), finish)],
             ORDER_SHOW: [MessageHandler(Filters.regex('^(Добавить новый заказ)$'), order),
                          MessageHandler(Filters.regex('^(Редактировать заказ)$'), order),
