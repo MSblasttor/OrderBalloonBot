@@ -346,8 +346,6 @@ def show_order(update: Update, context: CallbackContext) -> int:
 def edit_order(update: Update, context: CallbackContext) -> int:
     global state_machine
     user = update.message.from_user
-    print(state_machine)
-    print(update.message.text) #TODO убрать после теста
     if (state_machine == ORDER or state_machine == ORDER_CHANGE) and (
             update.message.text != 'ФИО' and update.message.text != 'Телефон' and update.message.text != 'Дата и время' and update.message.text != 'Состав заказа' and update.message.text != 'В архив' and update.message.text != 'Оплата' and update.message.text != 'Доставка' and update.message.text != '/predoplata' and update.message.text != '/dostavka'):
         state_machine = ORDER_EDIT
@@ -1443,7 +1441,6 @@ def main() -> None:
                                                       '|Добавить|Удалить|В архив)$'), edit_order),
                          MessageHandler(Filters.regex('^(Вернуться назад)$'), start),
                          MessageHandler(Filters.regex('^(В календарь)$'), finish)],
-            # Выбор манипуляций с заказом  # TODO: внести изменение чтобы функция отрабатывала комманду "в архив"
             ORDER_SHOW: [MessageHandler(Filters.regex('^(Добавить новый заказ)$'), order),
                          MessageHandler(Filters.regex('^(Редактировать заказ)$'), order),
                          MessageHandler(Filters.regex('^(Удалить заказ)$'), remove_order),
