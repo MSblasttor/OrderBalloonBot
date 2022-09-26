@@ -65,7 +65,7 @@ def save_user_order(mdb, update, user_data):
         finish = mdb.orders.update_one(
             {'user_id': user['user_id'], 'order_cnt': user_data['select_order']},
             {'$set': {'order.order_list' : result_order_list}})
-        #print(finish)
+        print(finish)
     else:
         if user_data['summa'] != 0:
             user = search_or_save_user(mdb, update.effective_user, update.message)  # получаем данные из базы данных
