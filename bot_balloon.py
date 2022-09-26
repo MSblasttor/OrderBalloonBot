@@ -1253,7 +1253,7 @@ def end(update: Update,
     if context.user_data.get('select_order') is not None:
         order_num = context.user_data['select_order']
         order = show_order_user_from_db(mdb, update, order_num)
-        msg = make_msg_order_list()
+        msg = make_msg_order_list(order)
     else:
         msg = make_msg_order_list(context.user_data)
     update.message.reply_text('Итак давай посмотрим что получается')
