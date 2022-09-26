@@ -533,6 +533,8 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         if context.user_data['last_msg'] != '/dostavka' and context.user_data.get('select_order') is not None:
             logger.info("Пользователь %s выбрал заказ %d и внес стоимость доставки", user.first_name, context.user_data['select_order'])
             context.user_data['last_msg'] = update.message.text
+            order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
+            edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'summa', order['summa']+int(update.message.text))
             edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'dostavka', int(update.message.text))
             text = "В заказе №" + str(context.user_data['select_order']) + " внесена сумма доставки в размере " + update.message.text + " руб."
             update.message.reply_text(text)
@@ -541,7 +543,9 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         elif context.user_data['last_msg'] == '/dostavka' and context.user_data.get('select_order') is not None:
             logger.info("Пользователь %s выбрал заказ %d и внес стоимость доставки", user.first_name, context.user_data['select_order'])
             context.user_data['last_msg'] = update.message.text
+            order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
             edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'dostavka', int(update.message.text))
+            edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'summa', order['summa']+int(update.message.text))
             text = "В заказе №" + str(context.user_data['select_order']) + " внесена сумма доставки в размере " + update.message.text + " руб."
             update.message.reply_text(text)
 
