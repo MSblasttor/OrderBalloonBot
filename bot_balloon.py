@@ -566,13 +566,13 @@ def remove_order(update: Update, context: CallbackContext) -> int:
     logger.info("Пользователь %s приступил к редактированию заказов. Удаление ", user.first_name)
     if state_machine == ORDER_REMOVE:
         state_machine = CHANGE
-        # Сюда вставить функцию удаления заказа из БД #TODO: Вставить функцию удаления заказа из БД
+        move_to_trash_from_orders(mdb, update, int(update.message.text))
         text = "Заказ " + update.message.text + " удален."
         update.message.reply_text(text)
         change(update, context)
     elif state_machine == ORDER_CHANGE:
         state_machine = CHANGE
-        # Сюда вставить функцию удаления заказа из БД #TODO: Вставить функцию удаления заказа из БД
+        move_to_trash_from_orders(mdb, update, context.user_data['select_order'])
         text = "Заказ " + str(context.user_data['select_order']) + " удален."
         update.message.reply_text(text)
         change(update, context)
