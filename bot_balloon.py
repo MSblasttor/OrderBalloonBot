@@ -841,7 +841,7 @@ def foil(update: Update, context: CallbackContext) -> int:  # Здесь пол�
         logger.info("%s: %s", user.first_name, update.message.text)
         # Сохраняем название фигуры
         key = 'count'
-        value = update.message.text
+        value = int(update.message.text)
         context.user_data['order_dict'][key] = value
         update.message.reply_text('Укажи цену фигуры')
         state_machine = FOIL_FIG_PRICE
