@@ -65,7 +65,7 @@ def save_user_order(mdb, update, user_data):
         finish = mdb.orders.update_one(
             {'user_id': user['user_id'], 'order_cnt': user_data['select_order']},
             {'$set': {'order.order_list' : result_order_list}})
-        #print(finish)
+        print(finish)
     else:
         if user_data['summa'] != 0:
             user = search_or_save_user(mdb, update.effective_user, update.message)  # получаем данные из базы данных
@@ -156,6 +156,13 @@ def move_to_archive_from_orders(mdb, update, order_num):
     user = search_or_save_user(mdb, update.effective_user, update.message)
     archive = mdb.orders.find_one({'user_id': user['user_id'], 'order_cnt': order_num})
     mdb.archives.insert_one(archive)  # сохраняем в коллекцию archives
+    mdb.orders.delete_one({'user_id': user['user_id'], 'order_cnt': order_num}) # удаляем заказ из колекции orders
+    return
+
+def move_to_trash_from_orders(mdb, update, order_num):
+    user = search_or_save_user(mdb, update.effective_user, update.message)
+    trash = mdb.orders.find_one({'user_id': user['user_id'], 'order_cnt': order_num})
+    mdb.trash.insert_one(trash)  # сохраняем в коллекцию archives
     mdb.orders.delete_one({'user_id': user['user_id'], 'order_cnt': order_num}) # удаляем заказ из колекции orders
     return
 

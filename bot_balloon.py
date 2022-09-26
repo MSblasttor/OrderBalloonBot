@@ -50,8 +50,8 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-START, CHANGE, FIO, TEL, FROM, DATE, LOCATION, ORDER, ORDER_CHANGE, ORDER_REMOVE, ORDER_EDIT, ORDER_SHOW, ORDER_ADD_ITEMS, ARCHIVE, LATEX, LATEX_SIZE, LATEX_COLOR, LATEX_COUNT, LATEX_PRICE, FOIL, FOIL_CHANGE, FOIL_FIG, FOIL_FIG_NAME, FOIL_FIG_COLOR, FOIL_FIG_PRICE, FOIL_NUM, FOIL_NUM_NAME, FOIL_NUM_COLOR, FOIL_NUM_PRICE, BUBL_COLOR, BUBL_INSERT, BUBL_PRICE, BUBL_SIZE, LABEL_NAME, LABEL_COLOR, LABEL_PRICE, STAND_NAME, STAND_PRICE, ACCESSORIES, ACCESSORIES_CNT, ACCESSORIES_PRICE, ACCESSORIES_COMMENT, COMMENT = range(
-    43)
+START, CHANGE, FIO, TEL, FROM, DATE, LOCATION, ORDER, ORDER_CHANGE, ORDER_REMOVE, ORDER_EDIT, ORDER_SHOW, ORDER_ADD_ITEMS, ARCHIVE, LATEX, LATEX_SIZE, LATEX_COLOR, LATEX_COUNT, LATEX_PRICE, FOIL, FOIL_CHANGE, FOIL_FIG, FOIL_FIG_NAME, FOIL_FIG_COLOR, FOIL_FIG_CNT, FOIL_FIG_PRICE, FOIL_NUM, FOIL_NUM_NAME, FOIL_NUM_COLOR, FOIL_NUM_PRICE, BUBL_COLOR, BUBL_INSERT, BUBL_PRICE, BUBL_SIZE, LABEL_NAME, LABEL_COLOR, LABEL_PRICE, STAND_NAME, STAND_PRICE, ACCESSORIES, ACCESSORIES_CNT, ACCESSORIES_PRICE, ACCESSORIES_COMMENT, COMMENT = range(
+    44)
 
 state_machine = START
 order_cnt = 0
@@ -71,6 +71,7 @@ def start(update: Update, context: CallbackContext) -> int:
     order_sheet = {'fio': 0, 'tel': 0, 'date': 0, 'location': 0, 'order_list': order_list, 'comment': 0}
     context.user_data.update(order_sheet)
     print(user['id'])
+    context.user_data['last_msg'] = str(user['id'])
     user = search_or_save_user(mdb, update.effective_user, update.message)  # получаем данные из базы данных
     global state_machine
     state_machine = CHANGE
@@ -479,6 +480,13 @@ def edit_order(update: Update, context: CallbackContext) -> int:
             update.message.reply_text(text)
             state_machine = CHANGE
             change(update, context)
+        elif context.user_data['last_msg'] == '/predoplata' and context.user_data.get('select_order') is not None:
+            edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'predoplata', predoplata)
+            context.user_data['last_msg'] = update.message.text
+            text = "В заказе №" + str(
+                context.user_data['select_order']) + " внесена предоплата в размере " + update.message.text + " руб."
+            update.message.reply_text(text)
+            end(update, context)
         else:
             context.user_data['predoplata'] = predoplata
             context.user_data['last_msg'] = update.message.text
@@ -522,14 +530,26 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         text = "Введите сумму доставки до адреса: " + order['location']
         update.message.reply_text(text)
     elif (state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'Доставка') or (state_machine == ORDER_ADD_ITEMS and context.user_data['last_msg'] == '/dostavka'):
-        if context.user_data['last_msg'] != '/dostavka' or context.user_data.get('select_order') is not None:
+        if context.user_data['last_msg'] != '/dostavka' and context.user_data.get('select_order') is not None:
             logger.info("Пользователь %s выбрал заказ %d и внес стоимость доставки", user.first_name, context.user_data['select_order'])
             context.user_data['last_msg'] = update.message.text
+            order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
+            edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'summa', order['summa']+int(update.message.text))
             edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'dostavka', int(update.message.text))
             text = "В заказе №" + str(context.user_data['select_order']) + " внесена сумма доставки в размере " + update.message.text + " руб."
             update.message.reply_text(text)
             state_machine = CHANGE
             change(update, context)
+        elif context.user_data['last_msg'] == '/dostavka' and context.user_data.get('select_order') is not None:
+            logger.info("Пользователь %s выбрал заказ %d и внес стоимость доставки", user.first_name, context.user_data['select_order'])
+            context.user_data['last_msg'] = update.message.text
+            order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
+            edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'dostavka', int(update.message.text))
+            edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'summa', order['summa']+int(update.message.text))
+            text = "В заказе №" + str(context.user_data['select_order']) + " внесена сумма доставки в размере " + update.message.text + " руб."
+            update.message.reply_text(text)
+
+            end(update, context)
         else:
             logger.info("Пользователь %s выбрал и внес стоимость доставки", user.first_name)
             context.user_data['last_msg'] = update.message.text
@@ -546,13 +566,13 @@ def remove_order(update: Update, context: CallbackContext) -> int:
     logger.info("Пользователь %s приступил к редактированию заказов. Удаление ", user.first_name)
     if state_machine == ORDER_REMOVE:
         state_machine = CHANGE
-        # Сюда вставить функцию удаления заказа из БД #TODO: Вставить функцию удаления заказа из БД
+        move_to_trash_from_orders(mdb, update, int(update.message.text))
         text = "Заказ " + update.message.text + " удален."
         update.message.reply_text(text)
         change(update, context)
     elif state_machine == ORDER_CHANGE:
         state_machine = CHANGE
-        # Сюда вставить функцию удаления заказа из БД #TODO: Вставить функцию удаления заказа из БД
+        move_to_trash_from_orders(mdb, update, context.user_data['select_order'])
         text = "Заказ " + str(context.user_data['select_order']) + " удален."
         update.message.reply_text(text)
         change(update, context)
@@ -833,6 +853,15 @@ def foil(update: Update, context: CallbackContext) -> int:  # Здесь пол�
         key = 'color'
         value = update.message.text
         context.user_data['order_dict'][key] = value
+        update.message.reply_text('Укажи кол-во фигур')
+        state_machine = FOIL_FIG_CNT
+    elif state_machine == FOIL_FIG_CNT:
+        """Пользователь указал кол-во ФИГУР"""
+        logger.info("%s: %s", user.first_name, update.message.text)
+        # Сохраняем название фигуры
+        key = 'count'
+        value = int(update.message.text)
+        context.user_data['order_dict'][key] = value
         update.message.reply_text('Укажи цену фигуры')
         state_machine = FOIL_FIG_PRICE
     elif state_machine == FOIL_FIG_PRICE:
@@ -842,14 +871,15 @@ def foil(update: Update, context: CallbackContext) -> int:  # Здесь пол�
         value = int(update.message.text)
         context.user_data['order_dict'][key] = value
         key = 'count'
-        context.user_data['order_dict'][key] = 1
+        value_cnt = context.user_data['order_dict'][key]
+        summa = value * value_cnt
         key = 'summa'
-        context.user_data['order_dict'][key] = value
-        print(context.user_data)
+        context.user_data['order_dict'][key] = summa
+        #print(context.user_data)
         dict2 = copy.deepcopy(context.user_data['order_dict'])
         order_list = context.user_data['order_list']
         order_list.append(dict2)
-        print(order_list)
+        #print(order_list)
         context.user_data['order_list'] = order_list
         # Здесь необходимо сохранить словарь по данной ФИГУРЕ
         state_machine = order_insert(update, context)
@@ -1085,17 +1115,32 @@ def label(update: Update, context: CallbackContext) -> int:  # Здесь пол
         )
         state_machine = LABEL_COLOR
     elif state_machine == LABEL_COLOR:
-        """Пользователь указал цвет НАДПИСИ"""
+        """Пользователь указал цвет ЦИФРЫ"""
         logger.info("%s: %s", user.first_name, update.message.text)
-        # Сохраняем цвет надписи
+        # Сохраняем цвет цифры
         key = 'color'
         value = update.message.text
+        context.user_data['order_dict'][key] = value
+        update.message.reply_text('Укажи стоимость надписи')
+        state_machine = LABEL_PRICE
+    elif state_machine == LABEL_PRICE:
+        """Пользователь указал цвет НАДПИСИ"""
+        logger.info("%s: %s", user.first_name, update.message.text)
+        """Пользователь указал стоимость ЦИФРЫ"""
+        logger.info("%s: %s", user.first_name, update.message.text)
+        # Сохраняем цену надписи
+        key = 'price'
+        value = int(update.message.text)
+        context.user_data['order_dict'][key] = value
+        key = 'count'
+        context.user_data['order_dict'][key] = 1
+        key = 'summa'
         context.user_data['order_dict'][key] = value
         dict2 = copy.deepcopy(context.user_data['order_dict'])
         order_list = context.user_data['order_list']
         order_list.append(dict2)
-        print(order_list)
         context.user_data['order_list'] = order_list
+        # Здесь необходимо сохранить словарь по данной надписи
         state_machine = order_insert(update, context)
     return state_machine
 
@@ -1209,7 +1254,12 @@ def end(update: Update,
     """Пользователь завершил заполнение формы"""
     user = update.message.from_user
     logger.info("Пользователь %s завершил заполнение форм", user.first_name)
-    msg = make_msg_order_list(context.user_data)
+    if context.user_data.get('select_order') is not None:
+        order_num = context.user_data['select_order']
+        order = show_order_user_from_db(mdb, update, order_num)
+        msg = make_msg_order_list(order)
+    else:
+        msg = make_msg_order_list(context.user_data)
     update.message.reply_text('Итак давай посмотрим что получается')
     update.message.reply_text(msg)
     reply_keyboard = [['/add'], ['/remove'], ['/predoplata'], ['/dostavka'], ['/comment'], ['/finish']]
@@ -1241,13 +1291,13 @@ def make_msg_order_list(user_data) -> str:
         elif result == 'foil_fig' and not (
                 user_data['order_list'][count]["name"] == 'Сердце' or user_data['order_list'][count][
             "name"] == 'Звезда' or user_data['order_list'][count]["name"] == 'Круг'):
-            msg_str = 'Фигура %(name)s Цена %(price)d руб. \n' % user_data['order_list'][count]
+            msg_str = 'Фигура %(name)s Кол-во - %(count)d шт. Цена %(price)d руб. \n' % user_data['order_list'][count]
             message += '%d. ' % (count + 1)
             message += msg_str
         elif result == 'foil_fig' and (
                 user_data['order_list'][count]["name"] == 'Сердце' or user_data['order_list'][count][
             "name"] == 'Звезда' or user_data['order_list'][count]["name"] == 'Круг'):
-            msg_str = 'Фигура %(name)s Цвет: %(color)s Цена %(price)d руб. \n' % user_data['order_list'][count]
+            msg_str = 'Фигура %(name)s Цвет: %(color)s Кол-во - %(count)d шт. Цена %(price)d руб. \n' % user_data['order_list'][count]
             # print (msg_str)
             message += '%d. ' % (count + 1)
             message += msg_str
@@ -1263,7 +1313,7 @@ def make_msg_order_list(user_data) -> str:
             message += '%d. ' % (count + 1)
             message += msg_str
         elif result == 'label':
-            msg_str = 'Надпись %(name)s Цвет: %(color)s. \n' % user_data['order_list'][count]
+            msg_str = 'Надпись %(name)s Цвет: %(color)s Цена %(price)d руб.\n' % user_data['order_list'][count]
             # print (msg_str)
             message += '%d. ' % (count + 1)
             message += msg_str
@@ -1350,10 +1400,10 @@ def error_input(update: Update,
     if state_machine == TEL:
         update.message.reply_text('Введите номер телефона в формате +7 999 123 44 55')
     elif state_machine == DATE:
-        update.message.reply_text('Введите дату мероприятия в формате дд-мм-гг ЧЧ:ММ')
+        update.message.reply_text('Введите дату мероприятия в формате дд.мм.гг ЧЧ:ММ')
     elif state_machine == LATEX_COUNT:
         update.message.reply_text('Введите колличество шаров ЦИФРАМИ')
-    elif state_machine == LATEX_PRICE or state_machine == FOIL_NUM_PRICE or state_machine == FOIL_FIG_PRICE or state_machine == BUBL_PRICE or state_machine == STAND_PRICE or state_machine == ACCESSORIES_PRICE:
+    elif state_machine == LATEX_PRICE or state_machine == FOIL_NUM_PRICE or state_machine == FOIL_FIG_PRICE or state_machine == BUBL_PRICE or state_machine == STAND_PRICE  or state_machine == FOIL_FIG_CNT or state_machine == ACCESSORIES_PRICE:
         update.message.reply_text('Введите стоимость ЦИФРАМИ')
     elif state_machine == START or state_machine == ConversationHandler.END:
         update.message.reply_text('Чтобы начать разговор введите команду /start')
@@ -1492,6 +1542,9 @@ def main() -> None:
             FOIL_FIG_NAME: [MessageHandler(Filters.text & ~Filters.command, foil), CommandHandler('skip', skip)],
             # Фигуры из фольги
             FOIL_FIG_COLOR: [MessageHandler(Filters.text & ~Filters.command, foil), CommandHandler('skip', skip)],
+            FOIL_FIG_CNT: [MessageHandler(Filters.regex('^\d+$') & ~Filters.command, foil),
+                             MessageHandler(Filters.text & ~Filters.command, error_input),
+                             CommandHandler('skip', skip)],
             FOIL_FIG_PRICE: [MessageHandler(Filters.regex('^\d+$') & ~Filters.command, foil),
                              MessageHandler(Filters.text & ~Filters.command, error_input),
                              CommandHandler('skip', skip)],
