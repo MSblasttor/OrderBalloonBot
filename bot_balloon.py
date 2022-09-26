@@ -480,7 +480,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
             update.message.reply_text(text)
             state_machine = CHANGE
             change(update, context)
-        if context.user_data['last_msg'] == '/predoplata' and context.user_data.get('select_order') is not None:
+        elif context.user_data['last_msg'] == '/predoplata' and context.user_data.get('select_order') is not None:
             edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'predoplata', predoplata)
             context.user_data['last_msg'] = update.message.text
             text = "В заказе №" + str(
@@ -544,6 +544,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
             edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'dostavka', int(update.message.text))
             text = "В заказе №" + str(context.user_data['select_order']) + " внесена сумма доставки в размере " + update.message.text + " руб."
             update.message.reply_text(text)
+
             end(update, context)
         else:
             logger.info("Пользователь %s выбрал и внес стоимость доставки", user.first_name)
@@ -1249,7 +1250,12 @@ def end(update: Update,
     """Пользователь завершил заполнение формы"""
     user = update.message.from_user
     logger.info("Пользователь %s завершил заполнение форм", user.first_name)
-    msg = make_msg_order_list(context.user_data)
+    if context.user_data.get('select_order') is not None:
+        order_num = context.user_data['select_order']
+        order = show_order_user_from_db(mdb, update, order_num)
+        msg = make_msg_order_list()
+    else:
+        msg = make_msg_order_list(context.user_data)
     update.message.reply_text('Итак давай посмотрим что получается')
     update.message.reply_text(msg)
     reply_keyboard = [['/add'], ['/remove'], ['/predoplata'], ['/dostavka'], ['/comment'], ['/finish']]
