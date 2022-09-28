@@ -1457,14 +1457,6 @@ def callback_button_pressed(update: Update, context: CallbackContext) -> None:
     # return state_machine
 
 # errror handler
-def error(update,context):
-
-    print(f"Update the context error : {context.error}")
-    global state_machine
-    state_machine = ConversationHandler.END  # выходим из диалога
-    text = "Возникла ошибка. Сообщите администратору. Попробуй заново /cancel"
-    update.message.reply_text(text)
-
 def error_handler(update: object, context: CallbackContext) -> None:
     """Log the error and send a telegram message to notify the developer."""
     # Log the error before we do anything else, so we can see it even if something breaks.
@@ -1488,8 +1480,9 @@ def error_handler(update: object, context: CallbackContext) -> None:
     )
 
     # Finally, send the message
-    #context.bot.send_message(chat_id=DEVELOPER_CHAT_ID, text=message, parse_mode=ParseMode.HTML)
     context.bot.send_message(chat_id=DEVELOPER_CHAT_ID, text=message, parse_mode=ParseMode.HTML)
+    text = "Возникла ошибка. Сообщите администратору. Попробуй заново /cancel"
+    update.message.reply_text(text)
 
 def bad_command(update: Update, context: CallbackContext) -> None:
     """Raise an error to trigger the error handler."""
