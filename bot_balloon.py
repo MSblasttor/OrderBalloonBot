@@ -1256,6 +1256,7 @@ def end(update: Update,
     logger.info("Пользователь %s завершил заполнение форм", user.first_name)
     if context.user_data.get('select_order') is not None:
         order_num = context.user_data['select_order']
+        print(order_num)
         order = show_order_user_from_db(mdb, update, order_num)
         msg = make_msg_order_list(order)
     else:
@@ -1493,11 +1494,11 @@ def main() -> None:
                            MessageHandler(Filters.regex('^(Вывести список заказов)$'), show_list_order),
                            MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],  # Выбор манипуляций с заказом
             ORDER_EDIT: [MessageHandler(Filters.contact, edit_order),
-                         MessageHandler(Filters.text & ~Filters.command, edit_order),
+                         MessageHandler(Filters.regex('^(Вернуться назад)$'), start),
+                         MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), edit_order),
                          MessageHandler(Filters.regex('^(ФИО|Телефон|Дата и время|Адрес|'
                                                       'Состав заказа|Оплата|Доставка|100%|50%|Другая сумма'
                                                       '|Добавить|Удалить|В архив)$'), edit_order),
-                         MessageHandler(Filters.regex('^(Вернуться назад)$'), start),
                          MessageHandler(Filters.regex('^(В календарь)$'), finish)],
             ORDER_SHOW: [MessageHandler(Filters.regex('^(Добавить новый заказ)$'), order),
                          MessageHandler(Filters.regex('^(Редактировать заказ)$'), order),
