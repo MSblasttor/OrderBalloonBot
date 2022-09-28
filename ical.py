@@ -20,7 +20,10 @@ def make_ical_from_order(order, msg):
 
     #event.add('dtstart', datetime(2022, 1, 25, 8, 0, 0, tzinfo=pytz.utc))
     #event.add('dtend', datetime(2022, 1, 25, 10, 0, 0, tzinfo=pytz.utc))
-    start_time = datetime.strptime(order['order']['date'], '%d.%m.%y %H:%M')
+    if order['order']['date'] != '0':
+        start_time = datetime.strptime(order['order']['date'], '%d.%m.%y %H:%M')
+    else:
+        start_time = datetime.strptime('01.01.20 12:00', '%d.%m.%y %H:%M')
     event.add('dtstart', vDatetime(start_time))
     event.add('dtend', vDatetime(start_time))
     event['location'] = vText(order['order']['location'])
