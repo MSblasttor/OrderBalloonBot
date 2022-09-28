@@ -17,6 +17,11 @@ import logging
 import copy
 import re
 
+# Добавил для обработки исключений возникающих при ошибках
+import json
+import traceback
+import html
+
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ParseMode, \
     Update, Bot
 from telegram.ext import (
@@ -33,7 +38,7 @@ from io import BytesIO
 
 from mongodb import *
 
-from settings import TG_TOKEN
+from settings import TG_TOKEN, DEVELOPER_CHAT_ID
 
 from keyboars import *
 
@@ -166,7 +171,7 @@ def order(update: Update, context: CallbackContext) -> int:  # Здесь пол
         value = phone
         context.user_data[key] = value
         reply_text = 'Хорошо. Теперь выберете откуда заказчик о вас узнал \n или отправь /skip если ты не знаешь'
-        reply_keyboard = [['Инстаграм', 'Авито', 'ВКонтакте'], ['Telegram', 'WhatshApp', 'Viber'], ['Другое'], ['/skip']]
+        reply_keyboard = [['Инстаграм', 'Авито', 'ВКонтакте'], ['Telegram', 'WhatsApp', 'Viber'], ['Другое'], ['/skip']]
         update.message.reply_text(
             reply_text,
             reply_markup=ReplyKeyboardMarkup(
@@ -640,9 +645,11 @@ def skip(update: Update, context: CallbackContext) -> int:  # Здесь пол�
         value = '0'
         context.user_data[key] = value
         logger.info("Пользователь %s не прислал номер телефона заказчика", user.first_name)
-        reply_text = 'Плохо что нет номера заказчика, лучше уточнить на будушее. Теперь пришли дату мероприятия, или отправь /skip.'
-        update.message.reply_text(reply_text)
-    if update.message.text == '/skip' and state_machine == FROM:
+        reply_text = 'Плохо что нет номера заказчика, лучше уточнить на будушее. Теперь выбери откуда о пришёл заказчик, или отправь /skip.'
+        reply_keyboard = [['Инстаграм', 'Авито', 'ВКонтакте'], ['Telegram', 'WhatsApp', 'Viber'], ['Другое'],
+                          ['/skip']]
+        update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+    elif update.message.text == '/skip' and state_machine == FROM:
         state_machine = DATE
         # Сохраняем значение
         key = 'from'
@@ -1391,6 +1398,7 @@ def finish(update: Update,
         update.message.reply_text(text, parse_mode=ParseMode.HTML)
     else:
         text = "Заказ не сохранен так как нечего сохранять. Попробуй заново /start"
+        update.message.reply_text(text)
     context.user_data.clear() #Очищаем данные пользователя после сохранения заказа
     state_machine = ConversationHandler.END  # выходим из диалога
     return state_machine
@@ -1449,6 +1457,39 @@ def callback_button_pressed(update: Update, context: CallbackContext) -> None:
         state_machine = CHANGE
         change(update, context)
     # return state_machine
+
+# errror handler
+def error_handler(update: object, context: CallbackContext) -> None:
+    """Log the error and send a telegram message to notify the developer."""
+    # Log the error before we do anything else, so we can see it even if something breaks.
+    logger.error(msg="Exception while handling an update:", exc_info=context.error)
+
+    # traceback.format_exception returns the usual python message about an exception, but as a
+    # list of strings rather than a single string, so we have to join them together.
+    tb_list = traceback.format_exception(None, context.error, context.error.__traceback__)
+    tb_string = ''.join(tb_list)
+
+    # Build the message with some markup and additional information about what happened.
+    # You might need to add some logic to deal with messages longer than the 4096 character limit.
+    update_str = update.to_dict() if isinstance(update, Update) else str(update)
+    message = (
+        f'An exception was raised while handling an update\n'
+        f'<pre>update = {html.escape(json.dumps(update_str, indent=2, ensure_ascii=False))}'
+        '</pre>\n\n'
+        f'<pre>context.chat_data = {html.escape(str(context.chat_data))}</pre>\n\n'
+        f'<pre>context.user_data = {html.escape(str(context.user_data))}</pre>\n\n'
+        f'<pre>{html.escape(tb_string)}</pre>'
+    )
+
+    # Finally, send the message
+    context.bot.send_message(chat_id=DEVELOPER_CHAT_ID, text=message, parse_mode=ParseMode.HTML)
+    text = "Возникла ошибка. Сообщите администратору. Попробуй заново /cancel"
+    update.message.reply_text(text)
+
+def bad_command(update: Update, context: CallbackContext) -> None:
+    """Raise an error to trigger the error handler."""
+    context.bot.wrong_method_name()  # type: ignore[attr-defined]
+
 
 def main() -> None:
     """Run the bot."""
@@ -1591,6 +1632,10 @@ def main() -> None:
     )
 
     dispatcher.add_handler(conv_handler)
+
+    dispatcher.add_handler(CommandHandler('bad_command', bad_command))
+    # error handlers
+    dispatcher.add_error_handler(error_handler)
 
     # Start the Bot
     updater.start_polling()
