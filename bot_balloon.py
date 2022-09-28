@@ -1391,6 +1391,7 @@ def finish(update: Update,
         update.message.reply_text(text, parse_mode=ParseMode.HTML)
     else:
         text = "Заказ не сохранен так как нечего сохранять. Попробуй заново /start"
+        update.message.reply_text(text)
     context.user_data.clear() #Очищаем данные пользователя после сохранения заказа
     state_machine = ConversationHandler.END  # выходим из диалога
     return state_machine
@@ -1452,7 +1453,13 @@ def callback_button_pressed(update: Update, context: CallbackContext) -> None:
 
 # errror handler
 def error(update,context):
+
     print(f"Update the context error : {context.error}")
+    global state_machine = ConversationHandler.END  # выходим из диалога
+    text = "Возникла ошибка. Сообщите администратору. Попробуй заново /start"
+    update.message.reply_text(text)
+
+
 
 
 def main() -> None:
