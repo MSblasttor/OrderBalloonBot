@@ -645,8 +645,10 @@ def skip(update: Update, context: CallbackContext) -> int:  # Здесь пол�
         value = '0'
         context.user_data[key] = value
         logger.info("Пользователь %s не прислал номер телефона заказчика", user.first_name)
-        reply_text = 'Плохо что нет номера заказчика, лучше уточнить на будушее. Теперь пришли дату мероприятия, или отправь /skip.'
-        update.message.reply_text(reply_text)
+        reply_text = 'Плохо что нет номера заказчика, лучше уточнить на будушее. Теперь выбери откуда о пришёл заказчик, или отправь /skip.'
+        reply_keyboard = [['Инстаграм', 'Авито', 'ВКонтакте'], ['Telegram', 'WhatshApp', 'Viber'], ['Другое'],
+                          ['/skip']]
+        update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     if update.message.text == '/skip' and state_machine == FROM:
         state_machine = DATE
         # Сохраняем значение
