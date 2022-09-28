@@ -72,6 +72,7 @@ def start(update: Update, context: CallbackContext) -> int:
     context.user_data.update(order_sheet)
     print(user['id'])
     context.user_data['last_msg'] = str(user['id'])
+    context.user_data['select_order'] = 0
     user = search_or_save_user(mdb, update.effective_user, update.message)  # получаем данные из базы данных
     global state_machine
     state_machine = CHANGE
