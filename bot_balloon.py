@@ -1496,7 +1496,7 @@ def main() -> None:
                            MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],  # Выбор манипуляций с заказом
             ORDER_EDIT: [MessageHandler(Filters.contact, edit_order),
                          MessageHandler(Filters.regex('^(Вернуться назад)$'), start),
-                         MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), edit_order),
+                         MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$') & ~Filters.regex('^(В календарь)$'), edit_order),
                          MessageHandler(Filters.regex('^(ФИО|Телефон|Дата и время|Адрес|'
                                                       'Состав заказа|Оплата|Доставка|100%|50%|Другая сумма'
                                                       '|Добавить|Удалить|В архив)$'), edit_order),
