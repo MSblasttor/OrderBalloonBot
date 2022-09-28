@@ -20,6 +20,7 @@ import re
 # Добавил для обработки исключений возникающих при ошибках
 import json
 import traceback
+import html
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ParseMode, \
     Update, Bot
