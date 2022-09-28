@@ -1255,13 +1255,15 @@ def end(update: Update,
     """Пользователь завершил заполнение формы"""
     user = update.message.from_user
     logger.info("Пользователь %s завершил заполнение форм", user.first_name)
-    if context.user_data.get('select_order') is not None and context.user_data['select_order'] != 0:
-        order_num = context.user_data['select_order']
-        print(order_num)
-        order = show_order_user_from_db(mdb, update, order_num)
-        msg = make_msg_order_list(order)
-    else:
-        msg = make_msg_order_list(context.user_data)
+    # if context.user_data.get('select_order') is not None and context.user_data['select_order'] != 0:
+    #     order_num = context.user_data['select_order']
+    #     print(order_num) #debug TODO: Delete
+    #     order = show_order_user_from_db(mdb, update, order_num)
+    #     msg = make_msg_order_list(order)
+    # else:
+    #     print('make msg frome user_data') #debug TODO: Delete
+    #     msg = make_msg_order_list(context.user_data)
+    msg = make_msg_order_list(context.user_data)
     update.message.reply_text('Итак давай посмотрим что получается')
     update.message.reply_text(msg)
     reply_keyboard = [['/add'], ['/remove'], ['/predoplata'], ['/dostavka'], ['/comment'], ['/finish']]
