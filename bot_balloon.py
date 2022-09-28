@@ -1489,9 +1489,11 @@ def error_handler(update: object, context: CallbackContext) -> None:
 
     # Finally, send the message
     #context.bot.send_message(chat_id=DEVELOPER_CHAT_ID, text=message, parse_mode=ParseMode.HTML)
-    update.message.reply_text(chat_id=DEVELOPER_CHAT_ID, text=message, parse_mode=ParseMode.HTML)
+    context.bot.send_message(chat_id=DEVELOPER_CHAT_ID, text=message, parse_mode=ParseMode.HTML)
 
-
+def bad_command(update: Update, context: CallbackContext) -> None:
+    """Raise an error to trigger the error handler."""
+    context.bot.wrong_method_name()  # type: ignore[attr-defined]
 
 
 def main() -> None:
@@ -1635,6 +1637,8 @@ def main() -> None:
     )
 
     dispatcher.add_handler(conv_handler)
+
+    dispatcher.add_handler(CommandHandler('bad_command', bad_command))
     # error handlers
     dispatcher.add_error_handler(error_handler)
 
