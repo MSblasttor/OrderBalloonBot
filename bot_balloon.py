@@ -649,7 +649,7 @@ def skip(update: Update, context: CallbackContext) -> int:  # Здесь пол�
         reply_keyboard = [['Инстаграм', 'Авито', 'ВКонтакте'], ['Telegram', 'WhatshApp', 'Viber'], ['Другое'],
                           ['/skip']]
         update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
-    if update.message.text == '/skip' and state_machine == FROM:
+    elif update.message.text == '/skip' and state_machine == FROM:
         state_machine = DATE
         # Сохраняем значение
         key = 'from'
