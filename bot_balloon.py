@@ -1488,7 +1488,8 @@ def error_handler(update: object, context: CallbackContext) -> None:
     )
 
     # Finally, send the message
-    context.bot.send_message(chat_id=DEVELOPER_CHAT_ID, text=message, parse_mode=ParseMode.HTML)
+    #context.bot.send_message(chat_id=DEVELOPER_CHAT_ID, text=message, parse_mode=ParseMode.HTML)
+    update.message.reply_text(text, parse_mode=ParseMode.HTML)
 
 
 
