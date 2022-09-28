@@ -1506,6 +1506,7 @@ def main() -> None:
                          MessageHandler(Filters.regex('^(Удалить заказ)$'), remove_order),
                          MessageHandler(Filters.regex('^[1-9][0-9]*$'), remove_order),
                          MessageHandler(Filters.regex('^(Вывести список заказов)$'), show_list_order),
+                         MessageHandler(Filters.regex('^(В календарь)$'), finish),
                          MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],  # Выбор манипуляций с заказом
             ORDER_ADD_ITEMS: [MessageHandler(Filters.regex('^(Латекс)$'), latex),
                               MessageHandler(Filters.regex('^(Фольга)$'), foil),
