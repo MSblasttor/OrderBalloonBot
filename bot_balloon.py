@@ -38,7 +38,7 @@ from io import BytesIO
 
 from mongodb import *
 
-from settings import TG_TOKEN
+from settings import TG_TOKEN, DEVELOPER_CHAT_ID
 
 from keyboars import *
 
@@ -1489,7 +1489,7 @@ def error_handler(update: object, context: CallbackContext) -> None:
 
     # Finally, send the message
     #context.bot.send_message(chat_id=DEVELOPER_CHAT_ID, text=message, parse_mode=ParseMode.HTML)
-    update.message.reply_text(text=message, parse_mode=ParseMode.HTML)
+    update.message.reply_text(chat_id=DEVELOPER_CHAT_ID, text=message, parse_mode=ParseMode.HTML)
 
 
 
