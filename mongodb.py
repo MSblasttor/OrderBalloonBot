@@ -70,7 +70,6 @@ def save_user_order(mdb, update, user_data):
         #print(finish)
         order = mdb.orders.find_one({'user_id': user['user_id'], 'order_cnt': user_data['select_order']})
     else:
-        print('save fail')
         if user_data['summa'] != 0:
             user = search_or_save_user(mdb, update.effective_user, update.message)  # получаем данные из базы данных
             mdb.users.update_one(
