@@ -1246,7 +1246,7 @@ def cancel(update: Update, context: CallbackContext) -> int:  # Здесь пр�
     update.message.reply_text(
         'Пока! Я надеюсь тебе все понравилось и ты вернешься в следующий раз', reply_markup=ReplyKeyboardRemove()
     )
-
+    context.user_data.clear()  # Очищаем данные пользователя после завершения диалога
     return ConversationHandler.END
 
 def end(update: Update,
