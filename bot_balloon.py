@@ -171,7 +171,7 @@ def order(update: Update, context: CallbackContext) -> int:  # Здесь пол
         value = phone
         context.user_data[key] = value
         reply_text = 'Хорошо. Теперь выберете откуда заказчик о вас узнал \n или отправь /skip если ты не знаешь'
-        reply_keyboard = [['Инстаграм', 'Авито', 'ВКонтакте'], ['Telegram', 'WhatshApp', 'Viber'], ['Другое'], ['/skip']]
+        reply_keyboard = [['Инстаграм', 'Авито', 'ВКонтакте'], ['Telegram', 'WhatsApp', 'Viber'], ['Другое'], ['/skip']]
         update.message.reply_text(
             reply_text,
             reply_markup=ReplyKeyboardMarkup(
@@ -646,7 +646,7 @@ def skip(update: Update, context: CallbackContext) -> int:  # Здесь пол�
         context.user_data[key] = value
         logger.info("Пользователь %s не прислал номер телефона заказчика", user.first_name)
         reply_text = 'Плохо что нет номера заказчика, лучше уточнить на будушее. Теперь выбери откуда о пришёл заказчик, или отправь /skip.'
-        reply_keyboard = [['Инстаграм', 'Авито', 'ВКонтакте'], ['Telegram', 'WhatshApp', 'Viber'], ['Другое'],
+        reply_keyboard = [['Инстаграм', 'Авито', 'ВКонтакте'], ['Telegram', 'WhatsApp', 'Viber'], ['Другое'],
                           ['/skip']]
         update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     elif update.message.text == '/skip' and state_machine == FROM:
