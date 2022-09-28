@@ -1450,6 +1450,11 @@ def callback_button_pressed(update: Update, context: CallbackContext) -> None:
         change(update, context)
     # return state_machine
 
+# errror handler
+def error(update,context):
+    print(f"Update the context error : {context.error}")
+
+
 def main() -> None:
     """Run the bot."""
     # Create the Updater and pass it your bot's token.
@@ -1591,6 +1596,8 @@ def main() -> None:
     )
 
     dispatcher.add_handler(conv_handler)
+    # error handlers
+    dispatcher.add_error_handler(error)
 
     # Start the Bot
     updater.start_polling()
