@@ -1521,7 +1521,7 @@ def main() -> None:
                               CommandHandler('dostavka', edit_order),
                               CommandHandler('finish', finish),
                               CommandHandler('comment', comment),
-                              MessageHandler(Filters.regex('^(Вернуться назад)$'), order_insert)],
+                              MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],
             ARCHIVE: [MessageHandler(Filters.regex('^(Состав заказа|Восстановить)$'), archive),
                       MessageHandler(Filters.regex('^[1-9][0-9]*$'), archive),
                       MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), archive),
