@@ -100,7 +100,7 @@ def make_image_order(order):
     if 'predoplata' in order['order']:
         if summa - order['order']['predoplata'] > 0:
             message = 'Предоплата: %d руб.' % order['order']['predoplata']
-            message += '/nОсталось доплатить %d руб.' % (summa - order['order']['predoplata'])
+            message += '\nОсталось доплатить %d руб.' % (summa - order['order']['predoplata'])
         else:
             message = 'Все оплачено'
     else:
