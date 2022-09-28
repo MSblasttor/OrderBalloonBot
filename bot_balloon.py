@@ -1255,7 +1255,7 @@ def end(update: Update,
     """Пользователь завершил заполнение формы"""
     user = update.message.from_user
     logger.info("Пользователь %s завершил заполнение форм", user.first_name)
-    if context.user_data.get('select_order') is not None:
+    if context.user_data.get('select_order') is not None and context.user_data['select_order'] == 0:
         order_num = context.user_data['select_order']
         print(order_num)
         order = show_order_user_from_db(mdb, update, order_num)
