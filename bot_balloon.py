@@ -1455,7 +1455,8 @@ def callback_button_pressed(update: Update, context: CallbackContext) -> None:
 def error(update,context):
 
     print(f"Update the context error : {context.error}")
-    global state_machine = ConversationHandler.END  # выходим из диалога
+    global state_machine
+    state_machine = ConversationHandler.END  # выходим из диалога
     text = "Возникла ошибка. Сообщите администратору. Попробуй заново /start"
     update.message.reply_text(text)
 
