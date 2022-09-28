@@ -58,7 +58,7 @@ def search_or_save_user(mdb, effective_user, message):
     return user
 
 def save_user_order(mdb, update, user_data):
-    if 'select_order' in user_data:
+    if 'select_order' in user_data and user_data['select_order'] != 0:
         user = search_or_save_user(mdb, update.effective_user, update.message)
         order = mdb.orders.find_one({'user_id': user['user_id'], 'order_cnt': user_data['select_order']})
         result_order_list = user_data['order_list']
