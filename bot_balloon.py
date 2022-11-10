@@ -106,8 +106,7 @@ def other(update: Update, context: CallbackContext) -> int:
     update.message.reply_text('Данный раздел в разработке. Отправь команду /cancel чтобы начать сначала')
     return ORDER_ADD_ITEMS
 
-def change(update: Update,
-           context: CallbackContext) -> int:  # Сюда прилетают результаты выбора пользователя после старта
+def change(update: Update, context: CallbackContext) -> int:  # Сюда прилетают результаты выбора пользователя после старта
     global state_machine
     user = update.message.from_user
     if state_machine == CHANGE and not update.message.text == 'Смета':
@@ -338,7 +337,7 @@ def show_order(update: Update, context: CallbackContext) -> int:
         # Сюда вставить функцию вывода состава заказа из БД
         order_num = context.user_data['select_order']
         order = show_order_user_from_db(mdb, update, order_num)
-        # print(show_order_user_from_db(mdb, update, order_num))
+        order = order['order']
         text = "Заказ № " + str(context.user_data['select_order']) + ":\n"
         text += "ФИО:" + order['fio'] + "\n"
         text += "Телефон:" + order['tel'] + "\n"
@@ -461,6 +460,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
             logger.info("Пользователь %s выбрал заказ %d и отредактировал %s", user.first_name,
                         context.user_data['select_order'], context.user_data['last_msg'])
             order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
+            order = order['order']
         else:
             logger.info("Пользователь %s внес предоплату в размере %s", user.first_name, update.message.text)
             order = {'summa' : context.user_data['summa']}
@@ -513,6 +513,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         order_num = context.user_data['select_order']
         # print(order_num)
         order = show_order_user_from_db(mdb, update, order_num)
+        order = order['order']
         # print(order)
         context.user_data['order_list'] = order['order_list']
         if update.message.text == 'Добавить':
@@ -530,6 +531,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
             logger.info("Пользователь %s выбрал заказ %d чтобы внести стоимость доставки", user.first_name, context.user_data['select_order'])
             context.user_data['last_msg'] = update.message.text
             order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
+            order = order['order']
         else:
             logger.info("Пользователь %s выбрал чтобы внести стоимость доставки", user.first_name)
             context.user_data['last_msg'] = update.message.text
@@ -542,6 +544,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
             logger.info("Пользователь %s выбрал заказ %d и внес стоимость доставки", user.first_name, context.user_data['select_order'])
             context.user_data['last_msg'] = update.message.text
             order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
+            order = order['order']
             edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'summa', order['summa']+int(update.message.text))
             edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'dostavka', int(update.message.text))
             text = "В заказе №" + str(context.user_data['select_order']) + " внесена сумма доставки в размере " + update.message.text + " руб."
@@ -552,6 +555,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
             logger.info("Пользователь %s выбрал заказ %d и внес стоимость доставки", user.first_name, context.user_data['select_order'])
             context.user_data['last_msg'] = update.message.text
             order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
+            order = order['order']
             edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'dostavka', int(update.message.text))
             edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'summa', order['summa']+int(update.message.text))
             text = "В заказе №" + str(context.user_data['select_order']) + " внесена сумма доставки в размере " + update.message.text + " руб."
@@ -1265,8 +1269,7 @@ def cancel(update: Update, context: CallbackContext) -> int:  # Здесь пр�
     context.user_data.clear()  # Очищаем данные пользователя после завершения диалога
     return ConversationHandler.END
 
-def end(update: Update,
-        context: CallbackContext) -> int:  # Здесь обрабатываются смета и выводится предварительный состав заказ
+def end(update: Update, context: CallbackContext) -> int:  # Здесь обрабатываются смета и выводится предварительный состав заказ
     """Пользователь завершил заполнение формы"""
     user = update.message.from_user
     logger.info("Пользователь %s завершил заполнение форм", user.first_name)
@@ -1288,7 +1291,7 @@ def end(update: Update,
         '/add - чтобы добавить в заказ еще позиции\n'
         '/remove - чтобы удалить из списка заказа позицию \n'
         '/predoplata - чтобы указать сумму предоплаты \n'
-        '/dostavka - чтобы указать сумму доставки'
+        '/dostavka - чтобы указать сумму доставки\n'
         '/comment - добавить коментарий к заказу\n'
         '/finish - чтобы завершить оформление')
     text="Выберите действие"
@@ -1398,8 +1401,7 @@ def to_calendar(order, update):
     update.message.reply_text(text, parse_mode=ParseMode.HTML)
     return
 
-def finish(update: Update,
-           context: CallbackContext) -> int:  # Здесь финализируется каточка заказа и сохраняется в базу данных MongoDB
+def finish(update: Update, context: CallbackContext) -> int:  # Здесь финализируется каточка заказа и сохраняется в базу данных MongoDB
     global state_machine
     user = update.message.from_user
     logger.info("Пользователь %s завершил оформление заказ", user.first_name)
@@ -1420,9 +1422,7 @@ def finish(update: Update,
     state_machine = ConversationHandler.END  # выходим из диалога
     return state_machine
 
-
-def error_input(update: Update,
-                context: CallbackContext) -> int:  # Здесь обрабатываются недопустимые значения вводимые пользователем при заполнении форм
+def error_input(update: Update, context: CallbackContext) -> int:  # Здесь обрабатываются недопустимые значения вводимые пользователем при заполнении форм
     """Пользователь ввел не правильные значения формы"""
     global state_machine
     user = update.message.from_user
