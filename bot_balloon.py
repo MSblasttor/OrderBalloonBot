@@ -106,8 +106,7 @@ def other(update: Update, context: CallbackContext) -> int:
     update.message.reply_text('Данный раздел в разработке. Отправь команду /cancel чтобы начать сначала')
     return ORDER_ADD_ITEMS
 
-def change(update: Update,
-           context: CallbackContext) -> int:  # Сюда прилетают результаты выбора пользователя после старта
+def change(update: Update, context: CallbackContext) -> int:  # Сюда прилетают результаты выбора пользователя после старта
     global state_machine
     user = update.message.from_user
     if state_machine == CHANGE and not update.message.text == 'Смета':
@@ -265,14 +264,20 @@ def list_order(update: Update, context: CallbackContext) -> int:
     user = update.message.from_user
     logger.info("Пользователь %s запросил список заказов", user.first_name)
     order_list = list_order_from_db(mdb, update)
-    reply_keyboard = [[], []]
+    reply_keyboard = [[]]
     reply_text = "Вот список ваших заказов: \n"
     cnt = 0
+    index = 0
+    lst_index = 0
     for order in order_list:
         cnt += 1
         reply_text += "%d\n" % order['order_cnt']
-        reply_keyboard[0].append(str(order['order_cnt']))
-    reply_keyboard[1].append('Вернуться назад')
+        index = cnt // 5
+        if index != lst_index:
+            lst_index = index
+            reply_keyboard.append([])
+        reply_keyboard[index].append(str(order['order_cnt']))
+    reply_keyboard.append(['Вернуться назад'])
     update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     return cnt
 
@@ -338,7 +343,7 @@ def show_order(update: Update, context: CallbackContext) -> int:
         # Сюда вставить функцию вывода состава заказа из БД
         order_num = context.user_data['select_order']
         order = show_order_user_from_db(mdb, update, order_num)
-        # print(show_order_user_from_db(mdb, update, order_num))
+        order = order['order']
         text = "Заказ № " + str(context.user_data['select_order']) + ":\n"
         text += "ФИО:" + order['fio'] + "\n"
         text += "Телефон:" + order['tel'] + "\n"
@@ -354,7 +359,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
     global state_machine
     user = update.message.from_user
     if (state_machine == ORDER or state_machine == ORDER_CHANGE) and (
-            update.message.text != 'ФИО' and update.message.text != 'Телефон' and update.message.text != 'Дата и время' and update.message.text != 'Состав заказа' and update.message.text != 'В архив' and update.message.text != 'Оплата' and update.message.text != 'Доставка' and update.message.text != '/predoplata' and update.message.text != '/dostavka'):
+            update.message.text != 'ФИО' and update.message.text != 'Телефон' and update.message.text != 'Дата и время' and update.message.text != 'Состав заказа' and update.message.text != 'В архив' and update.message.text != 'Оплата' and update.message.text != 'Доставка' and update.message.text != '/predoplata' and update.message.text != '/dostavka' and update.message.text != 'В календарь'):
         state_machine = ORDER_EDIT
         # Сюда вставить функцию редактирования заказа из БД
         logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать", user.first_name,
@@ -461,6 +466,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
             logger.info("Пользователь %s выбрал заказ %d и отредактировал %s", user.first_name,
                         context.user_data['select_order'], context.user_data['last_msg'])
             order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
+            order = order['order']
         else:
             logger.info("Пользователь %s внес предоплату в размере %s", user.first_name, update.message.text)
             order = {'summa' : context.user_data['summa']}
@@ -494,6 +500,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
             update.message.reply_text(text)
             end(update, context)
         else:
+            print("Внесена предоплата")
             context.user_data['predoplata'] = predoplata
             context.user_data['last_msg'] = update.message.text
             text = "Внесена предоплата в размере " + str(predoplata) + " руб."
@@ -512,6 +519,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         order_num = context.user_data['select_order']
         # print(order_num)
         order = show_order_user_from_db(mdb, update, order_num)
+        order = order['order']
         # print(order)
         context.user_data['order_list'] = order['order_list']
         if update.message.text == 'Добавить':
@@ -525,13 +533,15 @@ def edit_order(update: Update, context: CallbackContext) -> int:
             text = "Выберите дейстивие ДОБАВИТЬ или УДАЛИТЬ, либо ВЕРНУТЬСЯ НАЗАД"
             update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     elif (state_machine == ORDER_EDIT and update.message.text == 'Доставка') or (state_machine == ORDER_ADD_ITEMS and update.message.text == '/dostavka'):
-        if context.user_data['last_msg'] != '/dostavka' or (context.user_data.get('select_order') is not None and context.user_data['select_order'] != 0):
+        if context.user_data['last_msg'] != '/dostavka' and (context.user_data.get('select_order') is not None and context.user_data['select_order'] != 0):
             logger.info("Пользователь %s выбрал заказ %d чтобы внести стоимость доставки", user.first_name, context.user_data['select_order'])
             context.user_data['last_msg'] = update.message.text
             order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
+            order = order['order']
         else:
             logger.info("Пользователь %s выбрал чтобы внести стоимость доставки", user.first_name)
             context.user_data['last_msg'] = update.message.text
+            #TODO: Разобраться с доставкой во время оформления заказ и при выбранном самовывозе
             order = {"location":context.user_data['location']}
         text = "Введите сумму доставки до адреса: " + order['location']
         update.message.reply_text(text)
@@ -540,6 +550,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
             logger.info("Пользователь %s выбрал заказ %d и внес стоимость доставки", user.first_name, context.user_data['select_order'])
             context.user_data['last_msg'] = update.message.text
             order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
+            order = order['order']
             edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'summa', order['summa']+int(update.message.text))
             edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'dostavka', int(update.message.text))
             text = "В заказе №" + str(context.user_data['select_order']) + " внесена сумма доставки в размере " + update.message.text + " руб."
@@ -550,6 +561,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
             logger.info("Пользователь %s выбрал заказ %d и внес стоимость доставки", user.first_name, context.user_data['select_order'])
             context.user_data['last_msg'] = update.message.text
             order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
+            order = order['order']
             edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'dostavka', int(update.message.text))
             edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'summa', order['summa']+int(update.message.text))
             text = "В заказе №" + str(context.user_data['select_order']) + " внесена сумма доставки в размере " + update.message.text + " руб."
@@ -563,6 +575,12 @@ def edit_order(update: Update, context: CallbackContext) -> int:
             text = "Внесена сумма доставки в размере " + update.message.text + " руб."
             update.message.reply_text(text)
             end(update, context)
+    elif (state_machine == ORDER_EDIT or state_machine == ORDER_SHOW) and update.message.text == 'В календарь':
+        logger.info("Пользователь %s выбрал заказ %d чтобы добавить в календарь", user.first_name,
+                    context.user_data['select_order'])
+        context.user_data['last_msg'] = update.message.text
+        order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
+        to_calendar(order, update)
     # else
     return state_machine
 
@@ -1257,8 +1275,7 @@ def cancel(update: Update, context: CallbackContext) -> int:  # Здесь пр�
     context.user_data.clear()  # Очищаем данные пользователя после завершения диалога
     return ConversationHandler.END
 
-def end(update: Update,
-        context: CallbackContext) -> int:  # Здесь обрабатываются смета и выводится предварительный состав заказ
+def end(update: Update, context: CallbackContext) -> int:  # Здесь обрабатываются смета и выводится предварительный состав заказ
     """Пользователь завершил заполнение формы"""
     user = update.message.from_user
     logger.info("Пользователь %s завершил заполнение форм", user.first_name)
@@ -1274,16 +1291,17 @@ def end(update: Update,
     update.message.reply_text('Итак давай посмотрим что получается')
     update.message.reply_text(msg)
     reply_keyboard = [['/add'], ['/remove'], ['/predoplata'], ['/dostavka'], ['/comment'], ['/finish']]
-    text = "Выберите дейстивие ДОБАВИТЬ или УДАЛИТЬ, либо ВЕРНУТЬСЯ НАЗАД"
-    update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+    #text = "Выберите дейстивие ДОБАВИТЬ или УДАЛИТЬ, либо ВЕРНУТЬСЯ НАЗАД"
     update.message.reply_text(
         'Введите одну из следующих команд:\n'
         '/add - чтобы добавить в заказ еще позиции\n'
         '/remove - чтобы удалить из списка заказа позицию \n'
         '/predoplata - чтобы указать сумму предоплаты \n'
-        '/dostavka - чтобы указать сумму доставки'
+        '/dostavka - чтобы указать сумму доставки\n'
         '/comment - добавить коментарий к заказу\n'
         '/finish - чтобы завершить оформление')
+    text="Выберите действие"
+    update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     return ORDER_ADD_ITEMS
 
 def make_msg_order_list(user_data) -> str:
@@ -1370,32 +1388,39 @@ def make_msg_order_list(user_data) -> str:
     #print(message)
     return message
 
-def finish(update: Update,
-           context: CallbackContext) -> int:  # Здесь финализируется каточка заказа и сохраняется в базу данных MongoDB
+def send_image_order(order, context, update):
+    make_image_order(order)
+    PHOTO_PATH = "/root/OrderBalloonBot/img/" + str(order['user_id']) + "/" + str(order['order_cnt']) + ".png"
+    context.bot.send_photo(chat_id=update.message.chat_id, photo=open(PHOTO_PATH, 'rb'))
+    return
+
+def to_calendar(order, update):
+    text = "Заказ № " + str(order['order_cnt']) + ":\n"
+    text += "ФИО:" + order['order']['fio'] + "\n"
+    text += "Телефон:" + order['order']['tel'] + "\n"
+    text += "Дата:" + order['order']['date'] + "\n"
+    text += "Адрес:" + order['order']['location'] + "\n"
+    text += make_msg_order_list(order['order'])
+    make_ical_from_order(order, text)
+    text = "<b><a href=\"http://msblast-home.ru/download?user_id=" + str(order['user_id']) + "&order_cnt=" + str(
+        order['order_cnt']) + "\">Добавить заказ в календарь</a></b>"
+    update.message.reply_text(text, parse_mode=ParseMode.HTML)
+    return
+
+def finish(update: Update, context: CallbackContext) -> int:  # Здесь финализируется каточка заказа и сохраняется в базу данных MongoDB
     global state_machine
     user = update.message.from_user
     logger.info("Пользователь %s завершил оформление заказ", user.first_name)
+    if context.user_data.get('predoplata') is None:
+        context.user_data['predoplata'] = 0
     order = save_user_order(mdb, update, context.user_data)  # Сохраняем заказ в базу данных
-    #msg = make_msg_order_list(context.user_data)
-
     if order != 0:
-        text = "Заказ № " + str(order['order_cnt']) + ":\n"
-        text += "ФИО:" + order['order']['fio'] + "\n"
-        text += "Телефон:" + order['order']['tel'] + "\n"
-        text += "Дата:" + order['order']['date'] + "\n"
-        text += "Адрес:" + order['order']['location'] + "\n"
-        text += make_msg_order_list(order['order'])
         text = """Заказ сохранён!
             Его номер: <b>%d</b>
             Я надеюсь тебе все понравилось и ты вернешься в следующий раз""" % (order['order_cnt'])
         update.message.reply_text(text, parse_mode=ParseMode.HTML)  # текстовое сообщение с форматированием HTML
-        make_image_order(order)
-        PHOTO_PATH ="/root/OrderBalloonBot/img/"+str(order['user_id'])+"/"+str(order['order_cnt'])+".png"
-        context.bot.send_photo(chat_id=update.message.chat_id, photo=open(PHOTO_PATH, 'rb'))
-        make_ical_from_order(order, text)
-        text = "<b><a href=\"http://msblast-home.ru/download?user_id=" + str(order['user_id']) + "&order_cnt=" + str(
-            order['order_cnt']) + "\">Добавить заказ в календарь</a></b>"
-        update.message.reply_text(text, parse_mode=ParseMode.HTML)
+        send_image_order(order, context, update)
+        to_calendar(order, update)
     else:
         text = "Заказ не сохранен так как нечего сохранять. Попробуй заново /start"
         update.message.reply_text(text)
@@ -1403,8 +1428,7 @@ def finish(update: Update,
     state_machine = ConversationHandler.END  # выходим из диалога
     return state_machine
 
-def error_input(update: Update,
-                context: CallbackContext) -> int:  # Здесь обрабатываются недопустимые значения вводимые пользователем при заполнении форм
+def error_input(update: Update, context: CallbackContext) -> int:  # Здесь обрабатываются недопустимые значения вводимые пользователем при заполнении форм
     """Пользователь ввел не правильные значения формы"""
     global state_machine
     user = update.message.from_user
@@ -1543,13 +1567,13 @@ def main() -> None:
                          MessageHandler(Filters.regex('^(ФИО|Телефон|Дата и время|Адрес|'
                                                       'Состав заказа|Оплата|Доставка|100%|50%|Другая сумма'
                                                       '|Добавить|Удалить|В архив)$'), edit_order),
-                         MessageHandler(Filters.regex('^(В календарь)$'), finish)],
+                         MessageHandler(Filters.regex('^(В календарь)$'), edit_order)],
             ORDER_SHOW: [MessageHandler(Filters.regex('^(Добавить новый заказ)$'), order),
                          MessageHandler(Filters.regex('^(Редактировать заказ)$'), order),
                          MessageHandler(Filters.regex('^(Удалить заказ)$'), remove_order),
                          MessageHandler(Filters.regex('^[1-9][0-9]*$'), remove_order),
                          MessageHandler(Filters.regex('^(Вывести список заказов)$'), show_list_order),
-                         MessageHandler(Filters.regex('^(В календарь)$'), finish),
+                         MessageHandler(Filters.regex('^(В календарь)$'), edit_order),
                          MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],  # Выбор манипуляций с заказом
             ORDER_ADD_ITEMS: [MessageHandler(Filters.regex('^(Латекс)$'), latex),
                               MessageHandler(Filters.regex('^(Фольга)$'), foil),

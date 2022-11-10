@@ -89,6 +89,7 @@ def save_user_order(mdb, update, user_data):
                         "location": user_data['location'],
                         "order_list": user_data['order_list'],
                         "comment": user_data['comment'],
+                        "predoplata": user_data['predoplata'],
                         "summa": user_data['summa']
                     }
                 }
@@ -105,6 +106,7 @@ def save_user_order(mdb, update, user_data):
                         "location": user_data['location'],
                         "order_list": user_data['order_list'],
                         "comment": user_data['comment'],
+                        "predoplata": user_data['predoplata'],
                         "summa": user_data['summa']
                     }
                 }
@@ -126,7 +128,7 @@ def show_order_user_from_db(mdb, update, order_num):
     user = search_or_save_user(mdb, update.effective_user, update.message)
     order = mdb.orders.find_one({'user_id': user['user_id'], 'order_cnt': order_num})
     print(order)
-    return order['order']
+    return order
 
 def show_archive_user_from_db(mdb, update, order_num):
     user = search_or_save_user(mdb, update.effective_user, update.message)

@@ -10,6 +10,7 @@ def make_image_order(order):
     template = Image.open('/root/OrderBalloonBot/img/order_templ.png')
     im.paste(template, (0, 0))
     template.close()
+    print(order)
     #Заполняем поле номер заказа
     txt = str(order['order_cnt'])
     make_txt(im, 260, 80, txt, "centr", 60)
@@ -142,6 +143,7 @@ def make_txt(image, x, y, txt, align="centr", font_size=30, font_path="/root/Ord
         fill=fill
     )
     return
+
 
 #order={'order_cnt':1024, 'user_id':123456789, 'order':{'fio':'Тест Тестович', 'tel':'89539729889', 'date':'20.09.22 15:00', 'location':'Тула, Санаторная 9 - 13', "comment":0, 'order_list':[{"type": "latex", "size":"12\"","color":"Черный", "name":"Латекс", "count":10, "price":105, "summa":1050}]}}
 #make_image_order(order)
