@@ -264,13 +264,19 @@ def list_order(update: Update, context: CallbackContext) -> int:
     user = update.message.from_user
     logger.info("Пользователь %s запросил список заказов", user.first_name)
     order_list = list_order_from_db(mdb, update)
-    reply_keyboard = [[], []]
+    reply_keyboard = [[]]
     reply_text = "Вот список ваших заказов: \n"
     cnt = 0
+    index = 0
+    lst_index = 0
     for order in order_list:
         cnt += 1
         reply_text += "%d\n" % order['order_cnt']
-        reply_keyboard[cnt//5].append(str(order['order_cnt']))
+        index = cnt // 5
+        if index != lst_index:
+            lst_index = index
+            reply_keyboard.append([])
+        reply_keyboard[index].append(str(order['order_cnt']))
     reply_keyboard.append(['Вернуться назад'])
     update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     return cnt
