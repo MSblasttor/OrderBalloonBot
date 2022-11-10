@@ -581,6 +581,12 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         context.user_data['last_msg'] = update.message.text
         order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
         to_calendar(order, update)
+    elif (state_machine == ORDER_EDIT or state_machine == ORDER_SHOW) and update.message.text == 'Фото':
+        logger.info("Пользователь %s выбрал заказ %d чтобы получить фото карточки заказа", user.first_name,
+                    context.user_data['select_order'])
+        context.user_data['last_msg'] = update.message.text
+        order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
+        send_image_order(order, context, update)
     # else
     return state_machine
 
