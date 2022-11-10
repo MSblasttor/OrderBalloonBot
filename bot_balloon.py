@@ -270,8 +270,8 @@ def list_order(update: Update, context: CallbackContext) -> int:
     for order in order_list:
         cnt += 1
         reply_text += "%d\n" % order['order_cnt']
-        reply_keyboard[0].append(str(order['order_cnt']))
-    reply_keyboard[1].append('Вернуться назад')
+        reply_keyboard[cnt//5].append(str(order['order_cnt']))
+    reply_keyboard[cnt//5+1].append('Вернуться назад')
     update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     return cnt
 
