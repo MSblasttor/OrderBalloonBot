@@ -592,7 +592,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
                     context.user_data['select_order'])
         context.user_data['last_msg'] = update.message.text
         order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
-        send_link_to_messanger(order, context, update)
+        send_link_to_messanger(order, update, context)
     # else
     return state_machine
 
