@@ -72,7 +72,7 @@ def make_image_order(order):
             message = '%d. ' % (count + 1)
             message += msg_str
         elif result == 'accessories':
-            msg_str = '%(name)s Кол-во - %(count)d шт. Цена %(price)d руб. Комментарий: %(comment)s\n' % order['order']['order_list'][count]
+            msg_str = '%(name)s Кол-во - %(count)d шт. Цена %(price)d руб. Комментарий: %(comment)s \n' % order['order']['order_list'][count]
             # print (msg_str)
             message += '%d. ' % (count + 1)
             message += msg_str
@@ -84,6 +84,7 @@ def make_image_order(order):
         summa += order['order']['order_list'][count]["summa"]
         count += 1
         print(count)
+        print(message)
         make_txt(im, 50, 320+count*30, message, "left")
     count += 2
     if order['order']['comment'] != 0:
