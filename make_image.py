@@ -74,7 +74,7 @@ def make_image_order(order):
         elif result == 'accessories':
             msg_str = '%(name)s Кол-во - %(count)d шт. Цена %(price)d руб. Комментарий: %(comment)s \n' % order['order']['order_list'][count]
             # print (msg_str)
-            message += '%d. ' % (count + 1)
+            message = '%d. ' % (count + 1)
             message += msg_str
         elif result == 'other':
             msg_str = 'Другое: %(comment)s. Цена %(price)d руб. \n' % order['order']['order_list'][count]
