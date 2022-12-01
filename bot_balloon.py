@@ -906,6 +906,8 @@ def foil(update: Update, context: CallbackContext) -> int:  # Здесь пол�
         value_cnt = context.user_data['order_dict'][key]
         if value_cnt == 0:
             value_cnt = 1
+            key = 'count'
+            context.user_data['order_dict'][key] = value_cnt
         summa = value * value_cnt
         key = 'summa'
         context.user_data['order_dict'][key] = summa
