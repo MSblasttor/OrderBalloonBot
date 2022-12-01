@@ -1431,26 +1431,27 @@ def make_link_to_messanger(order, context, update):
         tel = "7{}{}{}{}{}{}{}{}{}{}".format(*tel)
         print(tel)
         if order['order']['from'] == 'WhatsApp':
-            link = "<b><a href=\"http://wa.me/" + str(tel)+ "\">Открыть чат</a></b>"
+            link = "<b><a href=\"whatsapp://send?phone=" + str(tel)+ "\">Открыть чат в WhatsApp</a></b>"
         elif order['order']['from'] == 'Telegram':
-            link = "<b><a href=\"http://wa.me/" + str(tel) + "\">Открыть чат</a></b>"
+            link = "<b><a href=\"tg://resolve?domain=" + str(tel) + "\">Открыть чат в Телеграм</a></b>"
         elif order['order']['from'] == 'Viber':
-            link = "<b><a href=\"http://wa.me/" + str(tel) + "\">Открыть чат</a></b>"
+            link = "<b><a href=\"viber://chat?number=" + str(tel) + "\">Открыть чат в Viber</a></b>"
         elif order['order']['from'] == 'Инстаграм':
             print("Instagram develop")
-            link = ""
+            #link = "<b><a href=\"http://ig.me/m/" + order['order']['nickname'] + "\">Открыть чат в Instagram</a></b>"
+            link = "<b><a href=\"instagram://user?username=msblasttor\">Открыть чат в Instagram</a></b>"
         elif order['order']['from'] == 'Авито':
             print("Avito develop")
-            link = ""
+            link = "Пока в работе /cancel"
         elif order['order']['from'] == 'ВКонтакте':
             print("VKontakte develop")
-            link = ""
+            link = "Пока в работе /cancel"
         elif order['order']['from'] == 'Другое':
             print("Other develop")
-            link = ""
+            link = "Пока в работе /cancel"
         else:
             print("Error link develop")
-            link = ""
+            link = "Пока в работе /cancel"
     else:
         link = "Не указано контактных данных"
     return link
