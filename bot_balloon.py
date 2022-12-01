@@ -1439,7 +1439,8 @@ def make_link_to_messanger(order, context, update):
         elif order['order']['from'] == 'Инстаграм':
             print("Instagram develop")
             #link = "<b><a href=\"http://ig.me/m/" + order['order']['nickname'] + "\">Открыть чат в Instagram</a></b>"
-            link = "<b><a href=\"instagram://user?username=msblasttor\">Открыть чат в Instagram</a></b>"
+            #link = "<b><a href=\"instagram://user?username=msblasttor\">Открыть чат в Instagram</a></b>"
+            link = "<b><a href=\"http://ig.me/m/msblasttor\">Открыть чат в Instagram</a></b>"
         elif order['order']['from'] == 'Авито':
             print("Avito develop")
             link = "Пока в работе /cancel"
