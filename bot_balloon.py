@@ -1423,14 +1423,10 @@ def to_calendar(order, update):
     update.message.reply_text(text, parse_mode=ParseMode.HTML)
     return
 
-import re
-
-# в самом начале
-NUM_RE = re.compile(r".*(\d).*(\d).*(\d).*(\d).*(\d).*(\d).*(\d).*(\d).*(\d).*(\d).*")
-
 ##reply_keyboard = [['Инстаграм', 'Авито', 'ВКонтакте'], ['Telegram', 'WhatsApp', 'Viber'], ['Другое'], ['/skip']]
 def make_link_to_messanger(order, context, update):
-    tel = order['order']['tel'].apply(lambda x: "7" + ''.join(NUM_RE.match(x).groups()))
+    tel = list(filter(str.isdigit, tel))[1:]
+    tel = "7{}{}{}{}{}{}{}{}{}{}".format(*tel)
     print(tel)
     if order['order']['from'] == 'WhatsApp':
         link = "<b><a href=\"http://wa.me/" + str(tel)+ "\">Открыть чат</a></b>"
