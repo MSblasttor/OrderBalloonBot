@@ -1426,30 +1426,33 @@ def to_calendar(order, update):
 ##reply_keyboard = [['Инстаграм', 'Авито', 'ВКонтакте'], ['Telegram', 'WhatsApp', 'Viber'], ['Другое'], ['/skip']]
 def make_link_to_messanger(order, context, update):
     tel = order['order']['tel']
-    tel = list(filter(str.isdigit, tel))[1:]
-    tel = "7{}{}{}{}{}{}{}{}{}{}".format(*tel)
-    print(tel)
-    if order['order']['from'] == 'WhatsApp':
-        link = "<b><a href=\"http://wa.me/" + str(tel)+ "\">Открыть чат</a></b>"
-    elif order['order']['from'] == 'Telegram':
-        link = "<b><a href=\"http://wa.me/" + str(tel) + "\">Открыть чат</a></b>"
-    elif order['order']['from'] == 'Viber':
-        link = "<b><a href=\"http://wa.me/" + str(tel) + "\">Открыть чат</a></b>"
-    elif order['order']['from'] == 'Инстаграм':
-        print("Instagram develop")
-        link = ""
-    elif order['order']['from'] == 'Авито':
-        print("Avito develop")
-        link = ""
-    elif order['order']['from'] == 'ВКонтакте':
-        print("VKontakte develop")
-        link = ""
-    elif order['order']['from'] == 'Другое':
-        print("Other develop")
-        link = ""
+    if tel != 0:
+        tel = list(filter(str.isdigit, tel))[1:]
+        tel = "7{}{}{}{}{}{}{}{}{}{}".format(*tel)
+        print(tel)
+        if order['order']['from'] == 'WhatsApp':
+            link = "<b><a href=\"http://wa.me/" + str(tel)+ "\">Открыть чат</a></b>"
+        elif order['order']['from'] == 'Telegram':
+            link = "<b><a href=\"http://wa.me/" + str(tel) + "\">Открыть чат</a></b>"
+        elif order['order']['from'] == 'Viber':
+            link = "<b><a href=\"http://wa.me/" + str(tel) + "\">Открыть чат</a></b>"
+        elif order['order']['from'] == 'Инстаграм':
+            print("Instagram develop")
+            link = ""
+        elif order['order']['from'] == 'Авито':
+            print("Avito develop")
+            link = ""
+        elif order['order']['from'] == 'ВКонтакте':
+            print("VKontakte develop")
+            link = ""
+        elif order['order']['from'] == 'Другое':
+            print("Other develop")
+            link = ""
+        else:
+            print("Error link develop")
+            link = ""
     else:
-        print("Error link develop")
-        link = ""
+        link = "Не указано контактных данных"
     return link
 
 def send_link_to_messanger(order, update: Update, context: CallbackContext) -> int:  # Здесь отправляется ссылка на мессенджер откуда пришел заказчик
