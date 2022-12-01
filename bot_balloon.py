@@ -55,8 +55,8 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-START, CHANGE, FIO, TEL, FROM, DATE, LOCATION, ORDER, ORDER_CHANGE, ORDER_REMOVE, ORDER_EDIT, ORDER_SHOW, ORDER_ADD_ITEMS, ARCHIVE, LATEX, LATEX_SIZE, LATEX_COLOR, LATEX_COUNT, LATEX_PRICE, FOIL, FOIL_CHANGE, FOIL_FIG, FOIL_FIG_NAME, FOIL_FIG_COLOR, FOIL_FIG_CNT, FOIL_FIG_PRICE, FOIL_NUM, FOIL_NUM_NAME, FOIL_NUM_COLOR, FOIL_NUM_PRICE, BUBL_COLOR, BUBL_INSERT, BUBL_PRICE, BUBL_SIZE, LABEL_NAME, LABEL_COLOR, LABEL_PRICE, STAND_NAME, STAND_PRICE, ACCESSORIES, ACCESSORIES_CNT, ACCESSORIES_PRICE, ACCESSORIES_COMMENT, COMMENT = range(
-    44)
+START, CHANGE, FIO, TEL, FROM, NICKNAME, DATE, LOCATION, ORDER, ORDER_CHANGE, ORDER_REMOVE, ORDER_EDIT, ORDER_SHOW, ORDER_ADD_ITEMS, ARCHIVE, LATEX, LATEX_SIZE, LATEX_COLOR, LATEX_COUNT, LATEX_PRICE, FOIL, FOIL_CHANGE, FOIL_FIG, FOIL_FIG_NAME, FOIL_FIG_COLOR, FOIL_FIG_CNT, FOIL_FIG_PRICE, FOIL_NUM, FOIL_NUM_NAME, FOIL_NUM_COLOR, FOIL_NUM_PRICE, BUBL_COLOR, BUBL_INSERT, BUBL_PRICE, BUBL_SIZE, LABEL_NAME, LABEL_COLOR, LABEL_PRICE, STAND_NAME, STAND_PRICE, ACCESSORIES, ACCESSORIES_CNT, ACCESSORIES_PRICE, ACCESSORIES_COMMENT, COMMENT = range(
+    45)
 
 state_machine = START
 order_cnt = 0
@@ -184,6 +184,23 @@ def order(update: Update, context: CallbackContext) -> int:  # Здесь пол
         logger.info("Заказчик пришел of %s: %s", user.first_name, update.message.text)
         # Сохраняем значение
         key = 'from'
+        value = update.message.text
+        context.user_data[key] = value
+        if update.message.text == 'Инстаграм' or update.message.text == 'ВКонтакте':
+            update.message.reply_text(
+            'Отлично. Введи дату и время когда планируется мероприятие (доставка)'
+            ' или отправь /skip если ты не знаешь или требует уточнения')
+            state_machine = NICKNAME
+        else:
+            update.message.reply_text(
+                'Отлично. Введи дату и время когда планируется мероприятие (доставка)'
+                ' или отправь /skip если ты не знаешь или требует уточнения')
+            state_machine = DATE
+    elif state_machine == NICKNAME:
+        """Сохраняем никнейм заказчика"""
+        logger.info("Заказчик пришел of %s: %s", user.first_name, update.message.text)
+        # Сохраняем значение
+        key = 'nickname'
         value = update.message.text
         context.user_data[key] = value
         update.message.reply_text(
@@ -1431,9 +1448,11 @@ def make_link_to_messanger(order, context, update):
         tel = "7{}{}{}{}{}{}{}{}{}{}".format(*tel)
         print(tel)
         if order['order']['from'] == 'WhatsApp':
-            link = "<b><a href=\"whatsapp://send?phone=" + str(tel)+ "\">Открыть чат в WhatsApp</a></b>"
+            #link = "<b><a href=\"whatsapp://send?phone=" + str(tel)+ "\">Открыть чат в WhatsApp</a></b>"
+            link = "<b><a href=\"http://wa.me/" + str(tel) + "\">Открыть чат в WhatsApp</a></b>"
         elif order['order']['from'] == 'Telegram':
-            link = "<b><a href=\"tg://resolve?domain=" + str(tel) + "\">Открыть чат в Телеграм</a></b>"
+            #link = "<b><a href=\"tg://resolve?domain=" + str(tel) + "\">Открыть чат в Телеграм</a></b>"
+            link = "<b><a href=\"t.me/+" + str(tel) + "\">Открыть чат в Телеграм</a></b>"
         elif order['order']['from'] == 'Viber':
             link = "<b><a href=\"viber://chat?number=" + str(tel) + "\">Открыть чат в Viber</a></b>"
         elif order['order']['from'] == 'Инстаграм':
@@ -1596,6 +1615,7 @@ def main() -> None:
                                order), MessageHandler(Filters.text & ~Filters.command, error_input),
                 CommandHandler('skip', skip)],
             FROM: [MessageHandler(Filters.text & ~Filters.command, order), CommandHandler('skip', skip)],
+            NICKNAME: [MessageHandler(Filters.text & ~Filters.command, order), CommandHandler('skip', skip)],
             DATE: [MessageHandler(Filters.regex(
                 '[0-3]?[0-9].[0-3]?[0-9].(?:[0-9]{2})?[0-9]{2} (?:[01][0-9]|2[0-3]):[0-5][0-9]') & ~Filters.command,
                                   order), MessageHandler(Filters.text & ~Filters.command, error_input),
