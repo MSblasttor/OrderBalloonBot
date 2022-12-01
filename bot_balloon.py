@@ -359,7 +359,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
     global state_machine
     user = update.message.from_user
     if (state_machine == ORDER or state_machine == ORDER_CHANGE) and (
-            update.message.text != 'ФИО' and update.message.text != 'Телефон' and update.message.text != 'Дата и время' and update.message.text != 'Состав заказа' and update.message.text != 'В архив' and update.message.text != 'Оплата' and update.message.text != 'Доставка' and update.message.text != '/predoplata' and update.message.text != '/dostavka' and update.message.text != 'В календарь'):
+            update.message.text != 'ФИО' and update.message.text != 'Телефон' and update.message.text != 'Дата и время' and update.message.text != 'Состав заказа' and update.message.text != 'В архив' and update.message.text != 'Оплата' and update.message.text != 'Доставка' and update.message.text != '/predoplata' and update.message.text != '/dostavka' and update.message.text != 'В календарь' and update.message.text != 'Ссылка'):
         state_machine = ORDER_EDIT
         # Сюда вставить функцию редактирования заказа из БД
         logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать", user.first_name,
@@ -587,7 +587,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         context.user_data['last_msg'] = update.message.text
         order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
         send_image_order(order, context, update)
-    elif (state_machine == ORDER_EDIT or state_machine == ORDER_SHOW) and update.message.text == 'Фото':
+    elif (state_machine == ORDER_EDIT or state_machine == ORDER_SHOW) and update.message.text == 'Ссылка':
         logger.info("Пользователь %s выбрал заказ %d чтобы получить ссылку на диалог с заказчиком", user.first_name,
                     context.user_data['select_order'])
         context.user_data['last_msg'] = update.message.text
