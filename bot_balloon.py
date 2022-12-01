@@ -587,6 +587,12 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         context.user_data['last_msg'] = update.message.text
         order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
         send_image_order(order, context, update)
+    elif (state_machine == ORDER_EDIT or state_machine == ORDER_SHOW) and update.message.text == 'Фото':
+        logger.info("Пользователь %s выбрал заказ %d чтобы получить ссылку на диалог с заказчиком", user.first_name,
+                    context.user_data['select_order'])
+        context.user_data['last_msg'] = update.message.text
+        order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
+        send_link_to_messanger(order, context, update)
     # else
     return state_machine
 
@@ -1416,6 +1422,47 @@ def to_calendar(order, update):
         order['order_cnt']) + "\">Добавить заказ в календарь</a></b>"
     update.message.reply_text(text, parse_mode=ParseMode.HTML)
     return
+
+import re
+
+# в самом начале
+NUM_RE = re.compile(r".*(\d).*(\d).*(\d).*(\d).*(\d).*(\d).*(\d).*(\d).*(\d).*(\d).*")
+
+##reply_keyboard = [['Инстаграм', 'Авито', 'ВКонтакте'], ['Telegram', 'WhatsApp', 'Viber'], ['Другое'], ['/skip']]
+def make_link_to_messanger(order, context, update):
+    tel = order['order']['tel'].apply(lambda x: "7" + ''.join(NUM_RE.match(x).groups()))
+    print(tel)
+    if order['order']['from'] == 'WhatsApp':
+        link = "<b><a href=\"http://wa.me/" + str(tel)+ "\">Открыть чат</a></b>"
+    elif order['order']['from'] == 'Telegram':
+        link = "<b><a href=\"http://wa.me/" + str(tel) + "\">Открыть чат</a></b>"
+    elif order['order']['from'] == 'Viber':
+        link = "<b><a href=\"http://wa.me/" + str(tel) + "\">Открыть чат</a></b>"
+    elif order['order']['from'] == 'Инстаграм':
+        print("Instagram develop")
+        link = ""
+    elif order['order']['from'] == 'Авито':
+        print("Avito develop")
+        link = ""
+    elif order['order']['from'] == 'ВКонтакте':
+        print("VKontakte develop")
+        link = ""
+    elif order['order']['from'] == 'Другое':
+        print("Other develop")
+        link = ""
+    else:
+        print("Error link develop")
+        link = ""
+    return link
+
+def send_link_to_messanger(order, update: Update, context: CallbackContext) -> int:  # Здесь отправляется ссылка на мессенджер откуда пришел заказчик
+    global state_machine
+    user = update.message.from_user
+    logger.info("Пользователь %s получил ссылку на мессенджер с заказчиком", user.first_name)
+    text = make_link_to_messanger(order, context, update)
+    update.message.reply_text(text, parse_mode=ParseMode.HTML)
+    return state_machine
+
 
 def finish(update: Update, context: CallbackContext) -> int:  # Здесь финализируется каточка заказа и сохраняется в базу данных MongoDB
     global state_machine
