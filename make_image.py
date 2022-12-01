@@ -46,7 +46,7 @@ def make_image_order(order):
         elif result == 'foil_fig' and (
                 order['order']['order_list'][count]["name"] == 'Сердце' or order['order']['order_list'][count][
             "name"] == 'Звезда' or order['order']['order_list'][count]["name"] == 'Круг'):
-            msg_str = 'Фигура %(name)s Цвет: %(color)s Цена %(price)d руб. \n' % order['order']['order_list'][count]
+            msg_str = 'Фигура %(name)s Цвет: %(color)s Кол-во - %(count)d шт. Цена %(price)d руб. \n' % order['order']['order_list'][count]
             # print (msg_str)
             message = '%d. ' % (count + 1)
             message += msg_str
