@@ -188,7 +188,7 @@ def order(update: Update, context: CallbackContext) -> int:  # Здесь пол
         context.user_data[key] = value
         if update.message.text == 'Инстаграм' or update.message.text == 'ВКонтакте':
             update.message.reply_text(
-            'Отлично. Введи дату и время когда планируется мероприятие (доставка)'
+            'Отлично. Введи никнейм заказчина из ' + update.message.text +
             ' или отправь /skip если ты не знаешь или требует уточнения')
             state_machine = NICKNAME
         else:
@@ -200,8 +200,18 @@ def order(update: Update, context: CallbackContext) -> int:  # Здесь пол
         """Сохраняем никнейм заказчика"""
         logger.info("Заказчик пришел of %s: %s", user.first_name, update.message.text)
         # Сохраняем значение
-        key = 'nickname'
         value = update.message.text
+        if context.user_data['from'] == "Инстаграм":
+            if value.find(".com/"):
+                value = value[value.find(".com/") + 5:value.find("?")]
+            else:
+                update.message.reply_text(
+                'Пришлите ссылку на профиль заказчика из Инстаграм'
+                ' или отправь /skip если ты не знаешь или требует уточнения',
+            )
+        if context.user_data['from'] == "Вконтакте":
+            value = value[1:]
+        key = 'nickname'
         context.user_data[key] = value
         update.message.reply_text(
             'Отлично. Теперь введи дату и время когда планируется мероприятие (доставка)'
@@ -704,6 +714,15 @@ def skip(update: Update, context: CallbackContext) -> int:  # Здесь пол�
         context.user_data[key] = value
         logger.info("Пользователь %s не прислал откуда заказчик", user.first_name)
         reply_text = 'Плохо что неизвестно откуда заказчик, лучше уточнить на будушее. Теперь пришли дату мероприятия, или отправь /skip.'
+        update.message.reply_text(reply_text)
+    elif update.message.text == '/skip' and state_machine == NICKNAME:
+        state_machine = DATE
+        # Сохраняем значение
+        key = 'nickname'
+        value = '0'
+        context.user_data[key] = value
+        logger.info("Пользователь %s не прислал никнейм заказчика", user.first_name)
+        reply_text = 'Плохо что неизвестно никнейм заказчик, Ты не сможешь получить ссылку на чат. Теперь пришли дату мероприятия, или отправь /skip.'
         update.message.reply_text(reply_text)
     elif update.message.text == '/skip' and state_machine == DATE:
         state_machine = LOCATION
