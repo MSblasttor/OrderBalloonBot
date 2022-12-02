@@ -198,19 +198,19 @@ def order(update: Update, context: CallbackContext) -> int:  # Здесь пол
             state_machine = DATE
     elif state_machine == NICKNAME:
         """Сохраняем никнейм заказчика"""
-        logger.info("Заказчик пришел of %s: %s", user.first_name, update.message.text)
-        # Сохраняем значение
         value = update.message.text
         if context.user_data['from'] == "Инстаграм":
-            if value.find(".com/"):
+            if value.find(".com/") != -1:
                 value = value[value.find(".com/") + 5:value.find("?")]
             else:
                 update.message.reply_text(
-                'Пришлите ссылку на профиль заказчика из Инстаграм'
+                'Что-то не то. Пришлите ссылку на профиль заказчика из Инстаграм'
                 ' или отправь /skip если ты не знаешь или требует уточнения',
             )
         if context.user_data['from'] == "Вконтакте":
-            value = value[1:]
+            if value.find("@") != -1:
+                value = value[1:]
+        logger.info("Заказчик пришел из %s и пользователь добавил %s при обработке получился следующий ник: %s", context.user_data['from'], update.message.text, value)
         key = 'nickname'
         context.user_data[key] = value
         update.message.reply_text(
