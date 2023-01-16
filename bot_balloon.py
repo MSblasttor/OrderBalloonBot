@@ -55,8 +55,8 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-START, CHANGE, FIO, TEL, FROM, DATE, LOCATION, ORDER, ORDER_CHANGE, ORDER_REMOVE, ORDER_EDIT, ORDER_SHOW, ORDER_ADD_ITEMS, ARCHIVE, LATEX, LATEX_SIZE, LATEX_COLOR, LATEX_COUNT, LATEX_PRICE, FOIL, FOIL_CHANGE, FOIL_FIG, FOIL_FIG_NAME, FOIL_FIG_COLOR, FOIL_FIG_CNT, FOIL_FIG_PRICE, FOIL_NUM, FOIL_NUM_NAME, FOIL_NUM_COLOR, FOIL_NUM_PRICE, BUBL_COLOR, BUBL_INSERT, BUBL_PRICE, BUBL_SIZE, LABEL_NAME, LABEL_COLOR, LABEL_PRICE, STAND_NAME, STAND_PRICE, ACCESSORIES, ACCESSORIES_CNT, ACCESSORIES_PRICE, ACCESSORIES_COMMENT, COMMENT = range(
-    44)
+START, CHANGE, FIO, TEL, FROM, DATE, LOCATION, ORDER, ORDER_CHANGE, ORDER_REMOVE, ORDER_EDIT, ORDER_SHOW, ORDER_ADD_ITEMS, ARCHIVE, LATEX, LATEX_SIZE, LATEX_COLOR, LATEX_COUNT, LATEX_PRICE, FOIL, FOIL_CHANGE, FOIL_FIG, FOIL_FIG_NAME, FOIL_FIG_COLOR, FOIL_FIG_CNT, FOIL_FIG_PRICE, FOIL_NUM, FOIL_NUM_NAME, FOIL_NUM_COLOR, FOIL_NUM_PRICE, BUBL_COLOR, BUBL_INSERT, BUBL_PRICE, BUBL_SIZE, LABEL_NAME, LABEL_COLOR, LABEL_PRICE, STAND_NAME, STAND_PRICE, ACCESSORIES, ACCESSORIES_CNT, ACCESSORIES_PRICE, ACCESSORIES_COMMENT, COMMENT, REFERENCE = range(
+    45)
 
 state_machine = START
 order_cnt = 0
@@ -1275,6 +1275,27 @@ def comment(update: Update, context: CallbackContext) -> int:  # Здесь по
         state_machine = end(update, context)
     return state_machine
 
+def reference(update: Update, context: CallbackContext) -> int:  # Здесь пользователь выбрать добавить в заказ фото референс
+    global state_machine
+    user = update.message.from_user
+    if state_machine == ORDER_ADD_ITEMS:
+        """Пользователь выбрал фотореференс"""
+        # Сохраняем значение типа
+        logger.info("%s: %s", user.first_name, update.message.text)
+        update.message.reply_text("Пришлите фото референс")
+        state_machine = REFERENCE
+    elif state_machine == REFERENCE:
+        """Пользователь Прислал референс"""
+        logger.info("%s: %s", user.first_name, update.message.text)
+        # Сохраняем референс
+        newFile = message.efficient_attachment[-1].get_file()
+        newFile.download(path_img)
+        path_img = "/root/OrderBalloonBot/img/" + str(order['user_id']) + "/reference/" + str(order['order_cnt'])  #+ ".png"
+
+        state_machine = end(update, context)
+    return state_machine
+
+
 def cancel(update: Update, context: CallbackContext) -> int:  # Здесь прекращается общение с ботом.
     """Cancels and ends the conversation."""
     user = update.message.from_user
@@ -1444,6 +1465,8 @@ def error_input(update: Update, context: CallbackContext) -> int:  # Здесь 
         update.message.reply_text('Введите колличество шаров ЦИФРАМИ')
     elif state_machine == LATEX_PRICE or state_machine == FOIL_NUM_PRICE or state_machine == FOIL_FIG_PRICE or state_machine == BUBL_PRICE or state_machine == STAND_PRICE  or state_machine == FOIL_FIG_CNT or state_machine == ACCESSORIES_PRICE:
         update.message.reply_text('Введите стоимость ЦИФРАМИ')
+    elif state_machine == REFERENCE:
+        update.message.reply_text('Пришлите фото референс или для продолжения /skip')
     elif state_machine == START or state_machine == ConversationHandler.END:
         update.message.reply_text('Чтобы начать разговор введите команду /start')
         state_machine = ConversationHandler.END
@@ -1594,6 +1617,7 @@ def main() -> None:
                               CommandHandler('dostavka', edit_order),
                               CommandHandler('finish', finish),
                               CommandHandler('comment', comment),
+                              CommandHandler('reference', reference),
                               MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],
             ARCHIVE: [MessageHandler(Filters.regex('^(Состав заказа|Восстановить)$'), archive),
                       MessageHandler(Filters.regex('^[1-9][0-9]*$'), archive),
@@ -1653,6 +1677,8 @@ def main() -> None:
                           MessageHandler(Filters.text & ~Filters.command, error_input), CommandHandler('end', end)],
 
             COMMENT: [MessageHandler(Filters.text & ~Filters.command, comment), CommandHandler('skip', skip)],
+
+            REFERENCE: [MessageHandler(Filters.text & ~Filters.command, error_input), MessageHandler(Filters.forwarded & Filters.photo, reference) CommandHandler('skip', skip)],
             # Комментарий
         },
         fallbacks=[CommandHandler('cancel', cancel)],
