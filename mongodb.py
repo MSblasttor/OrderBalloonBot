@@ -89,6 +89,7 @@ def save_user_order(mdb, update, user_data):
                         "location": user_data['location'],
                         "order_list": user_data['order_list'],
                         "comment": user_data['comment'],
+                        "dostavka": user_data['dostavka'],
                         "predoplata": user_data['predoplata'],
                         "summa": user_data['summa']
                     }
@@ -106,6 +107,7 @@ def save_user_order(mdb, update, user_data):
                         "location": user_data['location'],
                         "order_list": user_data['order_list'],
                         "comment": user_data['comment'],
+                        "dostavka": user_data['dostavka'],
                         "predoplata": user_data['predoplata'],
                         "summa": user_data['summa']
                     }

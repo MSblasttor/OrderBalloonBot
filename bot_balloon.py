@@ -206,7 +206,8 @@ def order(update: Update, context: CallbackContext) -> int:  # Здесь пол
                 update.message.reply_text(
                 'Что-то не то. Пришлите ссылку на профиль заказчика из Инстаграм'
                 ' или отправь /skip если ты не знаешь или требует уточнения',
-            )
+                )
+                return state_machine
         if context.user_data['from'] == "Вконтакте":
             if value.find("@") != -1:
                 value = value[1:]
@@ -1478,7 +1479,7 @@ def make_link_to_messanger(order, context, update):
             print("Instagram develop")
             #link = "<b><a href=\"http://ig.me/m/" + order['order']['nickname'] + "\">Открыть чат в Instagram</a></b>"
             #link = "<b><a href=\"instagram://user?username=msblasttor\">Открыть чат в Instagram</a></b>"
-            link = "<b><a href=\"http://ig.me/m/msblasttor\">Открыть чат в Instagram</a></b>"
+            link = "<b><a href=\"http://ig.me/m/"+ order['order']['nickname'] +"\">Открыть чат в Instagram</a></b>"
         elif order['order']['from'] == 'Авито':
             print("Avito develop")
             link = "Пока в работе /cancel"
@@ -1510,6 +1511,8 @@ def finish(update: Update, context: CallbackContext) -> int:  # Здесь фи�
     logger.info("Пользователь %s завершил оформление заказ", user.first_name)
     if context.user_data.get('predoplata') is None:
         context.user_data['predoplata'] = 0
+    if context.user_data.get('dostavka') is None:
+        context.user_data['dostavka'] = 0
     order = save_user_order(mdb, update, context.user_data)  # Сохраняем заказ в базу данных
     if order != 0:
         text = """Заказ сохранён!
