@@ -46,6 +46,13 @@ def make_ical_from_order(order, msg):
     # alarm.add('description', desc)
     event.add_component(alarm)
 
+    alarm = Alarm()
+    alarm.add('trigger', timedelta(days=365-14))
+    #alarm.add('trigger', timedelta(days=-2))
+    alarm.add('action', 'display')
+    #desc = " in 1 year "
+    alarm.add('description', msg)
+    event.add_component(alarm)
 
 
     # Write to disk
