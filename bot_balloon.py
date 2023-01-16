@@ -1289,18 +1289,10 @@ def end(update: Update, context: CallbackContext) -> int:  # Здесь обра
     """Пользователь завершил заполнение формы"""
     user = update.message.from_user
     logger.info("Пользователь %s завершил заполнение форм", user.first_name)
-    # if context.user_data.get('select_order') is not None and context.user_data['select_order'] != 0:
-    #     order_num = context.user_data['select_order']
-    #     print(order_num) #debug TODO: Delete
-    #     order = show_order_user_from_db(mdb, update, order_num)
-    #     msg = make_msg_order_list(order)
-    # else:
-    #     print('make msg frome user_data') #debug TODO: Delete
-    #     msg = make_msg_order_list(context.user_data)
     msg = make_msg_order_list(context.user_data)
     update.message.reply_text('Итак давай посмотрим что получается')
     update.message.reply_text(msg)
-    reply_keyboard = [['/add'], ['/remove'], ['/predoplata'], ['/dostavka'], ['/comment'], ['/finish']]
+    reply_keyboard = [['/add'], ['/remove'], ['/predoplata'], ['/dostavka'], ['/comment'], ['/reference'], ['/finish']]
     #text = "Выберите дейстивие ДОБАВИТЬ или УДАЛИТЬ, либо ВЕРНУТЬСЯ НАЗАД"
     update.message.reply_text(
         'Введите одну из следующих команд:\n'
@@ -1309,6 +1301,7 @@ def end(update: Update, context: CallbackContext) -> int:  # Здесь обра
         '/predoplata - чтобы указать сумму предоплаты \n'
         '/dostavka - чтобы указать сумму доставки\n'
         '/comment - добавить коментарий к заказу\n'
+        '/reference - добавить фото референс к заказу\n'
         '/finish - чтобы завершить оформление')
     text="Выберите действие"
     update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
