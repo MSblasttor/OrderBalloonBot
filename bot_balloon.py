@@ -1286,12 +1286,12 @@ def reference(update: Update, context: CallbackContext) -> int:  # Здесь п
         state_machine = REFERENCE
     elif state_machine == REFERENCE:
         """Пользователь Прислал референс"""
-        logger.info("%s: %s", user.first_name, update.message.text)
+        logger.info("%s: %s", user.first_name, "Прислал референс")
         # Сохраняем референс
-        newFile = message.efficient_attachment[-1].get_file()
-        newFile.download(path_img)
+        newFile = update.message.photo[-1].get_file()
         path_img = "/root/OrderBalloonBot/img/" + str(order['user_id']) + "/reference/" + str(order['order_cnt'])  #+ ".png"
-
+        newFile.download(path_img)
+        print("save image user reference")
         state_machine = end(update, context)
     return state_machine
 
@@ -1678,7 +1678,7 @@ def main() -> None:
 
             COMMENT: [MessageHandler(Filters.text & ~Filters.command, comment), CommandHandler('skip', skip)],
 
-            REFERENCE: [MessageHandler(Filters.text & ~Filters.command, error_input), MessageHandler(Filters.forwarded & Filters.photo, reference) CommandHandler('skip', skip)],
+            REFERENCE: [MessageHandler(Filters.text & ~Filters.command, error_input), MessageHandler(Filters.forwarded | Filters.photo, reference), CommandHandler('skip', skip)],
             # Комментарий
         },
         fallbacks=[CommandHandler('cancel', cancel)],
