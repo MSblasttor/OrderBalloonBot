@@ -304,11 +304,11 @@ def select_order(update: Update, context: CallbackContext) -> int:
     global state_machine
     user = update.message.from_user
     if state_machine == ORDER_CHANGE and (
-            update.message.text != 'Состав заказа' and update.message.text != 'Изменить заказ' and update.message.text != 'Удалить заказ' and update.message.text != 'В архив' and
+            update.message.text != 'Состав заказа' and update.message.text != 'Изменить заказ' and update.message.text != 'Удалить заказ' and update.message.text != 'Карточка заказа' and update.message.text != 'В архив' and
             context.user_data['last_msg'] != "Редактировать заказ"):
         logger.info("Пользователь %s выбрал заказ %d", user.first_name, int(update.message.text))
         context.user_data['select_order'] = int(update.message.text)
-        reply_keyboard = [['Состав заказа', 'Изменить заказ', 'Удалить заказ'], ['В архив'], ['Вернуться назад']]
+        reply_keyboard = [['Состав заказа', 'Изменить заказ', 'Удалить заказ'], ['Карточка заказа'], ['В архив'], ['Вернуться назад']]
         reply_text = "Выберите что сделать с заказом: \n"
         update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     elif state_machine == ORDER_CHANGE and update.message.text == 'Состав заказа':
@@ -322,6 +322,10 @@ def select_order(update: Update, context: CallbackContext) -> int:
     elif state_machine == ORDER_CHANGE and update.message.text == 'Удалить заказ':
         logger.info("Пользователь %s выбрал заказ %d чтобы удалить", user.first_name, context.user_data['select_order'])
         remove_order(update, context)
+    elif state_machine == ORDER_CHANGE and update.message.text == 'Карточка заказа':
+        logger.info("Пользователь %s выбрал заказ %d чтобы посмотреть карточку заказа", user.first_name, context.user_data['select_order'])
+        order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
+        send_image_order(order, context, update)
     elif state_machine == ORDER_CHANGE and update.message.text == 'В архив':
         logger.info("Пользователь %s выбрал заказ %d чтобы отправить в архив", user.first_name,
                     context.user_data['select_order'])
