@@ -304,7 +304,16 @@ def select_order(update: Update, context: CallbackContext) -> int:
     global state_machine
     user = update.message.from_user
     if state_machine == ORDER_CHANGE and (
-            update.message.text != 'Состав заказа' and update.message.text != 'Изменить заказ' and update.message.text != 'Удалить заказ' and update.message.text != 'Карточка заказа' and update.message.text != 'РЕФЕРЕНСЫ' and update.message.text != 'В архив' and
+            update.message.text != 'Состав заказа' and
+            update.message.text != 'Изменить заказ' and
+            update.message.text != 'Удалить заказ' and
+            update.message.text != 'Карточка заказа' and
+            update.message.text != 'РЕФЕРЕНСЫ' and
+            update.message.text != 'Добавить' and
+            update.message.text != 'Удалить' and
+            update.message.text != 'Посмотреть' and
+            update.message.text != 'Вернуться назад' and
+            update.message.text != 'В архив' and
             context.user_data['last_msg'] != "Редактировать заказ"):
         logger.info("Пользователь %s выбрал заказ %d", user.first_name, int(update.message.text))
         context.user_data['select_order'] = int(update.message.text)
@@ -327,7 +336,7 @@ def select_order(update: Update, context: CallbackContext) -> int:
         order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
         send_image_order(order, context, update)
     elif state_machine == ORDER_CHANGE and update.message.text == 'РЕФЕРЕНСЫ':
-        logger.info("Пользователь %s выбрал заказ %d чтобы посмотреть референсы заказа", u ,user.first_name, context.user_data['select_order'])
+        logger.info("Пользователь %s выбрал заказ %d чтобы посмотреть референсы заказа", user.first_name, context.user_data['select_order'])
         context.user_data['last_msg'] = update.message.text
         reply_keyboard = [['Добавить', 'Удалить', 'Посмотреть', 'Вернуться назад']]
         text = "Что вы хотите сделать?"
@@ -1694,7 +1703,7 @@ def main() -> None:
                     MessageHandler(Filters.regex('^(Архив)$'), show_archive),
                     MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],  # Выбор манипуляций с заказом
             ORDER_CHANGE: [MessageHandler(Filters.regex('^[1-9][0-9]*$'), select_order), MessageHandler(
-                Filters.regex('^(Состав заказа|Изменить заказ|Удалить заказ|Оплата|В архив)$'), select_order),
+                Filters.regex('^(Состав заказа|Изменить заказ|Удалить заказ|Добавить|Удалить|Посмотреть|РЕФЕРЕНСЫ|Оплата|В архив)$'), select_order),
                            MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],  # Выбор манипуляций с заказом
             ORDER_REMOVE: [MessageHandler(Filters.regex('^(Добавить новый заказ)$'), order),
                            MessageHandler(Filters.regex('^(Редактировать заказ)$'), order),
@@ -1707,7 +1716,7 @@ def main() -> None:
                          MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$') & ~Filters.regex('^(В календарь)$'), edit_order),
                          MessageHandler(Filters.regex('^(ФИО|Телефон|Дата и время|Адрес|'
                                                       'Состав заказа|Оплата|Доставка|100%|50%|Другая сумма'
-                                                      '|Добавить|Удалить|Посмотреть|РЕФЕРЕНС|В архив)$'), edit_order),
+                                                      '|Добавить|Удалить|Посмотреть|РЕФЕРЕНСЫ|В архив)$'), edit_order),
                          MessageHandler(Filters.regex('^(В календарь)$'), edit_order)],
             ORDER_SHOW: [MessageHandler(Filters.regex('^(Добавить новый заказ)$'), order),
                          MessageHandler(Filters.regex('^(Редактировать заказ)$'), order),
