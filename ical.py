@@ -36,26 +36,16 @@ def make_ical_from_order(order, msg):
     cal.add_component(event)
 
     alarm = Alarm()
-    #alarm.add('trigger', timedelta(hours=-2))
-    alarm.add('trigger', timedelta(days=-20))
-    alarm.add('action', 'display')
-    #desc = " in 5 minutes"
-    #alarm.add('description', desc)
-    event.add_component(alarm)
-
-    alarm = Alarm()
     alarm.add('trigger', timedelta(days=-2))
     alarm.add('action', 'display')
     #alarm.add('action', 'audio')
-    #alarm.add('DURATION', vFrequency('daily').from_ical('MONTHLY'))
-    #alarm.add('repeat', vFrequency('daily').from_ical('MONTHLY'))
-    #alarm.add('DURATION', 'PT15M')
     # desc = " in 5 minutes"
     # alarm.add('description', desc)
     event.add_component(alarm)
 
     alarm = Alarm()
-    alarm.add('trigger', timedelta(hours=-2))
+    #alarm.add('trigger', timedelta(hours=-2)) #Напоминание за 2 часа
+    alarm.add('trigger', timedelta(days=-14)) #Напоминание за 14 дней
     alarm.add('action', 'display')
     # alarm.add('action', 'audio')
     # alarm.add('DURATION', vFrequency('daily').from_ical('MONTHLY'))
