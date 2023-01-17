@@ -304,11 +304,11 @@ def select_order(update: Update, context: CallbackContext) -> int:
     global state_machine
     user = update.message.from_user
     if state_machine == ORDER_CHANGE and (
-            update.message.text != 'Состав заказа' and update.message.text != 'Изменить заказ' and update.message.text != 'Удалить заказ' and update.message.text != 'Карточка заказа' and update.message.text != 'В архив' and
+            update.message.text != 'Состав заказа' and update.message.text != 'Изменить заказ' and update.message.text != 'Удалить заказ' and update.message.text != 'Карточка заказа' and update.message.text != 'РЕФЕРЕНСЫ' and update.message.text != 'В архив' and
             context.user_data['last_msg'] != "Редактировать заказ"):
         logger.info("Пользователь %s выбрал заказ %d", user.first_name, int(update.message.text))
         context.user_data['select_order'] = int(update.message.text)
-        reply_keyboard = [['Состав заказа', 'Изменить заказ', 'Удалить заказ'], ['Карточка заказа'], ['В архив'], ['Вернуться назад']]
+        reply_keyboard = [['Состав заказа', 'Изменить заказ', 'Удалить заказ'], ['Карточка заказа'], ['РЕФЕРЕНСЫ'], ['В архив'], ['Вернуться назад']]
         reply_text = "Выберите что сделать с заказом: \n"
         update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     elif state_machine == ORDER_CHANGE and update.message.text == 'Состав заказа':
@@ -326,6 +326,30 @@ def select_order(update: Update, context: CallbackContext) -> int:
         logger.info("Пользователь %s выбрал заказ %d чтобы посмотреть карточку заказа", user.first_name, context.user_data['select_order'])
         order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
         send_image_order(order, context, update)
+    elif state_machine == ORDER_CHANGE and update.message.text == 'РЕФЕРЕНСЫ':
+        logger.info("Пользователь %s выбрал заказ %d чтобы посмотреть референсы заказа", user.first_name, context.user_data['select_order'])
+        context.user_data['last_msg'] = update.message.text
+        reply_keyboard = [['Добавить', 'Удалить', 'Посмотреть', 'Вернуться назад']]
+        text = "Что вы хотите сделать?"
+        update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+    elif state_machine == ORDER_CHANGE and context.user_data['last_msg'] == 'РЕФЕРЕНСЫ':
+        logger.info("Пользователь %s выбрал заказ %d и решил %s референс", user.first_name,
+                    context.user_data['select_order'], update.message.text)
+        order_num = context.user_data['select_order']
+        order = show_order_user_from_db(mdb, update, order_num)
+        context.user_data['reference'] = order['order']['reference']
+        if update.message.text == 'Добавить':
+            state_machine = ORDER_ADD_ITEMS
+            reference(update, context)
+        elif update.message.text == 'Удалить':
+            print("Удалить референс")
+
+        elif update.message.text == 'Посмотреть':
+            send_reference_image_order(order, context, update)
+        else:
+            reply_keyboard = [['Добавить', 'Удалить', 'Посмотреть', 'Вернуться назад']]
+            text = "Выберите дейстивие ДОБАВИТЬ или УДАЛИТЬ или ПОСМОТРЕТЬ, либо ВЕРНУТЬСЯ НАЗАД"
+            update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     elif state_machine == ORDER_CHANGE and update.message.text == 'В архив':
         logger.info("Пользователь %s выбрал заказ %d чтобы отправить в архив", user.first_name,
                     context.user_data['select_order'])
@@ -366,7 +390,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
     global state_machine
     user = update.message.from_user
     if (state_machine == ORDER or state_machine == ORDER_CHANGE) and (
-            update.message.text != 'ФИО' and update.message.text != 'Телефон' and update.message.text != 'Дата и время' and update.message.text != 'Состав заказа' and update.message.text != 'В архив' and update.message.text != 'Оплата' and update.message.text != 'Доставка' and update.message.text != '/predoplata' and update.message.text != '/dostavka' and update.message.text != 'В календарь' and update.message.text != 'РЕФЕРЕНС'):
+            update.message.text != 'ФИО' and update.message.text != 'Телефон' and update.message.text != 'Дата и время' and update.message.text != 'Состав заказа' and update.message.text != 'В архив' and update.message.text != 'Оплата' and update.message.text != 'Доставка' and update.message.text != '/predoplata' and update.message.text != '/dostavka' and update.message.text != 'В календарь' and update.message.text != 'РЕФЕРЕНСЫ'):
         state_machine = ORDER_EDIT
         # Сюда вставить функцию редактирования заказа из БД
         logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать", user.first_name,
@@ -539,21 +563,18 @@ def edit_order(update: Update, context: CallbackContext) -> int:
             reply_keyboard = [['Добавить', 'Удалить', 'Вернуться назад']]
             text = "Выберите дейстивие ДОБАВИТЬ или УДАЛИТЬ, либо ВЕРНУТЬСЯ НАЗАД"
             update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
-    elif state_machine == ORDER_EDIT and update.message.text == 'РЕФЕРЕНС':
+    elif state_machine == ORDER_EDIT and update.message.text == 'РЕФЕРЕНСЫ':
         logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать референс", user.first_name,
                     context.user_data['select_order'])
         context.user_data['last_msg'] = update.message.text
         reply_keyboard = [['Добавить', 'Удалить', 'Посмотреть', 'Вернуться назад']]
         text = "Что вы хотите сделать?"
         update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
-    elif state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'РЕФЕРЕНС':
+    elif state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'РЕФЕРЕНСЫ':
         logger.info("Пользователь %s выбрал заказ %d и решил %s референс", user.first_name,
                     context.user_data['select_order'], update.message.text)
         order_num = context.user_data['select_order']
-        # print(order_num)
         order = show_order_user_from_db(mdb, update, order_num)
-        #order = order['order']
-        print(order)
         context.user_data['reference'] = order['order']['reference']
         if update.message.text == 'Добавить':
             print("Добавить референс")
@@ -561,7 +582,6 @@ def edit_order(update: Update, context: CallbackContext) -> int:
             reference(update, context)
         elif update.message.text == 'Удалить':
             print("Удалить референс")
-
         elif update.message.text == 'Посмотреть':
             print("Посмотреть референс")
             send_reference_image_order(order, context, update)
