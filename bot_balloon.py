@@ -327,7 +327,7 @@ def select_order(update: Update, context: CallbackContext) -> int:
         order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
         send_image_order(order, context, update)
     elif state_machine == ORDER_CHANGE and update.message.text == 'РЕФЕРЕНСЫ':
-        logger.info("Пользователь %s выбрал заказ %d чтобы посмотреть референсы заказа", user.first_name, context.user_data['select_order'])
+        logger.info("Пользователь %s выбрал заказ %d чтобы посмотреть референсы заказа", u ,user.first_name, context.user_data['select_order'])
         context.user_data['last_msg'] = update.message.text
         reply_keyboard = [['Добавить', 'Удалить', 'Посмотреть', 'Вернуться назад']]
         text = "Что вы хотите сделать?"
