@@ -1,5 +1,6 @@
 from PIL import Image, ImageDraw, ImageFont
-from pathlib import Path
+import pathlib
+import os
 
 
 font_path = "/root/OrderBalloonBot/fonts/Steclo.otf"
@@ -10,7 +11,7 @@ def make_image_order(order):
     template = Image.open('/root/OrderBalloonBot/img/order_templ.png')
     im.paste(template, (0, 0))
     template.close()
-    print(order)
+    #print(order)
     #Заполняем поле номер заказа
     txt = str(order['order_cnt'])
     make_txt(im, 260, 80, txt, "centr", 60)
@@ -117,16 +118,33 @@ def make_image_order(order):
         message = 'Необходимая предоплата: %d руб.' % (summa // 2)
     count += 1
     make_txt(im, 50, 320 + count * 30, message, "left")
-    #print(count)
+    if 'reference' in order['order']:
+        count += 2
+        # В случае наличия картинок референсов необходимо вычислить допустимую максимальную ширину и высоту картинок с учетом отступа
+        max_width_pic_ref = (pagesize_w - 50) / order['order']['reference']
+        max_height_pic_ref = 1052 - 320 + count * 30
+        print(max_width_pic_ref)
+        print(max_height_pic_ref)
+
+
+        for i in range(order['order']['reference']):
+            REFERENCE_PATH = str(pathlib.Path.cwd()) + "/orders/" + str(order['user_id']) + "/" + str(order['order_cnt']) + "/reference/" + str(i + 1) + ".jpg"
+            reference = Image.open(REFERENCE_PATH)
+            reference.thumbnail(size=(int(max_width_pic_ref), int(max_height_pic_ref)))
+            im.paste(reference, (int(max_width_pic_ref * i)+50, int(320 + count * 30)))
+            reference.close()
+
 
     # Сохраняем изображение
-    directory_order = Path('/root/OrderBalloonBot/img/' + str(order['user_id']))
+    directory_order = pathlib.Path('/root/OrderBalloonBot/img/' + str(order['user_id']))
     try:
         directory_order.mkdir(parents=True, exist_ok=False)
     except FileExistsError:
         print("Folder for pic: "+str(order['user_id'])+" already exists")
     else:
         print("Folder for pic: "+str(order['user_id'])+" was created")
+
+
     path_img ="/root/OrderBalloonBot/img/"+str(order['user_id'])+"/"+str(order['order_cnt'])+".png"
     im.save(path_img)
     print("Save pic order")
@@ -154,5 +172,5 @@ def make_txt(image, x, y, txt, align="centr", font_size=30, font_path="/root/Ord
     return
 
 
-#order={'order_cnt':1024, 'user_id':123456789, 'order':{'fio':'Тест Тестович', 'tel':'89539729889', 'date':'20.09.22 15:00', 'location':'Тула, Санаторная 9 - 13', "comment":0, 'order_list':[{"type": "latex", "size":"12\"","color":"Черный", "name":"Латекс", "count":10, "price":105, "summa":1050}]}}
+#order={'order_cnt':1024, 'user_id':123456789, 'order':{'fio':'Тест Тестович', 'tel':'89539729889', 'date':'20.09.22 15:00', 'location':'Тула, Санаторная 9 - 13', "comment":0, "reference":2 'order_list':[{"type": "latex", "size":"12\"","color":"Черный", "name":"Латекс", "count":10, "price":105, "summa":1050}]}}
 #make_image_order(order)
