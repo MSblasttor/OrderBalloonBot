@@ -1367,7 +1367,7 @@ def reference(update: Update, context: CallbackContext) -> int:  # Здесь п
         logger.info("%s: %s", user.first_name, update.message.text)
         update.message.reply_text("Пришлите фото референс или /skip чтобы закончить")
         state_machine = REFERENCE
-    elif state_machine == REFERENCE:
+    elif state_machine == REFERENCE and update.message.text == None:
         """Пользователь Прислал референс"""
         logger.info("%s: %s", user.first_name, "Прислал референс")
         # Сохраняем референс
@@ -1378,6 +1378,7 @@ def reference(update: Update, context: CallbackContext) -> int:  # Здесь п
         else:
             i += 1
         context.user_data[key] = i
+        print(update.message.text)
         newFile = update.message.photo[-1].get_file()  # get the photo with the biggest resolution
         if context.user_data.get('select_order') == None:
             user = mdb.users.find_one({"user_id": update.effective_user.id})
@@ -1406,13 +1407,16 @@ def reference(update: Update, context: CallbackContext) -> int:  # Здесь п
         update.message.reply_text("Пришлите еще фото референс или /skip чтобы закончить")
         state_machine = REFERENCE
     elif state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'РЕФЕРЕНСЫ' and update.message.text == 'Удалить':
+        state_machine = REFERENCE
+        context.user_data['last_msg'] = update.message.text
         reply_keyboard = [[]]
-        reply_text = "Выберите номер референса который удалить: \n"
+        reply_text = "Выберите номер референса который удалить:"
         for num in range(context.user_data['reference']):
-            reply_text += "%d\n" % num
-            reply_keyboard[0].append(str(num))
+            reply_keyboard[0].append(str(num+1))
         reply_keyboard.append(['Вернуться назад'])
         update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+    elif state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'Удалить':
+
     return state_machine
 
 
