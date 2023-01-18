@@ -26,7 +26,7 @@ import traceback
 import html
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ParseMode, \
-    Update, Bot
+    Update, Bot, InputMediaPhoto
 from telegram.ext import (
     Updater,
     CommandHandler,
@@ -590,7 +590,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
             state_machine = ORDER_ADD_ITEMS
             reference(update, context)
         elif update.message.text == 'Удалить':
-            print("Удалить референс")
+            reference(update, context)
         elif update.message.text == 'Посмотреть':
             print("Посмотреть референс")
             send_reference_image_order(order, context, update)
@@ -1405,6 +1405,8 @@ def reference(update: Update, context: CallbackContext) -> int:  # Здесь п
         print("save image user reference")
         update.message.reply_text("Пришлите еще фото референс или /skip чтобы закончить")
         state_machine = REFERENCE
+    elif state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'РЕФЕРЕНСЫ' and update.message.text == 'Удалить':
+
     return state_machine
 
 
@@ -1531,9 +1533,15 @@ def send_image_order(order, context, update):
     return
 
 def send_reference_image_order(order, context, update):
+    media_group = []
+    text = 'some caption for album'
     for i in range(order['order']['reference']):
-        PHOTO_PATH = str(pathlib.Path.cwd()) + "/orders/" + str(order['user_id']) + "/" + str(order['order_cnt']) + "/reference/" + str(i+1) + ".jpg"
-        context.bot.send_photo(chat_id=update.message.chat_id, photo=open(PHOTO_PATH, 'rb'))
+        PHOTO_PATH = str(pathlib.Path.cwd()) + "/orders/" + str(order['user_id']) + "/" + str(
+            order['order_cnt']) + "/reference/" + str(i + 1) + ".jpg"
+        media_group.append(InputMediaPhoto(open(PHOTO_PATH, 'rb'), caption=text if num == 0 else ''))
+        #PHOTO_PATH = str(pathlib.Path.cwd()) + "/orders/" + str(order['user_id']) + "/" + str(order['order_cnt']) + "/reference/" + str(i+1) + ".jpg"
+        #context.bot.send_photo(chat_id=update.message.chat_id, photo=open(PHOTO_PATH, 'rb'))
+    context.bot.send_media_group(chat_id=update.message.chat_id, media = media_group)
     context.user_data['last_msg'] = 'РЕФЕРЕНС'
     reply_keyboard = [['Добавить', 'Удалить', 'Посмотреть', 'Вернуться назад']]
     text = "Что вы хотите сделать?"
