@@ -1415,7 +1415,7 @@ def reference(update: Update, context: CallbackContext) -> int:  # Здесь п
             reply_keyboard[0].append(str(num+1))
         reply_keyboard.append(['Вернуться назад'])
         update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
-    elif state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'Удалить':
+    elif state_machine == REFERENCE and context.user_data['last_msg'] == 'Удалить':
         logger.info("Пользователь %s выбрал заказ %d и решил %s референс номер %d", user.first_name,
                     context.user_data['select_order'], context.user_data['last_msg'], update.message.text)
 
