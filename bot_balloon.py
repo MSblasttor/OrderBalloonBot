@@ -1432,8 +1432,8 @@ def reference(update: Update, context: CallbackContext) -> int:  # Здесь п
             print(PHOTO_PATH)
         except:
             print("The system cannot find the file specified")
-        i = update.message.text
-        for i in range(value):
+
+        for i in range(update.message.text,value):
             PHOTO_PATH_old = str(pathlib.Path.cwd()) + "/orders/" + str(user.id) + "/" + str(
                 order_num) + "/reference/" + str(i+1) + ".jpg"
             PHOTO_PATH_new = str(pathlib.Path.cwd()) + "/orders/" + str(user.id) + "/" + str(
