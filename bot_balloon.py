@@ -1416,6 +1416,34 @@ def reference(update: Update, context: CallbackContext) -> int:  # Здесь п
         reply_keyboard.append(['Вернуться назад'])
         update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     elif state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'Удалить':
+        logger.info("Пользователь %s выбрал заказ %d и решил %s референс номер %d", user.first_name,
+                    context.user_data['select_order'], context.user_data['last_msg'], update.message.text)
+
+        order_num = context.user_data['select_order']
+        param = 'reference'
+        value = context.user_data['reference'] - 1
+        print("reference - 1")
+        #edit_order_user_from_db(mdb, update, order_num, param, value) #Уменьшаем в базе данных значение референсов на 1
+
+        PHOTO_PATH = str(pathlib.Path.cwd()) + "/orders/" + str(user.id) + "/" + str(order_num) + "/reference/" + str(update.message.text) + ".jpg"
+        try:
+            #os.remove(PHOTO_PATH)
+            print("REMOVE:")
+            print(PHOTO_PATH)
+        except:
+            print("The system cannot find the file specified")
+        i = update.message.text
+        for i in range(value)
+            PHOTO_PATH_old = str(pathlib.Path.cwd()) + "/orders/" + str(user.id) + "/" + str(
+                order_num) + "/reference/" + str(i+1) + ".jpg"
+            PHOTO_PATH_new = str(pathlib.Path.cwd()) + "/orders/" + str(user.id) + "/" + str(
+                order_num) + "/reference/" + str(i) + ".jpg"
+
+            print("RENAME:")
+            print("OLD NAME:")
+            print(PHOTO_PATH_old)
+            print("NEW NAME:")
+            print(PHOTO_PATH_new)
 
     return state_machine
 
