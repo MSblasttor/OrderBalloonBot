@@ -338,7 +338,7 @@ def select_order(update: Update, context: CallbackContext) -> int:
     elif state_machine == ORDER_CHANGE and update.message.text == 'РЕФЕРЕНСЫ':
         logger.info("Пользователь %s выбрал заказ %d чтобы посмотреть референсы заказа", user.first_name, context.user_data['select_order'])
         context.user_data['last_msg'] = update.message.text
-        reply_keyboard = [['Добавить', 'Удалить', 'Посмотреть', 'Вернуться назад']]
+        reply_keyboard = [['Добавить', 'Удалить', 'Посмотреть'], ['Вернуться назад']]
         text = "Что вы хотите сделать?"
         update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     elif state_machine == ORDER_CHANGE and context.user_data['last_msg'] == 'РЕФЕРЕНСЫ':
@@ -576,7 +576,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать референс", user.first_name,
                     context.user_data['select_order'])
         context.user_data['last_msg'] = update.message.text
-        reply_keyboard = [['Добавить', 'Удалить', 'Посмотреть', 'Вернуться назад']]
+        reply_keyboard = [['Добавить', 'Удалить', 'Посмотреть'], ['Вернуться назад']]
         text = "Что вы хотите сделать?"
         update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     elif state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'РЕФЕРЕНСЫ':
@@ -1406,7 +1406,13 @@ def reference(update: Update, context: CallbackContext) -> int:  # Здесь п
         update.message.reply_text("Пришлите еще фото референс или /skip чтобы закончить")
         state_machine = REFERENCE
     elif state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'РЕФЕРЕНСЫ' and update.message.text == 'Удалить':
-
+        reply_keyboard = [[]]
+        reply_text = "Выберите номер референса который удалить: \n"
+        for num in range(context.user_data['reference']):
+            reply_text += "%d\n" % num
+            reply_keyboard[0].append(str(num))
+        reply_keyboard.append(['Вернуться назад'])
+        update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     return state_machine
 
 
@@ -1534,11 +1540,11 @@ def send_image_order(order, context, update):
 
 def send_reference_image_order(order, context, update):
     media_group = []
-    text = 'some caption for album'
+    text = 'Референсы к заказу №' + str(context.user_data['select_order'])
     for i in range(order['order']['reference']):
         PHOTO_PATH = str(pathlib.Path.cwd()) + "/orders/" + str(order['user_id']) + "/" + str(
             order['order_cnt']) + "/reference/" + str(i + 1) + ".jpg"
-        media_group.append(InputMediaPhoto(open(PHOTO_PATH, 'rb'), caption=text if num == 0 else ''))
+        media_group.append(InputMediaPhoto(open(PHOTO_PATH, 'rb'), caption=text if i == 0 else ''))
         #PHOTO_PATH = str(pathlib.Path.cwd()) + "/orders/" + str(order['user_id']) + "/" + str(order['order_cnt']) + "/reference/" + str(i+1) + ".jpg"
         #context.bot.send_photo(chat_id=update.message.chat_id, photo=open(PHOTO_PATH, 'rb'))
     context.bot.send_media_group(chat_id=update.message.chat_id, media = media_group)
