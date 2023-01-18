@@ -131,7 +131,7 @@ def make_image_order(order):
             REFERENCE_PATH = str(pathlib.Path.cwd()) + "/orders/" + str(order['user_id']) + "/" + str(order['order_cnt']) + "/reference/" + str(i + 1) + ".jpg"
             reference = Image.open(REFERENCE_PATH)
             reference.thumbnail(size=(int(max_width_pic_ref), int(max_height_pic_ref)))
-            im.paste(reference, (int(max_width_pic_ref * i)+50, int(320 + count * 30)))
+            im.paste(reference, (int(max_width_pic_ref * i)+25*i, int(320 + count * 30)))
             reference.close()
 
 
