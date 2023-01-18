@@ -1422,6 +1422,7 @@ def reference(update: Update, context: CallbackContext) -> int:  # Здесь п
         order_num = context.user_data['select_order']
         param = 'reference'
         value = context.user_data['reference'] - 1
+        del_ref_num = int(update.message.text)
         print("reference - 1")
         #edit_order_user_from_db(mdb, update, order_num, param, value) #Уменьшаем в базе данных значение референсов на 1
 
@@ -1433,7 +1434,7 @@ def reference(update: Update, context: CallbackContext) -> int:  # Здесь п
         except:
             print("The system cannot find the file specified")
 
-        for i in range(update.message.text,value):
+        for i in range(del_ref_num,value):
             PHOTO_PATH_old = str(pathlib.Path.cwd()) + "/orders/" + str(user.id) + "/" + str(
                 order_num) + "/reference/" + str(i+1) + ".jpg"
             PHOTO_PATH_new = str(pathlib.Path.cwd()) + "/orders/" + str(user.id) + "/" + str(
