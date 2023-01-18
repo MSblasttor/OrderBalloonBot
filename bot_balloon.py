@@ -1424,11 +1424,11 @@ def reference(update: Update, context: CallbackContext) -> int:  # Здесь п
         value = context.user_data['reference'] - 1
         del_ref_num = int(update.message.text)
         print("reference - 1")
-        #edit_order_user_from_db(mdb, update, order_num, param, value) #Уменьшаем в базе данных значение референсов на 1
+        edit_order_user_from_db(mdb, update, order_num, param, value) #Уменьшаем в базе данных значение референсов на 1
 
         PHOTO_PATH = str(pathlib.Path.cwd()) + "/orders/" + str(user.id) + "/" + str(order_num) + "/reference/" + str(update.message.text) + ".jpg"
         try:
-            #os.remove(PHOTO_PATH)
+            os.remove(PHOTO_PATH)
             print("REMOVE:")
             print(PHOTO_PATH)
         except:
@@ -1439,13 +1439,15 @@ def reference(update: Update, context: CallbackContext) -> int:  # Здесь п
                 order_num) + "/reference/" + str(i+1) + ".jpg"
             PHOTO_PATH_new = str(pathlib.Path.cwd()) + "/orders/" + str(user.id) + "/" + str(
                 order_num) + "/reference/" + str(i) + ".jpg"
-
-            print("RENAME:")
-            print("OLD NAME:")
-            print(PHOTO_PATH_old)
-            print("NEW NAME:")
-            print(PHOTO_PATH_new)
-
+            try:
+                os.rename(PHOTO_PATH_old, PHOTO_PATH_new)
+                print("RENAME:")
+                print("OLD NAME:")
+                print(PHOTO_PATH_old)
+                print("NEW NAME:")
+                print(PHOTO_PATH_new)
+            except:
+                print("The system cannot find the file specified")
     return state_machine
 
 
@@ -1581,7 +1583,7 @@ def send_reference_image_order(order, context, update):
         #PHOTO_PATH = str(pathlib.Path.cwd()) + "/orders/" + str(order['user_id']) + "/" + str(order['order_cnt']) + "/reference/" + str(i+1) + ".jpg"
         #context.bot.send_photo(chat_id=update.message.chat_id, photo=open(PHOTO_PATH, 'rb'))
     context.bot.send_media_group(chat_id=update.message.chat_id, media = media_group)
-    context.user_data['last_msg'] = 'РЕФЕРЕНС'
+    context.user_data['last_msg'] = 'РЕФЕРЕНСЫ'
     reply_keyboard = [['Добавить', 'Удалить', 'Посмотреть', 'Вернуться назад']]
     text = "Что вы хотите сделать?"
     update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
