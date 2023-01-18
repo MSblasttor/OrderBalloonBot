@@ -779,10 +779,11 @@ def skip(update: Update, context: CallbackContext) -> int:  # Здесь пол�
         reply_text = 'Ок. Теперь пришли колличество аксессуаров: ' + context.user_data['order_dict']['name']
         update.message.reply_text(reply_text)
     elif update.message.text == '/skip' and state_machine == REFERENCE:
-        state_machine = ORDER_ADD_ITEMS
+
         logger.info("Пользователь %s завершил добавление референсов", user.first_name)
         # Сохраняем значение
         if 'select_order' in context.user_data and context.user_data['select_order'] != 0:
+            context.user_data['last_msg'] = update.message.text
             edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'reference', context.user_data['reference'])
             logger.info("Пользователь %s выбрал заказ %d и сохранил референсы", user.first_name,
                         context.user_data['select_order'])
@@ -792,6 +793,7 @@ def skip(update: Update, context: CallbackContext) -> int:  # Здесь пол�
                                       reply_markup=ReplyKeyboardMarkup(reply_keyboard_edit_order,
                                                                        one_time_keyboard=True))
         else:
+            state_machine = ORDER_ADD_ITEMS
             end(update, context)
     elif update.message.text == '/skip':
         logger.info("%s команда /skip", user.first_name)
