@@ -139,7 +139,7 @@ def make_image_order(order):
         # В случае наличия картинок референсов необходимо вычислить допустимую максимальную ширину и высоту картинок с учетом отступа
         #max_width_pic_ref = (pagesize_w - 50 - 25 * (cells-1)) / cells
         max_width_pic_ref = (pagesize_w - 50) / cells
-        max_height_pic_ref = (1052 - (320 + 30 + count * 30) - 25 * (row - 1)) / row
+        max_height_pic_ref = (pagesize_h - 25 -(320 + 30 + count * 30) - 25 * (row - 1)) / row
         print(max_width_pic_ref)
         print(max_height_pic_ref)
 
@@ -148,8 +148,14 @@ def make_image_order(order):
             REFERENCE_PATH = str(pathlib.Path.cwd()) + "/orders/" + str(order['user_id']) + "/" + str(order['order_cnt']) + "/reference/" + str(i + 1) + ".jpg"
             reference = Image.open(REFERENCE_PATH)
             reference.thumbnail(size=(int(max_width_pic_ref), int(max_height_pic_ref)))
-            cord_x_ref = int(max_width_pic_ref * i)+25*i+25 if i <= 3 else int(max_width_pic_ref * (i-4))+25*(i-4)+25
-            print(cord_x_ref)
+            if order['order']['reference'] == 1:
+                width, height = reference.size
+                #print(width)
+                cord_x_ref = (pagesize_w - width) // 2
+                #print(cord_x_ref)
+            else:
+                cord_x_ref = int(max_width_pic_ref * i)+25*i+25 if i <= 3 else int(max_width_pic_ref * (i-4))+25*(i-4)+25
+            #print(cord_x_ref)
             step = max_height_pic_ref * (ceil((i + 1) / max_pic_inline) - 1) + 25 * (ceil((i + 1) / max_pic_inline) - 1)
             #print(step)
             cord_y_ref = 320 + 30 + count * 30 + int(step)

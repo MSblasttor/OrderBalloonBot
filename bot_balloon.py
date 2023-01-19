@@ -351,8 +351,7 @@ def select_order(update: Update, context: CallbackContext) -> int:
             state_machine = ORDER_ADD_ITEMS
             reference(update, context)
         elif update.message.text == 'Удалить':
-            print("Удалить референс")
-
+            reference(update, context)
         elif update.message.text == 'Посмотреть':
             send_reference_image_order(order, context, update)
         else:
@@ -1380,11 +1379,11 @@ def reference(update: Update, context: CallbackContext) -> int:  # Здесь п
         context.user_data[key] = i
         print(update.message.text)
         newFile = update.message.photo[-1].get_file()  # get the photo with the biggest resolution
-        if context.user_data.get('select_order') == None:
+        if context.user_data.get('select_order') == None or context.user_data['select_order'] == 0:
             user = mdb.users.find_one({"user_id": update.effective_user.id})
             PHOTO_PATH = str(pathlib.Path.cwd()) + "/orders/" + str(update.effective_user.id) + "/" + str(user['order_cnt']+1) + "/reference/" + str(i) + ".jpg"
         else:
-            PHOTO_PATH = str(pathlib.Path.cwd()) + "/orders/" + str(update.effective_user.id) + "/" + str(context.user_data.get('select_order')) + "/reference/" + str(i) + ".jpg"
+            PHOTO_PATH = str(pathlib.Path.cwd()) + "/orders/" + str(update.effective_user.id) + "/" + str(context.user_data['select_order']) + "/reference/" + str(i) + ".jpg"
         # Write to disk
         directory = PHOTO_PATH.rpartition('/')[0]
         try:
