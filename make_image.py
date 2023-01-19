@@ -126,7 +126,7 @@ def make_image_order(order):
     #print(message)
     make_txt(im, 50, 320 + count * 30, message, "left")
     count += 1
-    if 'reference' in order['order']:
+    if 'reference' in order['order'] and order['order']['reference'] != 0:
         count += 2
         message = "Референсы"
         #print(count)
