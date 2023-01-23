@@ -63,10 +63,12 @@ def save_user_order(mdb, update, user_data):
         user = search_or_save_user(mdb, update.effective_user, update.message)
         #order = mdb.orders.find_one({'user_id': user['user_id'], 'order_cnt': user_data['select_order']})
         result_order_list = user_data['order_list']
-        #print(result_order_list)
+        #reference = user_data['reference']
+        print(result_order_list)
         finish = mdb.orders.update_one(
             {'user_id': user['user_id'], 'order_cnt': user_data['select_order']},
-            {'$set': {'order.order_list' : result_order_list}})
+            #{'$set': {'order.order_list' : result_order_list, 'order.reference' : reference}})
+            {'$set': {'order.order_list': result_order_list}})
         #print(finish)
         order = mdb.orders.find_one({'user_id': user['user_id'], 'order_cnt': user_data['select_order']})
     else:
@@ -90,6 +92,7 @@ def save_user_order(mdb, update, user_data):
                         "order_list": user_data['order_list'],
                         "comment": user_data['comment'],
                         "dostavka": user_data['dostavka'],
+                        "reference": user_data['reference'],
                         "predoplata": user_data['predoplata'],
                         "summa": user_data['summa']
                     }
@@ -108,6 +111,7 @@ def save_user_order(mdb, update, user_data):
                         "order_list": user_data['order_list'],
                         "comment": user_data['comment'],
                         "dostavka": user_data['dostavka'],
+                        "reference": user_data['reference'],
                         "predoplata": user_data['predoplata'],
                         "summa": user_data['summa']
                     }
@@ -129,7 +133,7 @@ def list_archive_from_db(mdb, update):
 def show_order_user_from_db(mdb, update, order_num):
     user = search_or_save_user(mdb, update.effective_user, update.message)
     order = mdb.orders.find_one({'user_id': user['user_id'], 'order_cnt': order_num})
-    print(order)
+    #print(order)
     return order
 
 def show_archive_user_from_db(mdb, update, order_num):

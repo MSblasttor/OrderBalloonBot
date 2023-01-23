@@ -16,6 +16,9 @@ bot.
 import logging
 import copy
 import re
+#import requests
+import pathlib
+import os
 
 # Добавил для обработки исключений возникающих при ошибках
 import json
@@ -23,7 +26,7 @@ import traceback
 import html
 
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ParseMode, \
-    Update, Bot
+    Update, Bot, InputMediaPhoto
 from telegram.ext import (
     Updater,
     CommandHandler,
@@ -55,21 +58,22 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-START, CHANGE, FIO, TEL, FROM, NICKNAME, DATE, LOCATION, ORDER, ORDER_CHANGE, ORDER_REMOVE, ORDER_EDIT, ORDER_SHOW, ORDER_ADD_ITEMS, ARCHIVE, LATEX, LATEX_SIZE, LATEX_COLOR, LATEX_COUNT, LATEX_PRICE, FOIL, FOIL_CHANGE, FOIL_FIG, FOIL_FIG_NAME, FOIL_FIG_COLOR, FOIL_FIG_CNT, FOIL_FIG_PRICE, FOIL_NUM, FOIL_NUM_NAME, FOIL_NUM_COLOR, FOIL_NUM_PRICE, BUBL_COLOR, BUBL_INSERT, BUBL_PRICE, BUBL_SIZE, LABEL_NAME, LABEL_COLOR, LABEL_PRICE, STAND_NAME, STAND_PRICE, ACCESSORIES, ACCESSORIES_CNT, ACCESSORIES_PRICE, ACCESSORIES_COMMENT, COMMENT = range(
-    45)
+
+START, CHANGE, FIO, TEL, FROM, DATE, LOCATION, ORDER, ORDER_CHANGE, ORDER_REMOVE, ORDER_EDIT, ORDER_SHOW, ORDER_ADD_ITEMS, ARCHIVE, LATEX, LATEX_SIZE, LATEX_COLOR, LATEX_COUNT, LATEX_PRICE, FOIL, FOIL_CHANGE, FOIL_FIG, FOIL_FIG_NAME, FOIL_FIG_COLOR, FOIL_FIG_CNT, FOIL_FIG_PRICE, FOIL_NUM, FOIL_NUM_NAME, FOIL_NUM_COLOR, FOIL_NUM_PRICE, BUBL_COLOR, BUBL_INSERT, BUBL_PRICE, BUBL_SIZE, LABEL_NAME, LABEL_COLOR, LABEL_PRICE, STAND_NAME, STAND_PRICE, ACCESSORIES, ACCESSORIES_CNT, ACCESSORIES_PRICE, ACCESSORIES_COMMENT, COMMENT, REFERENCE = range(45)
+
 
 state_machine = START
 order_cnt = 0
 
 def start(update: Update, context: CallbackContext) -> int:
     user = update.message.from_user
-    reply_keyboard = [['Заказ', 'Смета', 'Другое']]
+    reply_keyboard = [['Заказ', 'Статистика' , 'Оплата' , 'Другое']]
     update.message.reply_text(
         'Привет! Меня зовут ШароБот. Я помогу тебе составить карточку заказа или расcчитать смету для заказчика '
         'Отправь /cancel что бы перестать разговаривать со мной\n\n'
         'Вы хотите оформить заказ или сделать смету?',
         reply_markup=ReplyKeyboardMarkup(
-            reply_keyboard, one_time_keyboard=True, input_field_placeholder='Заказ или смета'
+            reply_keyboard, one_time_keyboard=True, input_field_placeholder='Заказ или ...'
         ),
     )
     order_list = []
@@ -104,7 +108,7 @@ def other(update: Update, context: CallbackContext) -> int:
     #     context.bot.send_document(update.message.from_user.id, document=obj, caption='myevents.ics')
     #move_to_archive(mdb, update, 1022)
     update.message.reply_text('Данный раздел в разработке. Отправь команду /cancel чтобы начать сначала')
-    return ORDER_ADD_ITEMS
+    return CHANGE
 
 def change(update: Update, context: CallbackContext) -> int:  # Сюда прилетают результаты выбора пользователя после старта
     global state_machine
@@ -329,11 +333,20 @@ def select_order(update: Update, context: CallbackContext) -> int:
     global state_machine
     user = update.message.from_user
     if state_machine == ORDER_CHANGE and (
-            update.message.text != 'Состав заказа' and update.message.text != 'Изменить заказ' and update.message.text != 'Удалить заказ' and update.message.text != 'В архив' and
+            update.message.text != 'Состав заказа' and
+            update.message.text != 'Изменить заказ' and
+            update.message.text != 'Удалить заказ' and
+            update.message.text != 'Карточка заказа' and
+            update.message.text != 'РЕФЕРЕНСЫ' and
+            update.message.text != 'Добавить' and
+            update.message.text != 'Удалить' and
+            update.message.text != 'Посмотреть' and
+            update.message.text != 'Вернуться назад' and
+            update.message.text != 'В архив' and
             context.user_data['last_msg'] != "Редактировать заказ"):
         logger.info("Пользователь %s выбрал заказ %d", user.first_name, int(update.message.text))
         context.user_data['select_order'] = int(update.message.text)
-        reply_keyboard = [['Состав заказа', 'Изменить заказ', 'Удалить заказ'], ['В архив'], ['Вернуться назад']]
+        reply_keyboard = [['Состав заказа', 'Изменить заказ', 'Удалить заказ'], ['Карточка заказа'], ['РЕФЕРЕНСЫ'], ['В архив'], ['Вернуться назад']]
         reply_text = "Выберите что сделать с заказом: \n"
         update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     elif state_machine == ORDER_CHANGE and update.message.text == 'Состав заказа':
@@ -347,6 +360,33 @@ def select_order(update: Update, context: CallbackContext) -> int:
     elif state_machine == ORDER_CHANGE and update.message.text == 'Удалить заказ':
         logger.info("Пользователь %s выбрал заказ %d чтобы удалить", user.first_name, context.user_data['select_order'])
         remove_order(update, context)
+    elif state_machine == ORDER_CHANGE and update.message.text == 'Карточка заказа':
+        logger.info("Пользователь %s выбрал заказ %d чтобы посмотреть карточку заказа", user.first_name, context.user_data['select_order'])
+        order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
+        send_image_order(order, context, update)
+    elif state_machine == ORDER_CHANGE and update.message.text == 'РЕФЕРЕНСЫ':
+        logger.info("Пользователь %s выбрал заказ %d чтобы посмотреть референсы заказа", user.first_name, context.user_data['select_order'])
+        context.user_data['last_msg'] = update.message.text
+        reply_keyboard = [['Добавить', 'Удалить', 'Посмотреть'], ['Вернуться назад']]
+        text = "Что вы хотите сделать?"
+        update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+    elif state_machine == ORDER_CHANGE and context.user_data['last_msg'] == 'РЕФЕРЕНСЫ':
+        logger.info("Пользователь %s выбрал заказ %d и решил %s референс", user.first_name,
+                    context.user_data['select_order'], update.message.text)
+        order_num = context.user_data['select_order']
+        order = show_order_user_from_db(mdb, update, order_num)
+        context.user_data['reference'] = order['order']['reference']
+        if update.message.text == 'Добавить':
+            state_machine = ORDER_ADD_ITEMS
+            reference(update, context)
+        elif update.message.text == 'Удалить':
+            reference(update, context)
+        elif update.message.text == 'Посмотреть':
+            send_reference_image_order(order, context, update)
+        else:
+            reply_keyboard = [['Добавить', 'Удалить', 'Посмотреть', 'Вернуться назад']]
+            text = "Выберите дейстивие ДОБАВИТЬ или УДАЛИТЬ или ПОСМОТРЕТЬ, либо ВЕРНУТЬСЯ НАЗАД"
+            update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     elif state_machine == ORDER_CHANGE and update.message.text == 'В архив':
         logger.info("Пользователь %s выбрал заказ %d чтобы отправить в архив", user.first_name,
                     context.user_data['select_order'])
@@ -388,7 +428,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
     global state_machine
     user = update.message.from_user
     if (state_machine == ORDER or state_machine == ORDER_CHANGE) and (
-            update.message.text != 'ФИО' and update.message.text != 'Телефон' and update.message.text != 'Дата и время' and update.message.text != 'Состав заказа' and update.message.text != 'В архив' and update.message.text != 'Оплата' and update.message.text != 'Доставка' and update.message.text != '/predoplata' and update.message.text != '/dostavka' and update.message.text != 'В календарь' and update.message.text != 'Ссылка'):
+            update.message.text != 'ФИО' and update.message.text != 'Телефон' and update.message.text != 'Дата и время' and update.message.text != 'Состав заказа' and update.message.text != 'В архив' and update.message.text != 'Оплата' and update.message.text != 'Доставка' and update.message.text != '/predoplata' and update.message.text != '/dostavka' and update.message.text != 'В календарь' and update.message.text != 'РЕФЕРЕНСЫ'):
         state_machine = ORDER_EDIT
         # Сюда вставить функцию редактирования заказа из БД
         logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать", user.first_name,
@@ -559,6 +599,32 @@ def edit_order(update: Update, context: CallbackContext) -> int:
             state_machine = remove_items_from_order(update, context)
         else:
             reply_keyboard = [['Добавить', 'Удалить', 'Вернуться назад']]
+            text = "Выберите дейстивие ДОБАВИТЬ или УДАЛИТЬ, либо ВЕРНУТЬСЯ НАЗАД"
+            update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+    elif state_machine == ORDER_EDIT and update.message.text == 'РЕФЕРЕНСЫ':
+        logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать референс", user.first_name,
+                    context.user_data['select_order'])
+        context.user_data['last_msg'] = update.message.text
+        reply_keyboard = [['Добавить', 'Удалить', 'Посмотреть'], ['Вернуться назад']]
+        text = "Что вы хотите сделать?"
+        update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+    elif state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'РЕФЕРЕНСЫ':
+        logger.info("Пользователь %s выбрал заказ %d и решил %s референс", user.first_name,
+                    context.user_data['select_order'], update.message.text)
+        order_num = context.user_data['select_order']
+        order = show_order_user_from_db(mdb, update, order_num)
+        context.user_data['reference'] = order['order']['reference']
+        if update.message.text == 'Добавить':
+            print("Добавить референс")
+            state_machine = ORDER_ADD_ITEMS
+            reference(update, context)
+        elif update.message.text == 'Удалить':
+            reference(update, context)
+        elif update.message.text == 'Посмотреть':
+            print("Посмотреть референс")
+            send_reference_image_order(order, context, update)
+        else:
+            reply_keyboard = [['Добавить', 'Удалить', 'Посмотреть', 'Вернуться назад']]
             text = "Выберите дейстивие ДОБАВИТЬ или УДАЛИТЬ, либо ВЕРНУТЬСЯ НАЗАД"
             update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     elif (state_machine == ORDER_EDIT and update.message.text == 'Доставка') or (state_machine == ORDER_ADD_ITEMS and update.message.text == '/dostavka'):
@@ -756,6 +822,23 @@ def skip(update: Update, context: CallbackContext) -> int:  # Здесь пол�
         logger.info("Пользователь %s не прислал комментарий к аксессуару", user.first_name)
         reply_text = 'Ок. Теперь пришли колличество аксессуаров: ' + context.user_data['order_dict']['name']
         update.message.reply_text(reply_text)
+    elif update.message.text == '/skip' and state_machine == REFERENCE:
+
+        logger.info("Пользователь %s завершил добавление референсов", user.first_name)
+        # Сохраняем значение
+        if 'select_order' in context.user_data and context.user_data['select_order'] != 0:
+            context.user_data['last_msg'] = update.message.text
+            edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'reference', context.user_data['reference'])
+            logger.info("Пользователь %s выбрал заказ %d и сохранил референсы", user.first_name,
+                        context.user_data['select_order'])
+            state_machine = ORDER_EDIT
+            reply_text = "Референсы обновлены. Выберите что изменить: \n"
+            update.message.reply_text(reply_text,
+                                      reply_markup=ReplyKeyboardMarkup(reply_keyboard_edit_order,
+                                                                       one_time_keyboard=True))
+        else:
+            state_machine = ORDER_ADD_ITEMS
+            end(update, context)
     elif update.message.text == '/skip':
         logger.info("%s команда /skip", user.first_name)
         reply_text = "Как ты сюда попал? Введи команду /cancel и попробуем снова"
@@ -1319,6 +1402,101 @@ def comment(update: Update, context: CallbackContext) -> int:  # Здесь по
         state_machine = end(update, context)
     return state_machine
 
+def reference(update: Update, context: CallbackContext) -> int:  # Здесь пользователь выбрать добавить в заказ фото референс
+    global state_machine
+    user = update.message.from_user
+    if state_machine == ORDER_ADD_ITEMS:
+        """Пользователь выбрал фотореференс"""
+        # Сохраняем значение типа
+        logger.info("%s: %s", user.first_name, update.message.text)
+        update.message.reply_text("Пришлите фото референс или /skip чтобы закончить")
+        state_machine = REFERENCE
+    elif state_machine == REFERENCE and update.message.text == None:
+        """Пользователь Прислал референс"""
+        logger.info("%s: %s", user.first_name, "Прислал референс")
+        # Сохраняем референс
+        key = 'reference'
+        i = context.user_data.get(key)
+        if i == None:
+            i = 1
+        else:
+            if i <= 7:
+                i += 1
+            else:
+                update.message.reply_text("Вы прислали максимальное количество фото референс. Пришлите /skip чтобы закончить")
+                state_machine = REFERENCE
+                return state_machine
+
+        context.user_data[key] = i
+        print(update.message.text)
+        newFile = update.message.photo[-1].get_file()  # get the photo with the biggest resolution
+        if context.user_data.get('select_order') == None or context.user_data['select_order'] == 0:
+            user = mdb.users.find_one({"user_id": update.effective_user.id})
+            PHOTO_PATH = str(pathlib.Path.cwd()) + "/orders/" + str(update.effective_user.id) + "/" + str(user['order_cnt']+1) + "/reference/" + str(i) + ".jpg"
+        else:
+            PHOTO_PATH = str(pathlib.Path.cwd()) + "/orders/" + str(update.effective_user.id) + "/" + str(context.user_data['select_order']) + "/reference/" + str(i) + ".jpg"
+        # Write to disk
+        directory = PHOTO_PATH.rpartition('/')[0]
+        try:
+            os.makedirs(directory, mode=0o777, exist_ok=False) #рекурсивно создаем каталоги где будут лежать референсы
+        except FileExistsError:
+            print("Folder for save reference already exists")
+        else:
+            print("Folder for save reference was created")
+        newFile.download(PHOTO_PATH)
+        print("save image user reference")
+        update.message.reply_text("Пришлите еще фото референс или /skip чтобы закончить")
+        state_machine = REFERENCE
+    elif state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'РЕФЕРЕНСЫ' and update.message.text == 'Удалить':
+        state_machine = REFERENCE
+        context.user_data['last_msg'] = update.message.text
+        reply_keyboard = [[]]
+        reply_text = "Выберите номер референса который удалить:"
+        for num in range(context.user_data['reference']):
+            reply_keyboard[0].append(str(num+1))
+        reply_keyboard.append(['Вернуться назад'])
+        update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+    elif state_machine == REFERENCE and context.user_data['last_msg'] == 'Удалить':
+        logger.info("Пользователь %s выбрал заказ %d и решил %s референс номер %d", user.first_name,
+                    context.user_data['select_order'], context.user_data['last_msg'], update.message.text)
+
+        order_num = context.user_data['select_order']
+        param = 'reference'
+        value = context.user_data['reference'] - 1
+        del_ref_num = int(update.message.text)
+        # print("reference - 1")
+        edit_order_user_from_db(mdb, update, order_num, param, value) #Уменьшаем в базе данных значение референсов на 1
+
+        PHOTO_PATH = str(pathlib.Path.cwd()) + "/orders/" + str(user.id) + "/" + str(order_num) + "/reference/" + str(update.message.text) + ".jpg"
+        try:
+            os.remove(PHOTO_PATH)  # Удаляем выбранный файл референса
+            print("REMOVE:")
+            print(PHOTO_PATH)
+        except:
+            print("The system cannot find the file specified")
+
+        for i in range(del_ref_num,value + 1):
+            PHOTO_PATH_old = str(pathlib.Path.cwd()) + "/orders/" + str(user.id) + "/" + str(
+                order_num) + "/reference/" + str(i+1) + ".jpg"
+            PHOTO_PATH_new = str(pathlib.Path.cwd()) + "/orders/" + str(user.id) + "/" + str(
+                order_num) + "/reference/" + str(i) + ".jpg"
+            try:
+                os.rename(PHOTO_PATH_old, PHOTO_PATH_new)  # Переименовываем файлы в связи с удалением выбранного референса, чтобы они шли по порядку
+                print("RENAME:")
+                print("OLD NAME:")
+                print(PHOTO_PATH_old)
+                print("NEW NAME:")
+                print(PHOTO_PATH_new)
+            except:
+                print("The system cannot find the file specified")
+        context.user_data['last_msg'] = 'РЕФЕРЕНСЫ'
+        reply_keyboard = [['Добавить', 'Удалить', 'Посмотреть'], ['Вернуться назад']]
+        text = "Фото референс № "+ str(del_ref_num) +" удалено. Выберите что делать дальше: "
+        update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+        state_machine = ORDER_EDIT
+    return state_machine
+
+
 def cancel(update: Update, context: CallbackContext) -> int:  # Здесь прекращается общение с ботом.
     """Cancels and ends the conversation."""
     user = update.message.from_user
@@ -1333,18 +1511,10 @@ def end(update: Update, context: CallbackContext) -> int:  # Здесь обра
     """Пользователь завершил заполнение формы"""
     user = update.message.from_user
     logger.info("Пользователь %s завершил заполнение форм", user.first_name)
-    # if context.user_data.get('select_order') is not None and context.user_data['select_order'] != 0:
-    #     order_num = context.user_data['select_order']
-    #     print(order_num) #debug TODO: Delete
-    #     order = show_order_user_from_db(mdb, update, order_num)
-    #     msg = make_msg_order_list(order)
-    # else:
-    #     print('make msg frome user_data') #debug TODO: Delete
-    #     msg = make_msg_order_list(context.user_data)
     msg = make_msg_order_list(context.user_data)
     update.message.reply_text('Итак давай посмотрим что получается')
     update.message.reply_text(msg)
-    reply_keyboard = [['/add'], ['/remove'], ['/predoplata'], ['/dostavka'], ['/comment'], ['/finish']]
+    reply_keyboard = [['/add'], ['/remove'], ['/predoplata'], ['/dostavka'], ['/comment'], ['/reference'], ['/finish']]
     #text = "Выберите дейстивие ДОБАВИТЬ или УДАЛИТЬ, либо ВЕРНУТЬСЯ НАЗАД"
     update.message.reply_text(
         'Введите одну из следующих команд:\n'
@@ -1353,6 +1523,7 @@ def end(update: Update, context: CallbackContext) -> int:  # Здесь обра
         '/predoplata - чтобы указать сумму предоплаты \n'
         '/dostavka - чтобы указать сумму доставки\n'
         '/comment - добавить коментарий к заказу\n'
+        '/reference - добавить фото референс к заказу\n'
         '/finish - чтобы завершить оформление')
     text="Выберите действие"
     update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
@@ -1448,6 +1619,23 @@ def send_image_order(order, context, update):
     context.bot.send_photo(chat_id=update.message.chat_id, photo=open(PHOTO_PATH, 'rb'))
     return
 
+def send_reference_image_order(order, context, update):
+    media_group = []
+    text = 'Референсы к заказу №' + str(context.user_data['select_order'])
+    for i in range(order['order']['reference']):
+        PHOTO_PATH = str(pathlib.Path.cwd()) + "/orders/" + str(order['user_id']) + "/" + str(
+            order['order_cnt']) + "/reference/" + str(i + 1) + ".jpg"
+        media_group.append(InputMediaPhoto(open(PHOTO_PATH, 'rb'), caption=text if i == 0 else ''))
+        #PHOTO_PATH = str(pathlib.Path.cwd()) + "/orders/" + str(order['user_id']) + "/" + str(order['order_cnt']) + "/reference/" + str(i+1) + ".jpg"
+        #context.bot.send_photo(chat_id=update.message.chat_id, photo=open(PHOTO_PATH, 'rb'))
+    context.bot.send_media_group(chat_id=update.message.chat_id, media = media_group)
+    context.user_data['last_msg'] = 'РЕФЕРЕНСЫ'
+    reply_keyboard = [['Добавить', 'Удалить', 'Посмотреть', 'Вернуться назад']]
+    text = "Что вы хотите сделать?"
+    update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+    state_machine = ORDER_EDIT
+    return state_machine
+
 def to_calendar(order, update):
     text = "Заказ № " + str(order['order_cnt']) + ":\n"
     text += "ФИО:" + order['order']['fio'] + "\n"
@@ -1514,6 +1702,8 @@ def finish(update: Update, context: CallbackContext) -> int:  # Здесь фи�
         context.user_data['predoplata'] = 0
     if context.user_data.get('dostavka') is None:
         context.user_data['dostavka'] = 0
+    if context.user_data.get('reference') is None:
+        context.user_data['reference'] = 0
     order = save_user_order(mdb, update, context.user_data)  # Сохраняем заказ в базу данных
     if order != 0:
         text = """Заказ сохранён!
@@ -1543,6 +1733,8 @@ def error_input(update: Update, context: CallbackContext) -> int:  # Здесь 
         update.message.reply_text('Введите колличество шаров ЦИФРАМИ')
     elif state_machine == LATEX_PRICE or state_machine == FOIL_NUM_PRICE or state_machine == FOIL_FIG_PRICE or state_machine == BUBL_PRICE or state_machine == STAND_PRICE  or state_machine == FOIL_FIG_CNT or state_machine == ACCESSORIES_PRICE:
         update.message.reply_text('Введите стоимость ЦИФРАМИ')
+    elif state_machine == REFERENCE:
+        update.message.reply_text('Пришлите фото референс или для продолжения /skip')
     elif state_machine == START or state_machine == ConversationHandler.END:
         update.message.reply_text('Чтобы начать разговор введите команду /start')
         state_machine = ConversationHandler.END
@@ -1631,7 +1823,7 @@ def main() -> None:
         entry_points=[MessageHandler(Filters.text & ~Filters.command, error_input), CommandHandler('start', start)],
         states={
             CHANGE: [MessageHandler(Filters.regex('^(Заказ|Смета)$'), change),
-                     MessageHandler(Filters.regex('^(Другое)$'), other)],  # Обрабатываем выбор пользователя
+                     MessageHandler(Filters.regex('^(Другое|Статистика|Оплата)$'), other)],  # Обрабатываем выбор пользователя
             # Блок получение данных для заполнения карточки заказа
             FIO: [MessageHandler(Filters.text & ~Filters.command, order), CommandHandler('skip', skip)],
             TEL: [
@@ -1656,7 +1848,7 @@ def main() -> None:
                     MessageHandler(Filters.regex('^(Архив)$'), show_archive),
                     MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],  # Выбор манипуляций с заказом
             ORDER_CHANGE: [MessageHandler(Filters.regex('^[1-9][0-9]*$'), select_order), MessageHandler(
-                Filters.regex('^(Состав заказа|Изменить заказ|Удалить заказ|Оплата|В архив)$'), select_order),
+                Filters.regex('^(Состав заказа|Изменить заказ|Удалить заказ|Добавить|Удалить|Посмотреть|РЕФЕРЕНСЫ|Оплата|В архив)$'), select_order),
                            MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],  # Выбор манипуляций с заказом
             ORDER_REMOVE: [MessageHandler(Filters.regex('^(Добавить новый заказ)$'), order),
                            MessageHandler(Filters.regex('^(Редактировать заказ)$'), order),
@@ -1669,7 +1861,7 @@ def main() -> None:
                          MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$') & ~Filters.regex('^(В календарь)$'), edit_order),
                          MessageHandler(Filters.regex('^(ФИО|Телефон|Дата и время|Адрес|'
                                                       'Состав заказа|Оплата|Доставка|100%|50%|Другая сумма'
-                                                      '|Добавить|Удалить|В архив)$'), edit_order),
+                                                      '|Добавить|Удалить|Посмотреть|РЕФЕРЕНСЫ|В архив)$'), edit_order),
                          MessageHandler(Filters.regex('^(В календарь)$'), edit_order)],
             ORDER_SHOW: [MessageHandler(Filters.regex('^(Добавить новый заказ)$'), order),
                          MessageHandler(Filters.regex('^(Редактировать заказ)$'), order),
@@ -1694,6 +1886,7 @@ def main() -> None:
                               CommandHandler('dostavka', edit_order),
                               CommandHandler('finish', finish),
                               CommandHandler('comment', comment),
+                              CommandHandler('reference', reference),
                               MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],
             ARCHIVE: [MessageHandler(Filters.regex('^(Состав заказа|Восстановить)$'), archive),
                       MessageHandler(Filters.regex('^[1-9][0-9]*$'), archive),
@@ -1752,15 +1945,19 @@ def main() -> None:
             ACCESSORIES_PRICE: [MessageHandler(Filters.regex('^\d+$') & ~Filters.command, accessories),
                           MessageHandler(Filters.text & ~Filters.command, error_input), CommandHandler('end', end)],
 
-            COMMENT: [MessageHandler(Filters.text & ~Filters.command, comment), CommandHandler('skip', skip)],
             # Комментарий
+            COMMENT: [MessageHandler(Filters.text & ~Filters.command, comment), CommandHandler('skip', skip)],
+
+            # Референсы
+            REFERENCE: [MessageHandler(Filters.regex('^(Вернуться назад)$'), edit_order), MessageHandler(Filters.regex('^(1|2|3|4|5|6|7|8)$'), reference), MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), error_input), MessageHandler(Filters.forwarded | Filters.photo, reference), CommandHandler('skip', skip)],
+
         },
         fallbacks=[CommandHandler('cancel', cancel)],
     )
 
     dispatcher.add_handler(conv_handler)
 
-    dispatcher.add_handler(CommandHandler('bad_command', bad_command))
+    #dispatcher.add_handler(CommandHandler('bad_command', bad_command))
     # error handlers
     dispatcher.add_error_handler(error_handler)
 
