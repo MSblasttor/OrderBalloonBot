@@ -66,13 +66,13 @@ order_cnt = 0
 
 def start(update: Update, context: CallbackContext) -> int:
     user = update.message.from_user
-    reply_keyboard = [['Заказ', 'Смета', 'Другое']]
+    reply_keyboard = [['Заказ', 'Статистика' , 'Оплата' , 'Другое']]
     update.message.reply_text(
         'Привет! Меня зовут ШароБот. Я помогу тебе составить карточку заказа или расcчитать смету для заказчика '
         'Отправь /cancel что бы перестать разговаривать со мной\n\n'
         'Вы хотите оформить заказ или сделать смету?',
         reply_markup=ReplyKeyboardMarkup(
-            reply_keyboard, one_time_keyboard=True, input_field_placeholder='Заказ или смета'
+            reply_keyboard, one_time_keyboard=True, input_field_placeholder='Заказ или ...'
         ),
     )
     order_list = []
@@ -1731,7 +1731,7 @@ def main() -> None:
         entry_points=[MessageHandler(Filters.text & ~Filters.command, error_input), CommandHandler('start', start)],
         states={
             CHANGE: [MessageHandler(Filters.regex('^(Заказ|Смета)$'), change),
-                     MessageHandler(Filters.regex('^(Другое)$'), other)],  # Обрабатываем выбор пользователя
+                     MessageHandler(Filters.regex('^(Другое|Статистика|Оплата)$'), other)],  # Обрабатываем выбор пользователя
             # Блок получение данных для заполнения карточки заказа
             FIO: [MessageHandler(Filters.text & ~Filters.command, order), CommandHandler('skip', skip)],
             TEL: [
