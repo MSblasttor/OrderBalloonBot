@@ -107,7 +107,7 @@ def other(update: Update, context: CallbackContext) -> int:
     #     context.bot.send_document(update.message.from_user.id, document=obj, caption='myevents.ics')
     #move_to_archive(mdb, update, 1022)
     update.message.reply_text('Данный раздел в разработке. Отправь команду /cancel чтобы начать сначала')
-    return ORDER_ADD_ITEMS
+    return CHANGE
 
 def change(update: Update, context: CallbackContext) -> int:  # Сюда прилетают результаты выбора пользователя после старта
     global state_machine
