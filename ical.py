@@ -1,4 +1,4 @@
-from icalendar import Calendar, Event, vCalAddress, vText, vDatetime, Alarm
+from icalendar import Calendar, Event, vCalAddress, vText, vDatetime, Alarm, vFrequency, vRecur, vInt
 import pytz
 from datetime import datetime, timedelta
 import os
@@ -14,10 +14,11 @@ def make_ical_from_order(order, msg):
 
     # Add subcomponents
     event = Event()
+    event.add('rrule', {'freq': 'yearly'})
     event.add('name', 'Заказ №'+str(order['order_cnt']))
     event.add('summary', 'Заказ №' + str(order['order_cnt']))
     event.add('description', msg)
-    print(order['order']['date'])
+    #print(order['order']['date'])
     #event.add('dtstart', datetime(2022, 1, 25, 8, 0, 0, tzinfo=pytz.utc))
     #event.add('dtend', datetime(2022, 1, 25, 10, 0, 0, tzinfo=pytz.utc))
     if order['order']['date'] != '0':
@@ -35,22 +36,24 @@ def make_ical_from_order(order, msg):
     cal.add_component(event)
 
     alarm = Alarm()
-    alarm.add('trigger', timedelta(hours=-2))
-    #alarm.add('trigger', timedelta(days=-2))
-    alarm.add('action', 'display')
-    #desc = " in 5 minutes"
-    #alarm.add('description', desc)
-    event.add_component(alarm)
-
-    alarm = Alarm()
-    #alarm.add('trigger', timedelta(hours=-2))
     alarm.add('trigger', timedelta(days=-2))
     alarm.add('action', 'display')
+    #alarm.add('action', 'audio')
     # desc = " in 5 minutes"
     # alarm.add('description', desc)
     event.add_component(alarm)
 
-
+    alarm = Alarm()
+    #alarm.add('trigger', timedelta(hours=-2)) #Напоминание за 2 часа
+    alarm.add('trigger', timedelta(days=-14)) #Напоминание за 14 дней
+    alarm.add('action', 'display')
+    # alarm.add('action', 'audio')
+    # alarm.add('DURATION', vFrequency('daily').from_ical('MONTHLY'))
+    # alarm.add('repeat', vFrequency('daily').from_ical('MONTHLY'))
+    # alarm.add('DURATION', 'PT15M')
+    # desc = " in 5 minutes"
+    # alarm.add('description', desc)
+    event.add_component(alarm)
 
     # Write to disk
     directory = Path.cwd() / Path(str(order['user_id']))
