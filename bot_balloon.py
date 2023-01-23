@@ -1444,10 +1444,11 @@ def reference(update: Update, context: CallbackContext) -> int:  # Здесь п
                 print(PHOTO_PATH_new)
             except:
                 print("The system cannot find the file specified")
+        context.user_data['last_msg'] = 'РЕФЕРЕНСЫ'
         reply_keyboard = [['Добавить', 'Удалить', 'Посмотреть'], ['Вернуться назад']]
         text = "Фото референс № "+ str(del_ref_num) +" удалено. Выберите что делать дальше: "
         update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
-        state_machine = REFERENCE
+        state_machine = ORDER_EDIT
     return state_machine
 
 
