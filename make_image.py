@@ -104,15 +104,12 @@ def make_image_order(order):
     count += 1
     make_txt(im, 50, 320 + count * 30, message, "left")
     #print(count)
-    #print(message)
     if 'dostavka' in order['order']:
         message = 'Доставка: %d руб.' % order['order']['dostavka']
-        #order['summa'] = summa + user_data['dostavka']
-        #summa = order['summa']
+        summa = summa + order['order']['dostavka']
         count += 1
         make_txt(im, 50, 320 + count * 30, message, "left")
         #print(count)
-        #print(message)
     if 'predoplata' in order['order']:
         if summa - order['order']['predoplata'] > 0:
             message = 'Предоплата: %d руб.' % order['order']['predoplata']

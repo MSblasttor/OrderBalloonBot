@@ -58,8 +58,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-START, CHANGE, FIO, TEL, FROM, DATE, LOCATION, ORDER, ORDER_CHANGE, ORDER_REMOVE, ORDER_EDIT, ORDER_SHOW, ORDER_ADD_ITEMS, ARCHIVE, LATEX, LATEX_SIZE, LATEX_COLOR, LATEX_COUNT, LATEX_PRICE, FOIL, FOIL_CHANGE, FOIL_FIG, FOIL_FIG_NAME, FOIL_FIG_COLOR, FOIL_FIG_CNT, FOIL_FIG_PRICE, FOIL_NUM, FOIL_NUM_NAME, FOIL_NUM_COLOR, FOIL_NUM_PRICE, BUBL_COLOR, BUBL_INSERT, BUBL_PRICE, BUBL_SIZE, LABEL_NAME, LABEL_COLOR, LABEL_PRICE, STAND_NAME, STAND_PRICE, ACCESSORIES, ACCESSORIES_CNT, ACCESSORIES_PRICE, ACCESSORIES_COMMENT, COMMENT, REFERENCE = range(
-    45)
+START, CHANGE, FIO, TEL, FROM, DATE, LOCATION, ORDER, ORDER_CHANGE, ORDER_REMOVE, ORDER_EDIT, ORDER_SHOW, ORDER_ADD_ITEMS, ARCHIVE, LATEX, LATEX_SIZE, LATEX_COLOR, LATEX_COUNT, LATEX_PRICE, FOIL, FOIL_CHANGE, FOIL_FIG, FOIL_FIG_NAME, FOIL_FIG_COLOR, FOIL_FIG_CNT, FOIL_FIG_PRICE, FOIL_NUM, FOIL_NUM_NAME, FOIL_NUM_COLOR, FOIL_NUM_PRICE, BUBL_COLOR, BUBL_INSERT, BUBL_PRICE, BUBL_SIZE, LABEL_NAME, LABEL_COLOR, LABEL_PRICE, STAND_NAME, STAND_PRICE, ACCESSORIES, ACCESSORIES_CNT, ACCESSORIES_PRICE, ACCESSORIES_COMMENT, COMMENT, REFERENCE = range(45)
 
 state_machine = START
 order_cnt = 0
@@ -188,6 +187,34 @@ def order(update: Update, context: CallbackContext) -> int:  # Здесь пол
         # Сохраняем значение
         key = 'from'
         value = update.message.text
+        context.user_data[key] = value
+        if update.message.text == 'Инстаграм' or update.message.text == 'ВКонтакте':
+            update.message.reply_text(
+            'Отлично. Введи никнейм заказчина из ' + update.message.text +
+            ' или отправь /skip если ты не знаешь или требует уточнения')
+            state_machine = NICKNAME
+        else:
+            update.message.reply_text(
+                'Отлично. Введи дату и время когда планируется мероприятие (доставка)'
+                ' или отправь /skip если ты не знаешь или требует уточнения')
+            state_machine = DATE
+    elif state_machine == NICKNAME:
+        """Сохраняем никнейм заказчика"""
+        value = update.message.text
+        if context.user_data['from'] == "Инстаграм":
+            if value.find(".com/") != -1:
+                value = value[value.find(".com/") + 5:value.find("?")]
+            else:
+                update.message.reply_text(
+                'Что-то не то. Пришлите ссылку на профиль заказчика из Инстаграм'
+                ' или отправь /skip если ты не знаешь или требует уточнения',
+                )
+                return state_machine
+        if context.user_data['from'] == "Вконтакте":
+            if value.find("@") != -1:
+                value = value[1:]
+        logger.info("Заказчик пришел из %s и пользователь добавил %s при обработке получился следующий ник: %s", context.user_data['from'], update.message.text, value)
+        key = 'nickname'
         context.user_data[key] = value
         update.message.reply_text(
             'Отлично. Теперь введи дату и время когда планируется мероприятие (доставка)'
@@ -652,6 +679,12 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         context.user_data['last_msg'] = update.message.text
         order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
         send_image_order(order, context, update)
+    elif (state_machine == ORDER_EDIT or state_machine == ORDER_SHOW) and update.message.text == 'Ссылка':
+        logger.info("Пользователь %s выбрал заказ %d чтобы получить ссылку на диалог с заказчиком", user.first_name,
+                    context.user_data['select_order'])
+        context.user_data['last_msg'] = update.message.text
+        order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
+        send_link_to_messanger(order, update, context)
     # else
     return state_machine
 
@@ -746,6 +779,15 @@ def skip(update: Update, context: CallbackContext) -> int:  # Здесь пол�
         context.user_data[key] = value
         logger.info("Пользователь %s не прислал откуда заказчик", user.first_name)
         reply_text = 'Плохо что неизвестно откуда заказчик, лучше уточнить на будушее. Теперь пришли дату мероприятия, или отправь /skip.'
+        update.message.reply_text(reply_text)
+    elif update.message.text == '/skip' and state_machine == NICKNAME:
+        state_machine = DATE
+        # Сохраняем значение
+        key = 'nickname'
+        value = '0'
+        context.user_data[key] = value
+        logger.info("Пользователь %s не прислал никнейм заказчика", user.first_name)
+        reply_text = 'Плохо что неизвестно никнейм заказчик, Ты не сможешь получить ссылку на чат. Теперь пришли дату мероприятия, или отправь /skip.'
         update.message.reply_text(reply_text)
     elif update.message.text == '/skip' and state_machine == DATE:
         state_machine = LOCATION
@@ -1604,15 +1646,63 @@ def to_calendar(order, update):
     update.message.reply_text(text, parse_mode=ParseMode.HTML)
     return
 
+##reply_keyboard = [['Инстаграм', 'Авито', 'ВКонтакте'], ['Telegram', 'WhatsApp', 'Viber'], ['Другое'], ['/skip']]
+def make_link_to_messanger(order, context, update):
+    tel = order['order']['tel']
+    if tel != "0":
+        tel = list(filter(str.isdigit, tel))[1:]
+        tel = "7{}{}{}{}{}{}{}{}{}{}".format(*tel)
+        print(tel)
+        if order['order']['from'] == 'WhatsApp':
+            #link = "<b><a href=\"whatsapp://send?phone=" + str(tel)+ "\">Открыть чат в WhatsApp</a></b>"
+            link = "<b><a href=\"http://wa.me/" + str(tel) + "\">Открыть чат в WhatsApp</a></b>"
+        elif order['order']['from'] == 'Telegram':
+            #link = "<b><a href=\"tg://resolve?domain=" + str(tel) + "\">Открыть чат в Телеграм</a></b>"
+            link = "<b><a href=\"t.me/+" + str(tel) + "\">Открыть чат в Телеграм</a></b>"
+        elif order['order']['from'] == 'Viber':
+            link = "<b><a href=\"viber://chat?number=" + str(tel) + "\">Открыть чат в Viber</a></b>"
+        elif order['order']['from'] == 'Инстаграм':
+            print("Instagram develop")
+            #link = "<b><a href=\"http://ig.me/m/" + order['order']['nickname'] + "\">Открыть чат в Instagram</a></b>"
+            #link = "<b><a href=\"instagram://user?username=msblasttor\">Открыть чат в Instagram</a></b>"
+            link = "<b><a href=\"http://ig.me/m/"+ order['order']['nickname'] +"\">Открыть чат в Instagram</a></b>"
+        elif order['order']['from'] == 'Авито':
+            print("Avito develop")
+            link = "Пока в работе /cancel"
+        elif order['order']['from'] == 'ВКонтакте':
+            print("VKontakte develop")
+            link = "Пока в работе /cancel"
+        elif order['order']['from'] == 'Другое':
+            print("Other develop")
+            link = "Пока в работе /cancel"
+        else:
+            print("Error link develop")
+            link = "Пока в работе /cancel"
+    else:
+        link = "Не указано контактных данных"
+    return link
+
+def send_link_to_messanger(order, update: Update, context: CallbackContext) -> int:  # Здесь отправляется ссылка на мессенджер откуда пришел заказчик
+    global state_machine
+    user = update.message.from_user
+    logger.info("Пользователь %s получил ссылку на мессенджер с заказчиком", user.first_name)
+    text = make_link_to_messanger(order, context, update)
+    update.message.reply_text(text, parse_mode=ParseMode.HTML)
+    return state_machine
+
+
 def finish(update: Update, context: CallbackContext) -> int:  # Здесь финализируется каточка заказа и сохраняется в базу данных MongoDB
     global state_machine
     user = update.message.from_user
     logger.info("Пользователь %s завершил оформление заказ", user.first_name)
     if context.user_data.get('predoplata') is None:
         context.user_data['predoplata'] = 0
+    if context.user_data.get('dostavka') is None:
+        context.user_data['dostavka'] = 0
     if context.user_data.get('reference') is None:
         context.user_data['reference'] = 0
     print(context.user_data)
+
     order = save_user_order(mdb, update, context.user_data)  # Сохраняем заказ в базу данных
     if order != 0:
         text = """Заказ сохранён!
@@ -1739,6 +1829,7 @@ def main() -> None:
                                order), MessageHandler(Filters.text & ~Filters.command, error_input),
                 CommandHandler('skip', skip)],
             FROM: [MessageHandler(Filters.text & ~Filters.command, order), CommandHandler('skip', skip)],
+            NICKNAME: [MessageHandler(Filters.text & ~Filters.command, order), CommandHandler('skip', skip)],
             DATE: [MessageHandler(Filters.regex(
                 '[0-3]?[0-9].[0-3]?[0-9].(?:[0-9]{2})?[0-9]{2} (?:[01][0-9]|2[0-3]):[0-5][0-9]') & ~Filters.command,
                                   order), MessageHandler(Filters.text & ~Filters.command, error_input),
