@@ -418,7 +418,7 @@ def show_order(update: Update, context: CallbackContext) -> int:
         text += make_msg_order_list(order['order'])
         update.message.reply_text(text)
         update.message.text = order_num
-        send_link_to_messanger(order, context, update)
+        send_link_to_messanger(order, update, context)
         select_order(update, context)
     return state_machine
 
