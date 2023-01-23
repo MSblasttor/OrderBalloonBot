@@ -137,8 +137,9 @@ def make_image_order(order):
         row = ceil(order['order']['reference'] / max_pic_inline)
         cells = order['order']['reference'] if order['order']['reference'] <= max_pic_inline else max_pic_inline
         # В случае наличия картинок референсов необходимо вычислить допустимую максимальную ширину и высоту картинок с учетом отступа
-        #max_width_pic_ref = (pagesize_w - 50 - 25 * (cells-1)) / cells
-        max_width_pic_ref = ((pagesize_w - 50) / cells) - (25 * (cells - 1))
+        max_width_pic_ref = (pagesize_w - 50 - 25 * (cells-1)) / cells
+
+        #max_width_pic_ref = ((pagesize_w - 50) / cells) #- (25 * (cells - 1))
         max_height_pic_ref = (pagesize_h - 25 -(320 + 30 + count * 30) - 25 * (row - 1)) / row
         print(max_width_pic_ref)
         print(max_height_pic_ref)
