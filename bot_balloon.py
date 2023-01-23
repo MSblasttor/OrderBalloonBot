@@ -371,14 +371,15 @@ def show_order(update: Update, context: CallbackContext) -> int:
         # Сюда вставить функцию вывода состава заказа из БД
         order_num = context.user_data['select_order']
         order = show_order_user_from_db(mdb, update, order_num)
-        order = order['order']
+        # order = order['order']
         text = "Заказ № " + str(context.user_data['select_order']) + ":\n"
-        text += "ФИО:" + order['fio'] + "\n"
-        text += "Телефон:" + order['tel'] + "\n"
-        text += "Дата:" + order['date'] + "\n"
-        text += "Адрес:" + order['location'] + "\n\n"
-        text += make_msg_order_list(order)
+        text += "ФИО:" + order['order']['fio'] + "\n"
+        text += "Телефон:" + order['order']['tel'] + "\n"
+        text += "Дата:" + order['order']['date'] + "\n"
+        text += "Адрес:" + order['order']['location'] + "\n\n"
+        text += make_msg_order_list(order['order'])
         update.message.reply_text(text)
+        send_link_to_messanger(order, update, context)
         update.message.text = order_num
         select_order(update, context)
     return state_machine
@@ -1521,6 +1522,7 @@ def finish(update: Update, context: CallbackContext) -> int:  # Здесь фи�
         update.message.reply_text(text, parse_mode=ParseMode.HTML)  # текстовое сообщение с форматированием HTML
         send_image_order(order, context, update)
         to_calendar(order, update)
+        send_link_to_messanger(order, context, update)
     else:
         text = "Заказ не сохранен так как нечего сохранять. Попробуй заново /start"
         update.message.reply_text(text)
