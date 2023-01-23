@@ -1375,7 +1375,13 @@ def reference(update: Update, context: CallbackContext) -> int:  # Здесь п
         if i == None:
             i = 1
         else:
-            i += 1
+            if i <= 7:
+                i += 1
+            else:
+                update.message.reply_text("Вы прислали максимальное количество фото референс. Пришлите /skip чтобы закончить")
+                state_machine = REFERENCE
+                return state_machine
+
         context.user_data[key] = i
         print(update.message.text)
         newFile = update.message.photo[-1].get_file()  # get the photo with the biggest resolution
@@ -1393,15 +1399,6 @@ def reference(update: Update, context: CallbackContext) -> int:  # Здесь п
         else:
             print("Folder for save reference was created")
         newFile.download(PHOTO_PATH)
-
-        #file_id = update.message.photo[-1].file_id
-        # get URL by id
-        #file_path = requests.get(f'https://api.telegram.org/bot{TG_TOKEN}/getFile?file_id={file_id}').json()['result']['file_path']
-        #print(file_path)
-        #path_img = "/root/OrderBalloonBot/img/" + str(order['user_id']) + "/reference/" + str(order['order_cnt'])  #+ ".png"
-        #path_img = "/root/OrderBalloonBot/orders/test/"+'filename' + '.jpeg'
-        #newFile.download(path_img)
-        #newFile.download('filename' + '.jpeg')
         print("save image user reference")
         update.message.reply_text("Пришлите еще фото референс или /skip чтобы закончить")
         state_machine = REFERENCE
@@ -1422,12 +1419,12 @@ def reference(update: Update, context: CallbackContext) -> int:  # Здесь п
         param = 'reference'
         value = context.user_data['reference'] - 1
         del_ref_num = int(update.message.text)
-        print("reference - 1")
+        # print("reference - 1")
         edit_order_user_from_db(mdb, update, order_num, param, value) #Уменьшаем в базе данных значение референсов на 1
 
         PHOTO_PATH = str(pathlib.Path.cwd()) + "/orders/" + str(user.id) + "/" + str(order_num) + "/reference/" + str(update.message.text) + ".jpg"
         try:
-            os.remove(PHOTO_PATH)
+            os.remove(PHOTO_PATH)  # Удаляем выбранный файл референса
             print("REMOVE:")
             print(PHOTO_PATH)
         except:
@@ -1439,7 +1436,7 @@ def reference(update: Update, context: CallbackContext) -> int:  # Здесь п
             PHOTO_PATH_new = str(pathlib.Path.cwd()) + "/orders/" + str(user.id) + "/" + str(
                 order_num) + "/reference/" + str(i) + ".jpg"
             try:
-                os.rename(PHOTO_PATH_old, PHOTO_PATH_new)
+                os.rename(PHOTO_PATH_old, PHOTO_PATH_new)  # Переименовываем файлы в связи с удалением выбранного референса, чтобы они шли по порядку
                 print("RENAME:")
                 print("OLD NAME:")
                 print(PHOTO_PATH_old)
@@ -1447,6 +1444,10 @@ def reference(update: Update, context: CallbackContext) -> int:  # Здесь п
                 print(PHOTO_PATH_new)
             except:
                 print("The system cannot find the file specified")
+        reply_keyboard = [['Добавить', 'Удалить', 'Посмотреть'], ['Вернуться назад']]
+        text = "Фото референс № "+ str(del_ref_num) +" удалено. Выберите что делать дальше: "
+        update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+        state_machine = REFERENCE
     return state_machine
 
 
@@ -1850,17 +1851,19 @@ def main() -> None:
             ACCESSORIES_PRICE: [MessageHandler(Filters.regex('^\d+$') & ~Filters.command, accessories),
                           MessageHandler(Filters.text & ~Filters.command, error_input), CommandHandler('end', end)],
 
+            # Комментарий
             COMMENT: [MessageHandler(Filters.text & ~Filters.command, comment), CommandHandler('skip', skip)],
 
+            # Референсы
             REFERENCE: [MessageHandler(Filters.regex('^(Вернуться назад)$'), edit_order), MessageHandler(Filters.regex('^(1|2|3|4|5|6|7|8)$'), reference), MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), error_input), MessageHandler(Filters.forwarded | Filters.photo, reference), CommandHandler('skip', skip)],
-            # Комментарий
+
         },
         fallbacks=[CommandHandler('cancel', cancel)],
     )
 
     dispatcher.add_handler(conv_handler)
 
-    dispatcher.add_handler(CommandHandler('bad_command', bad_command))
+    #dispatcher.add_handler(CommandHandler('bad_command', bad_command))
     # error handlers
     dispatcher.add_error_handler(error_handler)
 
