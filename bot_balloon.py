@@ -58,7 +58,9 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+
 START, CHANGE, FIO, TEL, FROM, DATE, LOCATION, ORDER, ORDER_CHANGE, ORDER_REMOVE, ORDER_EDIT, ORDER_SHOW, ORDER_ADD_ITEMS, ARCHIVE, LATEX, LATEX_SIZE, LATEX_COLOR, LATEX_COUNT, LATEX_PRICE, FOIL, FOIL_CHANGE, FOIL_FIG, FOIL_FIG_NAME, FOIL_FIG_COLOR, FOIL_FIG_CNT, FOIL_FIG_PRICE, FOIL_NUM, FOIL_NUM_NAME, FOIL_NUM_COLOR, FOIL_NUM_PRICE, BUBL_COLOR, BUBL_INSERT, BUBL_PRICE, BUBL_SIZE, LABEL_NAME, LABEL_COLOR, LABEL_PRICE, STAND_NAME, STAND_PRICE, ACCESSORIES, ACCESSORIES_CNT, ACCESSORIES_PRICE, ACCESSORIES_COMMENT, COMMENT, REFERENCE = range(45)
+
 
 state_machine = START
 order_cnt = 0
@@ -409,14 +411,15 @@ def show_order(update: Update, context: CallbackContext) -> int:
         # Сюда вставить функцию вывода состава заказа из БД
         order_num = context.user_data['select_order']
         order = show_order_user_from_db(mdb, update, order_num)
-        order = order['order']
+        # order = order['order']
         text = "Заказ № " + str(context.user_data['select_order']) + ":\n"
-        text += "ФИО:" + order['fio'] + "\n"
-        text += "Телефон:" + order['tel'] + "\n"
-        text += "Дата:" + order['date'] + "\n"
-        text += "Адрес:" + order['location'] + "\n\n"
-        text += make_msg_order_list(order)
+        text += "ФИО:" + order['order']['fio'] + "\n"
+        text += "Телефон:" + order['order']['tel'] + "\n"
+        text += "Дата:" + order['order']['date'] + "\n"
+        text += "Адрес:" + order['order']['location'] + "\n\n"
+        text += make_msg_order_list(order['order'])
         update.message.reply_text(text)
+        send_link_to_messanger(order, update, context)
         update.message.text = order_num
         select_order(update, context)
     return state_machine
@@ -1701,8 +1704,6 @@ def finish(update: Update, context: CallbackContext) -> int:  # Здесь фи�
         context.user_data['dostavka'] = 0
     if context.user_data.get('reference') is None:
         context.user_data['reference'] = 0
-    print(context.user_data)
-
     order = save_user_order(mdb, update, context.user_data)  # Сохраняем заказ в базу данных
     if order != 0:
         text = """Заказ сохранён!
@@ -1711,6 +1712,7 @@ def finish(update: Update, context: CallbackContext) -> int:  # Здесь фи�
         update.message.reply_text(text, parse_mode=ParseMode.HTML)  # текстовое сообщение с форматированием HTML
         send_image_order(order, context, update)
         to_calendar(order, update)
+        send_link_to_messanger(order, context, update)
     else:
         text = "Заказ не сохранен так как нечего сохранять. Попробуй заново /start"
         update.message.reply_text(text)
