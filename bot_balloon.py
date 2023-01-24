@@ -1712,7 +1712,7 @@ def finish(update: Update, context: CallbackContext) -> int:  # Здесь фи�
         update.message.reply_text(text, parse_mode=ParseMode.HTML)  # текстовое сообщение с форматированием HTML
         send_image_order(order, context, update)
         to_calendar(order, update)
-        send_link_to_messanger(order, context, update)
+        send_link_to_messanger(order, update, context)
     else:
         text = "Заказ не сохранен так как нечего сохранять. Попробуй заново /start"
         update.message.reply_text(text)
