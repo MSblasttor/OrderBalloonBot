@@ -1848,7 +1848,7 @@ def main() -> None:
                     MessageHandler(Filters.regex('^(Архив)$'), show_archive),
                     MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],  # Выбор манипуляций с заказом
             ORDER_CHANGE: [MessageHandler(Filters.regex('^[1-9][0-9]*$'), select_order), MessageHandler(
-                Filters.regex('^(Состав заказа|Изменить заказ|Удалить заказ|Добавить|Удалить|Посмотреть|РЕФЕРЕНСЫ|Оплата|В архив)$'), select_order),
+                Filters.regex('^(Состав заказа|Изменить заказ|Удалить заказ|Добавить|Удалить|Карточка заказа|Посмотреть|РЕФЕРЕНСЫ|Оплата|В архив)$'), select_order),
                            MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],  # Выбор манипуляций с заказом
             ORDER_REMOVE: [MessageHandler(Filters.regex('^(Добавить новый заказ)$'), order),
                            MessageHandler(Filters.regex('^(Редактировать заказ)$'), order),
