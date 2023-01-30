@@ -1702,6 +1702,8 @@ def finish(update: Update, context: CallbackContext) -> int:  # Здесь фи�
         context.user_data['dostavka'] = 0
     if context.user_data.get('reference') is None:
         context.user_data['reference'] = 0
+    if context.user_data.get('nickname') is None:
+        context.user_data['nickname'] = 0
     print(context.user_data)
 
     order = save_user_order(mdb, update, context.user_data)  # Сохраняем заказ в базу данных
