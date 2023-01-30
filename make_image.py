@@ -10,7 +10,10 @@ font_path = "/root/OrderBalloonBot/fonts/Steclo.otf"
 def make_image_order(order):
     pagesize_w, pagesize_h = (744, 1052)
     im = Image.new('RGB', (pagesize_w, pagesize_h), color=('#FAACAC'))
-    template = Image.open('/root/OrderBalloonBot/img/order_templ.png')
+    try:
+        template = Image.open('/root/OrderBalloonBot/img/'+order['user_id']+'/order_templ_'+ order['user_id'] +'.png')
+    except:
+        template = Image.open('/root/OrderBalloonBot/img/order_templ.png')
     im.paste(template, (0, 0))
     template.close()
     #print(order)
