@@ -213,6 +213,14 @@ def order(update: Update, context: CallbackContext) -> int:  # Здесь пол
         if context.user_data['from'] == "Вконтакте":
             if value.find("@") != -1:
                 value = value[1:]
+            else:
+                update.message.reply_text(
+                'Вы прислали:'
+                '\n'+ value +
+                '\n Что-то не то. Пришлите ссылку на профиль заказчика из Инстаграм'
+                ' или отправь /skip если ты не знаешь или требует уточнения',
+                )
+                return state_machine
         logger.info("Заказчик пришел из %s и пользователь добавил %s при обработке получился следующий ник: %s", context.user_data['from'], update.message.text, value)
         key = 'nickname'
         context.user_data[key] = value
