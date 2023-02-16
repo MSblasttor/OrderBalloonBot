@@ -7,7 +7,7 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMa
 
 from telegram.ext import CallbackContext
 
-#from bot_balloon import *
+from bot_balloon import state_machine
 
 
 # Enable logging

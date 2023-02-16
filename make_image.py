@@ -229,7 +229,7 @@ def make_txt(image, x, y, txt, align="centr", font_size=30, font_path="/root/Ord
     )
     return
 
-
-order={'order_cnt': 1024, 'user_id': 123456789, 'order': {'fio': 'Тест Тестович', 'tel': '89539729889', 'date': '20.09.22 15:00', 'location': 'Тула, Санаторная 9 - 13', "comment": 0, "reference": 2, 'order_list': [{"type": "latex", "size": "12\"", "color": "Черный", "name": "Латекс", "count": 10, "price": 105, "summa": 1050}]}}
+# for Debug
+# order={'order_cnt': 1024, 'user_id': 123456789, 'order': {'fio': 'Тест Тестович', 'tel': '89539729889', 'date': '20.09.22 15:00', 'location': 'Тула, Санаторная 9 - 13', "comment": 0, "reference": 2, 'order_list': [{"type": "latex", "size": "12\"", "color": "Черный", "name": "Латекс", "count": 10, "price": 105, "summa": 1050}]}}
 # make_image_order(order)
-make_template_image(order)
+# make_template_image(order)
