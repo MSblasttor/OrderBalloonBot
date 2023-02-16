@@ -1847,13 +1847,13 @@ def profile(update: Update, context: CallbackContext) -> int:
         update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
         state_machine = PROFILE
     elif state_machine == PROFILE and update.message.text == 'Карточка заказа':
-        logger.info("%s выбрал раздел %s", user.first_name, update.message.text)
+        logger.info("Пользователь %s выбрал раздел %s", user.first_name, update.message.text)
         context.user_data['last_msg'] = update.message.text
         reply_text = "Вы выбрали раздел 'Карточка заказа'. Что бы вы хотели сделать?"
         reply_keyboard = [['Вывести текущий шаблон', 'Редактировать шаблон'], ['Назад']]
         update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     elif state_machine == PROFILE and context.user_data['last_msg'] == 'Карточка заказа' and update.message.text == 'Вывести текущий шаблон':
-        logger.info("%s выбрал раздел %s", user.first_name, update.message.text)
+        logger.info("Пользователь %s выбрал раздел %s", user.first_name, update.message.text)
         #context.user_data['last_msg'] = update.message.text
         #user_id = update.effective_user.id
         user = search_or_save_user(mdb, update.effective_user, update.message)
@@ -1862,6 +1862,27 @@ def profile(update: Update, context: CallbackContext) -> int:
         reply_text = "Текущий шаблон карточки заказа. Что бы вы хотели сделать?"
         reply_keyboard = [['Вывести текущий шаблон', 'Редактировать шаблон'], ['Назад']]
         update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+    elif state_machine == PROFILE and context.user_data['last_msg'] == 'Карточка заказа' and update.message.text == 'Редактировать шаблон':
+        logger.info("Пользователь %s выбрал раздел %s", user.first_name, update.message.text)
+        context.user_data['last_msg'] = update.message.text
+        reply_text = "Редактирование шаблона карточки заказа. Что бы вы хотели сделать?"
+        reply_keyboard = [['Изменить логотип', 'Изменить цвет фона'], ['Назад']]
+        update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+    elif state_machine == PROFILE and context.user_data['last_msg'] == 'Редактировать шаблон' and update.message.text == 'Изменить логотип':
+        logger.info("Пользователь %s выбрал раздел %s", user.first_name, update.message.text)
+        context.user_data['last_msg'] = update.message.text
+        reply_text = "Пришлите новый логотип. либо нажмите 'Назад' чтобы вернуться"
+        reply_keyboard = [['Назад']]
+        update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+    # elif state_machine == PROFILE and context.user_data['last_msg'] == 'Изменить логотип' and update.message.text == None:
+    #     """Пользователь Прислал новый логотип"""
+    #     logger.info("Пользователь %s: прислал новый логотип", user.first_name, "Прислал референс")
+    #     newFile = update.message.photo[-1].get_file()  # get the photo with the biggest resolution
+    #     PHOTO_PATH = ".jpg"
+    #     newFile.download(PHOTO_PATH)
+    #     print("save image user reference")
+    #     update.message.reply_text("Пришлите еще фото референс или /skip чтобы закончить")
+    #     #state_machine = REFERENCE
     else:
         logger.info("%s выбрала раздел %s", user.first_name, update.message.text)
     return state_machine
