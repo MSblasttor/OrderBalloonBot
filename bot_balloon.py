@@ -58,7 +58,7 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-START, CHANGE, FIO, TEL, FROM, NICKNAME, DATE, LOCATION, ORDER, ORDER_CHANGE, ORDER_REMOVE, ORDER_EDIT, ORDER_SHOW, ORDER_ADD_ITEMS, ARCHIVE, LATEX, LATEX_SIZE, LATEX_COLOR, LATEX_COUNT, LATEX_PRICE, FOIL, FOIL_CHANGE, FOIL_FIG, FOIL_FIG_NAME, FOIL_FIG_COLOR, FOIL_FIG_CNT, FOIL_FIG_PRICE, FOIL_NUM, FOIL_NUM_NAME, FOIL_NUM_COLOR, FOIL_NUM_PRICE, BUBL_COLOR, BUBL_INSERT, BUBL_PRICE, BUBL_SIZE, LABEL_NAME, LABEL_COLOR, LABEL_PRICE, STAND_NAME, STAND_PRICE, ACCESSORIES, ACCESSORIES_CNT, ACCESSORIES_PRICE, ACCESSORIES_COMMENT, COMMENT, REFERENCE = range(46)
+START, CHANGE, FIO, TEL, FROM, NICKNAME, DATE, LOCATION, ORDER, ORDER_CHANGE, ORDER_REMOVE, ORDER_EDIT, ORDER_SHOW, ORDER_ADD_ITEMS, ARCHIVE, LATEX, LATEX_SIZE, LATEX_COLOR, LATEX_COUNT, LATEX_PRICE, FOIL, FOIL_CHANGE, FOIL_FIG, FOIL_FIG_NAME, FOIL_FIG_COLOR, FOIL_FIG_CNT, FOIL_FIG_PRICE, FOIL_NUM, FOIL_NUM_NAME, FOIL_NUM_COLOR, FOIL_NUM_PRICE, BUBL_COLOR, BUBL_INSERT, BUBL_PRICE, BUBL_SIZE, LABEL_NAME, LABEL_COLOR, LABEL_PRICE, STAND_NAME, STAND_PRICE, ACCESSORIES, ACCESSORIES_CNT, ACCESSORIES_PRICE, ACCESSORIES_COMMENT, COMMENT, REFERENCE, PROFILE = range(47)
 
 state_machine = START
 order_cnt = 0
@@ -1960,6 +1960,13 @@ def main() -> None:
 
             # Референсы
             REFERENCE: [MessageHandler(Filters.regex('^(Вернуться назад)$'), edit_order), MessageHandler(Filters.regex('^(1|2|3|4|5|6|7|8)$'), reference), MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), error_input), MessageHandler(Filters.forwarded | Filters.photo, reference), CommandHandler('skip', skip)],
+
+            # Личный кабинет
+            PROFILE: [MessageHandler(Filters.regex('^(Вернуться назад)$'), edit_order),
+                        MessageHandler(Filters.regex('^(1|2|3|4|5|6|7|8)$'), reference),
+                        MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'),
+                                       error_input), MessageHandler(Filters.forwarded | Filters.photo, reference),
+                        CommandHandler('skip', skip)],
 
         },
         fallbacks=[CommandHandler('cancel', cancel)],
