@@ -49,7 +49,7 @@ def make_template_image(user):
     #    order['user_id']) + ".png"
     path_img = "/root/OrderBalloonBot/img/" + str(user['user_id']) + "/order_templ_" + str(user['user_id']) + ".png"
     im.save(path_img)
-    print("Save pic order")
+    print("Save template pic order")
     return
 
 
