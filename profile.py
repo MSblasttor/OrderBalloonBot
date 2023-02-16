@@ -6,7 +6,7 @@ import logging
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ParseMode, \
     Update, Bot, InputMediaPhoto
 
-from bot_balloon import *
+#from bot_balloon import *
 
 
 # Enable logging
