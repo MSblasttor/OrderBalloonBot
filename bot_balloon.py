@@ -40,6 +40,7 @@ from telegram.ext import (
 from io import BytesIO
 
 from mongodb import *
+from profile import profile
 
 from settings import TG_TOKEN, DEVELOPER_CHAT_ID
 
@@ -65,7 +66,7 @@ order_cnt = 0
 
 def start(update: Update, context: CallbackContext) -> int:
     user = update.message.from_user
-    reply_keyboard = [['Заказ', 'Статистика' , 'Оплата' , 'Другое']]
+    reply_keyboard = [['Заказ', 'Личный кабинет' , 'Другое']]
     update.message.reply_text(
         'Привет! Меня зовут ШароБот. Я помогу тебе составить карточку заказа или расcчитать смету для заказчика '
         'Отправь /cancel что бы перестать разговаривать со мной\n\n'
@@ -1833,7 +1834,8 @@ def main() -> None:
         entry_points=[MessageHandler(Filters.text & ~Filters.command, error_input), CommandHandler('start', start)],
         states={
             CHANGE: [MessageHandler(Filters.regex('^(Заказ|Смета)$'), change),
-                     MessageHandler(Filters.regex('^(Другое|Статистика|Оплата)$'), other)],  # Обрабатываем выбор пользователя
+                     MessageHandler(Filters.regex('^(Другое|Статистика|Оплата)$'), other),
+                    MessageHandler(Filters.regex('^(Личный кабинет)$'), profile)], # Обрабатываем выбор пользователя
             # Блок получение данных для заполнения карточки заказа
             FIO: [MessageHandler(Filters.text & ~Filters.command, order), CommandHandler('skip', skip)],
             TEL: [
@@ -1962,11 +1964,9 @@ def main() -> None:
             REFERENCE: [MessageHandler(Filters.regex('^(Вернуться назад)$'), edit_order), MessageHandler(Filters.regex('^(1|2|3|4|5|6|7|8)$'), reference), MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), error_input), MessageHandler(Filters.forwarded | Filters.photo, reference), CommandHandler('skip', skip)],
 
             # Личный кабинет
-            PROFILE: [MessageHandler(Filters.regex('^(Вернуться назад)$'), edit_order),
-                        MessageHandler(Filters.regex('^(1|2|3|4|5|6|7|8)$'), reference),
-                        MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'),
-                                       error_input), MessageHandler(Filters.forwarded | Filters.photo, reference),
-                        CommandHandler('skip', skip)],
+            PROFILE: [MessageHandler(Filters.regex('^(Вернуться назад)$'), start),
+                    MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), profile),
+                    CommandHandler('skip', skip)],
 
         },
         fallbacks=[CommandHandler('cancel', cancel)],
