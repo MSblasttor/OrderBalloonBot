@@ -7,6 +7,32 @@ from math import ceil
 
 font_path = "/root/OrderBalloonBot/fonts/Steclo.otf"
 
+def make_tempalate_image(order):
+    pagesize_w, pagesize_h = (744, 1052)
+    im = Image.new('RGB', (pagesize_w, pagesize_h), color=('#FFFFFF'))
+    logosize_w, logosize_h = (250, 250)
+    try:
+        logo_img = Image.open('/root/OrderBalloonBot/img/'+ str(order['user_id']) +'/order_logo_'+ str(order['user_id']) +'.png')
+        logo_img.thumbnail(size=(logosize_w, logosize_h))
+    except:
+        logo_img = Image.open('/root/OrderBalloonBot/img/order_templ.png')
+    im.paste(logo_img, (pagesize_w-logosize_w-10, pagesize_h-logosize_h-10))
+    logo_img.close()
+    # Сохраняем изображение
+    directory_order = pathlib.Path('/root/OrderBalloonBot/img/' + str(order['user_id']))
+    try:
+        directory_order.mkdir(parents=True, exist_ok=False)
+    except FileExistsError:
+        print("Folder for pic: " + str(order['user_id']) + " already exists")
+    else:
+        print("Folder for pic: " + str(order['user_id']) + " was created")
+
+    path_img = "/root/OrderBalloonBot/img/" + str(order['user_id']) + "/order_templ_test" + str(order['user_id']) + ".png"
+    im.save(path_img)
+    print("Save pic order")
+    return
+
+
 def make_image_order(order):
     pagesize_w, pagesize_h = (744, 1052)
     im = Image.new('RGB', (pagesize_w, pagesize_h), color=('#FAACAC'))
