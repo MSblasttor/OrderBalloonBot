@@ -41,9 +41,9 @@ from io import BytesIO
 
 from mongodb import *
 
-from state_machine_elements import *
+#from state_machine_elements import *
 
-from profile import profile
+#from profile import profile
 
 from settings import TG_TOKEN, DEVELOPER_CHAT_ID
 
@@ -53,7 +53,7 @@ from ical import make_ical_from_order
 
 from archives import *
 
-from make_image import make_image_order
+from make_image import make_image_order, make_template_image
 
 # Enable logging
 logging.basicConfig(
@@ -61,6 +61,21 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
+
+START, CHANGE, FIO, TEL, \
+FROM, NICKNAME, DATE, LOCATION, \
+ORDER, ORDER_CHANGE, ORDER_REMOVE, \
+ORDER_EDIT, ORDER_SHOW, ORDER_ADD_ITEMS, \
+ARCHIVE, LATEX, LATEX_SIZE, LATEX_COLOR, \
+LATEX_COUNT, LATEX_PRICE, FOIL, FOIL_CHANGE, \
+FOIL_FIG, FOIL_FIG_NAME, FOIL_FIG_COLOR, \
+FOIL_FIG_CNT, FOIL_FIG_PRICE, FOIL_NUM, \
+FOIL_NUM_NAME, FOIL_NUM_COLOR, FOIL_NUM_PRICE, \
+BUBL_COLOR, BUBL_INSERT, BUBL_PRICE, BUBL_SIZE, \
+LABEL_NAME, LABEL_COLOR, LABEL_PRICE, \
+STAND_NAME, STAND_PRICE, \
+ACCESSORIES, ACCESSORIES_CNT, ACCESSORIES_PRICE, ACCESSORIES_COMMENT, \
+COMMENT, REFERENCE, PROFILE = range(47)
 
 state_machine = START
 order_cnt = 0
@@ -1504,7 +1519,6 @@ def reference(update: Update, context: CallbackContext) -> int:  # Здесь п
         state_machine = ORDER_EDIT
     return state_machine
 
-
 def cancel(update: Update, context: CallbackContext) -> int:  # Здесь прекращается общение с ботом.
     """Cancels and ends the conversation."""
     user = update.message.from_user
@@ -1820,6 +1834,44 @@ def bad_command(update: Update, context: CallbackContext) -> None:
     """Raise an error to trigger the error handler."""
     context.bot.wrong_method_name()  # type: ignore[attr-defined]
 
+# Здесь будут формироваться функции по управлению личным кабинетом пользователя бота, такие как
+# создание карточки заказа, проверка баланса, оплата, статистика, формирование списка рассылки, рассылка рекламных сообщения, получение пароля для доступа через сайт
+def profile(update: Update, context: CallbackContext) -> int:
+    global state_machine
+    user = update.message.from_user
+    if state_machine != PROFILE or update.message.text == 'Назад':
+        """Пользователь выбрал раздел "ПРОФИЛЬ". Выводим перечень доступных разделов"""
+        logger.info("Пользователь %s раздел ПРОФИЛЬ", user.first_name)
+        reply_text = "Вы находитесь в личном кабинете. Выберите нужный раздел"
+        reply_keyboard = [['Баланс', 'Оплата'], ['Карточка заказа', 'Статистика', 'Рассылка'], ['Вернуться назад']]
+        update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+        state_machine = PROFILE
+    elif state_machine == PROFILE and update.message.text == 'Карточка заказа':
+        logger.info("%s выбрал раздел %s", user.first_name, update.message.text)
+        context.user_data['last_msg'] = update.message.text
+        reply_text = "Вы выбрали раздел 'Карточка заказа'. Что бы вы хотели сделать?"
+        reply_keyboard = [['Вывести текущий шаблон', 'Редактировать шаблон'], ['Назад']]
+        update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+    elif state_machine == PROFILE and context.user_data['last_msg'] == 'Карточка заказа' and update.message.text == 'Вывести текущий шаблон':
+        logger.info("%s выбрал раздел %s", user.first_name, update.message.text)
+        #context.user_data['last_msg'] = update.message.text
+        #user_id = update.effective_user.id
+        user = search_or_save_user(mdb, update.effective_user, update.message)
+        make_template_image(user)
+        send_image_template_order(user['user_id'], context, update)
+        reply_text = "Текущий шаблон карточки заказа. Что бы вы хотели сделать?"
+        reply_keyboard = [['Вывести текущий шаблон', 'Редактировать шаблон'], ['Назад']]
+        update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+    else:
+        logger.info("%s выбрала раздел %s", user.first_name, update.message.text)
+    return state_machine
+
+def send_image_template_order(user_id, context, update):
+    path_img = "/root/OrderBalloonBot/img/" + str(user_id) + "/order_templ_" + str(user_id) + ".png"
+    context.bot.send_photo(chat_id=update.message.chat_id, photo=open(path_img, 'rb'))
+    return
+
+
 
 def main() -> None:
     """Run the bot."""
@@ -1836,7 +1888,9 @@ def main() -> None:
         states={
             CHANGE: [MessageHandler(Filters.regex('^(Заказ|Смета)$'), change),
                      MessageHandler(Filters.regex('^(Другое|Статистика|Оплата)$'), other),
-                    MessageHandler(Filters.regex('^(Личный кабинет)$'), profile)], # Обрабатываем выбор пользователя
+                     MessageHandler(Filters.regex('^(Личный кабинет)$'), profile)
+                    ],
+            # Обрабатываем выбор пользователя
             # Блок получение данных для заполнения карточки заказа
             FIO: [MessageHandler(Filters.text & ~Filters.command, order), CommandHandler('skip', skip)],
             TEL: [
@@ -1965,7 +2019,7 @@ def main() -> None:
             REFERENCE: [MessageHandler(Filters.regex('^(Вернуться назад)$'), edit_order), MessageHandler(Filters.regex('^(1|2|3|4|5|6|7|8)$'), reference), MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), error_input), MessageHandler(Filters.forwarded | Filters.photo, reference), CommandHandler('skip', skip)],
 
             # Личный кабинет
-            PROFILE: [MessageHandler(Filters.regex('^(Вернуться назад)$'), start),
+             PROFILE: [MessageHandler(Filters.regex('^(Вернуться назад)$'), start),
                     MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), profile),
                     CommandHandler('skip', skip)],
 

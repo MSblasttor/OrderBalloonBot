@@ -6,8 +6,8 @@ from math import ceil
 font_path = "/root/OrderBalloonBot/fonts/Steclo.otf"
 def make_template_image(user):
     pagesize_w, pagesize_h = (744, 1052)
-    color = user['color_bg'] if user['color_bg'] == None else '#FFFFFF'
-    im = Image.new('RGB', (pagesize_w, pagesize_h), color='#FAACAC')
+    color_bg = user['color_bg'] if user.get('color_bg', 0) else '#FFFFFF'
+    im = Image.new('RGB', (pagesize_w, pagesize_h), color=color_bg)
     logosize_w, logosize_h = (250, 250)
     try:
         # for Debug uncomment next line
