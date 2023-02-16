@@ -21,8 +21,8 @@ def profile(update: Update, context: CallbackContext) -> int:
     user = update.message.from_user
     """Пользователь выбрал раздел "ПРОФИЛЬ". Выводим перечень доступных разделов"""
     logger.info("%s выбрала оформление сметы", user.first_name)
-    reply_text = "Отлично давай прикинем смету. Что будут заказывать?"
-    reply_keyboard = [['Латекс', 'Фольга', 'Баблс'], ['Стойка', 'Надпись', 'Акссесуары'], ['Другое']]
+    reply_text = "Вы находитесь в личном кабинете. Выберите нужный раздел"
+    reply_keyboard = [['Баланс', 'Оплата'], ['Карточка заказа', 'Статистика', 'Рассылка'], ['Вернуться назад']]
     update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     state_machine = PROFILE
     return state_machine
