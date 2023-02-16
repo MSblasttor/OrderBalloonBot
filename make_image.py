@@ -4,16 +4,15 @@ import pathlib
 from math import ceil
 
 font_path = "/root/OrderBalloonBot/fonts/Steclo.otf"
-def make_template_image(order):
+def make_template_image(user):
     pagesize_w, pagesize_h = (744, 1052)
-    # user = search_or_save_user(mdb, update.effective_user, update.message)
-    # color = user['color_bg']
+    color = user['color_bg'] if user['color_bg'] == None else '#FFFFFF'
     im = Image.new('RGB', (pagesize_w, pagesize_h), color='#FAACAC')
     logosize_w, logosize_h = (250, 250)
     try:
         # for Debug uncomment next line
         # logo_img = Image.open('/img/' + str(order['user_id']) + '/order_logo_' + str(order['user_id']) + '.png')
-        logo_img = Image.open('/root/OrderBalloonBot/img/' + str(order['user_id']) + '/order_logo_' + str(order['user_id']) +'.png')
+        logo_img = Image.open('/root/OrderBalloonBot/img/' + str(user['user_id']) + '/order_logo_' + str(user['user_id']) +'.png')
         logo_img.thumbnail(size=(logosize_w, logosize_h))
     except:
         # for Debug uncomment next line
@@ -38,17 +37,17 @@ def make_template_image(order):
 
     # for Debug uncomment next line
     # directory_order = pathlib.Path('C:/Users/GladkihAA/PycharmProjects/OrderBalloonBot/img/' + str(order['user_id']))
-    directory_order = pathlib.Path('/root/OrderBalloonBot/img/' + str(order['user_id']))
+    directory_order = pathlib.Path('/root/OrderBalloonBot/img/' + str(user['user_id']))
     try:
         directory_order.mkdir(parents=True, exist_ok=False)
     except FileExistsError:
-        print("Folder for pic: " + str(order['user_id']) + " already exists")
+        print("Folder for pic: " + str(user['user_id']) + " already exists")
     else:
-        print("Folder for pic: " + str(order['user_id']) + " was created")
+        print("Folder for pic: " + str(user['user_id']) + " was created")
     # for Debug uncomment next line
     # path_img = "C:/Users/GladkihAA/PycharmProjects/OrderBalloonBot/img/" + str(order['user_id']) + "/order_templ_test" + str(
     #    order['user_id']) + ".png"
-    path_img = "/root/OrderBalloonBot/img/" + str(order['user_id']) + "/order_templ_test" + str(order['user_id']) + ".png"
+    path_img = "/root/OrderBalloonBot/img/" + str(user['user_id']) + "/order_templ_test" + str(user['user_id']) + ".png"
     im.save(path_img)
     print("Save pic order")
     return
