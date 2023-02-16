@@ -3,8 +3,9 @@
 
 import logging
 
-from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, ParseMode, \
-    Update, Bot, InputMediaPhoto
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove, Update
+
+from telegram.ext import CallbackContext
 
 #from bot_balloon import *
 
