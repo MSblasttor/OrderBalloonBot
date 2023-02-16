@@ -41,7 +41,7 @@ from io import BytesIO
 
 from mongodb import *
 
-import state_machine_elements
+from state_machine_elements import *
 
 from profile import profile
 
