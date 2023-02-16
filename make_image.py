@@ -47,7 +47,7 @@ def make_template_image(user):
     # for Debug uncomment next line
     # path_img = "C:/Users/GladkihAA/PycharmProjects/OrderBalloonBot/img/" + str(order['user_id']) + "/order_templ_test" + str(
     #    order['user_id']) + ".png"
-    path_img = "/root/OrderBalloonBot/img/" + str(user['user_id']) + "/order_templ_test" + str(user['user_id']) + ".png"
+    path_img = "/root/OrderBalloonBot/img/" + str(user['user_id']) + "/order_templ_" + str(user['user_id']) + ".png"
     im.save(path_img)
     print("Save pic order")
     return
