@@ -16,7 +16,7 @@ bot.
 import logging
 import copy
 import re
-#import requests
+# import requests
 import pathlib
 import os
 
@@ -41,9 +41,9 @@ from io import BytesIO
 
 from mongodb import *
 
-#from state_machine_elements import *
+# from state_machine_elements import *
 
-#from profile import profile
+# from profile import profile
 
 from settings import TG_TOKEN, DEVELOPER_CHAT_ID
 
@@ -82,7 +82,7 @@ order_cnt = 0
 
 def start(update: Update, context: CallbackContext) -> int:
     user = update.message.from_user
-    reply_keyboard = [['Заказ', 'Личный кабинет' , 'Другое']]
+    reply_keyboard = [['Заказ', 'Личный кабинет', 'Другое']]
     update.message.reply_text(
         'Привет! Меня зовут ШароБот. Я помогу тебе составить карточку заказа или расcчитать смету для заказчика '
         'Отправь /cancel что бы перестать разговаривать со мной\n\n'
@@ -1874,15 +1874,15 @@ def profile(update: Update, context: CallbackContext) -> int:
         reply_text = "Пришлите новый логотип. либо нажмите 'Назад' чтобы вернуться"
         reply_keyboard = [['Назад']]
         update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
-    # elif state_machine == PROFILE and context.user_data['last_msg'] == 'Изменить логотип' and update.message.text == None:
-    #     """Пользователь Прислал новый логотип"""
-    #     logger.info("Пользователь %s: прислал новый логотип", user.first_name, "Прислал референс")
-    #     newFile = update.message.photo[-1].get_file()  # get the photo with the biggest resolution
-    #     PHOTO_PATH = ".jpg"
-    #     newFile.download(PHOTO_PATH)
-    #     print("save image user reference")
-    #     update.message.reply_text("Пришлите еще фото референс или /skip чтобы закончить")
-    #     #state_machine = REFERENCE
+    elif state_machine == PROFILE and context.user_data['last_msg'] == 'Изменить логотип' and update.message.text == None:
+        """Пользователь Прислал новый логотип"""
+        logger.info("Пользователь %s: прислал новый логотип", user.first_name, "Прислал референс")
+        newFile = update.message.photo[-1].get_file()  # get the photo with the biggest resolution
+        path_img = "/root/OrderBalloonBot/img/" + str(user['id']) + "/order_templ_" + str(user['id']) + ".png"
+        newFile.download(path_img)
+        print("save image user logo for order")
+        update.message.reply_text("Пришлите еще фото референс или /skip чтобы закончить")
+        #state_machine = REFERENCE
     else:
         logger.info("%s выбрала раздел %s", user.first_name, update.message.text)
     return state_machine
