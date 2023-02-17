@@ -75,7 +75,7 @@ BUBL_COLOR, BUBL_INSERT, BUBL_PRICE, BUBL_SIZE, \
 LABEL_NAME, LABEL_COLOR, LABEL_PRICE, \
 STAND_NAME, STAND_PRICE, \
 ACCESSORIES, ACCESSORIES_CNT, ACCESSORIES_PRICE, ACCESSORIES_COMMENT, \
-COMMENT, REFERENCE, PROFILE = range(47)
+COMMENT, REFERENCE, PROFILE, PROFILE_COLOR_BG = range(48)
 
 state_machine = START
 order_cnt = 0
@@ -1761,6 +1761,8 @@ def error_input(update: Update, context: CallbackContext) -> int:  # Здесь 
         update.message.reply_text('Введите стоимость ЦИФРАМИ')
     elif state_machine == REFERENCE:
         update.message.reply_text('Пришлите фото референс или для продолжения /skip')
+    elif state_machine == PROFILE_COLOR_BG:
+        update.message.reply_text('Введите цвет фона в формате HEX. Пример FFFFFF - белый, 000000 - черный, FF0000 - красный, 00FF00 - зеленый, 0000FF - синий. другие варианты цветов можно посмотреть на сайте https://colorscheme.ru/html-colors.html ')
     elif state_machine == START or state_machine == ConversationHandler.END:
         update.message.reply_text('Чтобы начать разговор введите команду /start')
         state_machine = ConversationHandler.END
@@ -1876,9 +1878,9 @@ def profile(update: Update, context: CallbackContext) -> int:
         update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     elif state_machine == PROFILE and context.user_data['last_msg'] == 'Изменить логотип' and update.message.text == None:
         """Пользователь Прислал новый логотип"""
-        logger.info("Пользователь %s: прислал новый логотип", user.first_name, "Прислал референс")
+        logger.info("Пользователь %s: прислал новый логотип", user.first_name)
         newFile = update.message.photo[-1].get_file()  # get the photo with the biggest resolution
-        path_img = "/root/OrderBalloonBot/img/" + str(user['id']) + "/order_logo_" + str(user['id']) + ".png"
+        path_img = "/root/OrderBalloonBot/img/" + str(update.effective_user.id) + "/order_logo_" + str(update.effective_user.id) + ".png"
         newFile.download(path_img)
         print("save image user logo for order")
         update.message.reply_text("Пришлите еще фото референс или /skip чтобы закончить")
@@ -2044,6 +2046,13 @@ def main() -> None:
                     MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), profile),
                     MessageHandler(Filters.forwarded | Filters.photo, profile),
                     CommandHandler('skip', skip)],
+
+            PROFILE_COLOR_BG:[MessageHandler(Filters.regex('^(Вернуться назад)$'), start),
+                    MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), error_input),
+                    # MessageHandler(Filters.forwarded | Filters.photo, profile),
+                    MessageHandler(Filters.regex('^([A-Fa-f0-9]{6})$'), profile),
+                    CommandHandler('skip', skip)],
+
 
         },
         fallbacks=[CommandHandler('cancel', cancel)],
