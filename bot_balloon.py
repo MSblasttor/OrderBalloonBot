@@ -1878,7 +1878,7 @@ def profile(update: Update, context: CallbackContext) -> int:
         """Пользователь Прислал новый логотип"""
         logger.info("Пользователь %s: прислал новый логотип", user.first_name, "Прислал референс")
         newFile = update.message.photo[-1].get_file()  # get the photo with the biggest resolution
-        path_img = "/root/OrderBalloonBot/img/" + str(user['id']) + "/order_templ_" + str(user['id']) + ".png"
+        path_img = "/root/OrderBalloonBot/img/" + str(user['id']) + "/order_logo_" + str(user['id']) + ".png"
         newFile.download(path_img)
         print("save image user logo for order")
         update.message.reply_text("Пришлите еще фото референс или /skip чтобы закончить")
