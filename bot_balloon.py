@@ -2040,8 +2040,9 @@ def main() -> None:
             REFERENCE: [MessageHandler(Filters.regex('^(Вернуться назад)$'), edit_order), MessageHandler(Filters.regex('^(1|2|3|4|5|6|7|8)$'), reference), MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), error_input), MessageHandler(Filters.forwarded | Filters.photo, reference), CommandHandler('skip', skip)],
 
             # Личный кабинет
-             PROFILE: [MessageHandler(Filters.regex('^(Вернуться назад)$'), start),
+            PROFILE: [MessageHandler(Filters.regex('^(Вернуться назад)$'), start),
                     MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), profile),
+                    MessageHandler(Filters.forwarded | Filters.photo, profile),
                     CommandHandler('skip', skip)],
 
         },
