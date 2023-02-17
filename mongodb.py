@@ -53,6 +53,7 @@ def search_or_save_user(mdb, effective_user, message):
             "last_name": effective_user.last_name,
             "chat_id": message.chat.id,
 			"order_cnt": 1000
+            "color_bg": 'FFFFFF'
         }
         mdb.users.insert_one(user)  # сохраняем в коллекцию users
     return user

@@ -1841,7 +1841,7 @@ def bad_command(update: Update, context: CallbackContext) -> None:
 def profile(update: Update, context: CallbackContext) -> int:
     global state_machine
     user = update.message.from_user
-    if state_machine != PROFILE or update.message.text == 'Назад':
+    if (state_machine != PROFILE and state_machine != PROFILE_COLOR_BG) or update.message.text == 'Назад':
         """Пользователь выбрал раздел "ПРОФИЛЬ". Выводим перечень доступных разделов"""
         logger.info("Пользователь %s раздел ПРОФИЛЬ", user.first_name)
         reply_text = "Вы находитесь в личном кабинете. Выберите нужный раздел"
@@ -1883,8 +1883,24 @@ def profile(update: Update, context: CallbackContext) -> int:
         path_img = "/root/OrderBalloonBot/img/" + str(update.effective_user.id) + "/order_logo_" + str(update.effective_user.id) + ".png"
         newFile.download(path_img)
         print("save image user logo for order")
-        update.message.reply_text("Пришлите еще фото референс или /skip чтобы закончить")
-        #state_machine = REFERENCE
+        update.message.reply_text("Логотип сохранен.")
+    elif state_machine == PROFILE and context.user_data['last_msg'] == 'Редактировать шаблон' and update.message.text == "Изменить цвет фона":
+        logger.info("Пользователь %s выбрал раздел %s", user.first_name, update.message.text)
+        context.user_data['last_msg'] = update.message.text
+        reply_text = "Введите цвет фона в формате HEX. Пример FFFFFF - белый, 000000 - черный, FF0000 - красный, 00FF00 - зеленый, 0000FF - синий. другие варианты цветов можно посмотреть на сайте https://colorscheme.ru/html-colors.html '"
+        reply_keyboard = [['Назад']]
+        update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+        state_machine = PROFILE_COLOR_BG
+    elif state_machine == PROFILE_COLOR_BG and context.user_data['last_msg'] == 'Изменить цвет фона':
+        logger.info("Пользователь %s прислал новый цвет фона %s", user.first_name, update.message.text)
+        save_color_bg = mdb.users.update_one(
+            {'user_id': update.effective_user.id},
+            {'$set': {'color_bg': '#' + update.message.text}})
+        print(save_color_bg)
+        reply_text = "Цвет фона изменен. Нажмите 'Назад'"
+        reply_keyboard = [['Назад']]
+        update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+        state_machine = PROFILE
     else:
         logger.info("%s выбрала раздел %s", user.first_name, update.message.text)
     return state_machine
@@ -2048,12 +2064,9 @@ def main() -> None:
                     CommandHandler('skip', skip)],
 
             PROFILE_COLOR_BG:[MessageHandler(Filters.regex('^(Вернуться назад)$'), start),
-                    MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), error_input),
-                    # MessageHandler(Filters.forwarded | Filters.photo, profile),
                     MessageHandler(Filters.regex('^([A-Fa-f0-9]{6})$'), profile),
+                    MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), error_input),
                     CommandHandler('skip', skip)],
-
-
         },
         fallbacks=[CommandHandler('cancel', cancel)],
     )
