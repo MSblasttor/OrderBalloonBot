@@ -1910,8 +1910,6 @@ def send_image_template_order(user_id, context, update):
     context.bot.send_photo(chat_id=update.message.chat_id, photo=open(path_img, 'rb'))
     return
 
-
-
 def main() -> None:
     """Run the bot."""
     # Create the Updater and pass it your bot's token.
