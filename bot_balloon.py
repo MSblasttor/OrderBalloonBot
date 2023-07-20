@@ -65,7 +65,7 @@ logger = logging.getLogger(__name__)
 START, CHANGE, FIO, TEL, \
 FROM, NICKNAME, DATE, LOCATION, \
 ORDER, ORDER_CHANGE, ORDER_REMOVE, \
-ORDER_EDIT, ORDER_SHOW, ORDER_ADD_ITEMS, \
+ORDER_EDIT, ORDER_SHOW, ORDER_ADD_ITEMS, ORDER_EDIT_ITEMS, \
 ARCHIVE, LATEX, LATEX_SIZE, LATEX_COLOR, \
 LATEX_COUNT, LATEX_PRICE, FOIL, FOIL_CHANGE, \
 FOIL_FIG, FOIL_FIG_NAME, FOIL_FIG_COLOR, \
@@ -75,7 +75,7 @@ BUBL_COLOR, BUBL_INSERT, BUBL_PRICE, BUBL_SIZE, \
 LABEL_NAME, LABEL_COLOR, LABEL_PRICE, \
 STAND_NAME, STAND_PRICE, \
 ACCESSORIES, ACCESSORIES_CNT, ACCESSORIES_PRICE, ACCESSORIES_COMMENT, \
-COMMENT, REFERENCE, PROFILE, PROFILE_COLOR_BG = range(48)
+COMMENT, REFERENCE, PROFILE, PROFILE_COLOR_BG = range(49)
 
 state_machine = START
 order_cnt = 0
@@ -602,7 +602,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать cостав", user.first_name,
                     context.user_data['select_order'])
         context.user_data['last_msg'] = update.message.text
-        reply_keyboard = [['Добавить', 'Удалить', 'Вернуться назад']]
+        reply_keyboard = [['Добавить', 'Изменить', 'Удалить'], ['Вернуться назад']]
         text = "Что вы хотите сделать?"
         update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     elif state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'Состав заказа':
@@ -620,9 +620,12 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         elif update.message.text == 'Удалить':
             state_machine = ORDER_ADD_ITEMS
             state_machine = remove_items_from_order(update, context)
+        elif update.message.text == 'Изменить':
+            state_machine = ORDER_EDIT_ITEMS
+            state_machine = edit_items_from_order(update, context)
         else:
-            reply_keyboard = [['Добавить', 'Удалить', 'Вернуться назад']]
-            text = "Выберите дейстивие ДОБАВИТЬ или УДАЛИТЬ, либо ВЕРНУТЬСЯ НАЗАД"
+            reply_keyboard = [['Добавить', 'Изменить', 'Удалить'], ['Вернуться назад']]
+            text = "Выберите дейстивие ДОБАВИТЬ, УДАЛИТЬ или ИЗМЕНИТЬ, либо ВЕРНУТЬСЯ НАЗАД"
             update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     elif state_machine == ORDER_EDIT and update.message.text == 'РЕФЕРЕНСЫ':
         logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать референс", user.first_name,
@@ -780,6 +783,100 @@ def remove_items_from_order(update: Update, context: CallbackContext) -> int:
         else:
             update.message.reply_text(
                 'Похоже в вашем заказе пусто. Удалять нечего. \nДля продолжения введите одну из следующих команд:\n/add - чтобы добавить в заказ еще позиции\n/remove - чтобы удалить из списка заказа позицию\n/edit - чтобы откорректировать позицию из списка заказа\n/comment - добавить коментарий к заказу\n/finish - чтобы завершить оформление')
+    return state_machine
+
+def edit_items_from_order(update: Update, context: CallbackContext) -> int:
+    global state_machine
+    # global order_list
+    user = update.message.from_user
+    logger.info("Пользователь %s приступил к редактированию заказа. Изменение ", user.first_name)
+    #if state_machine == ORDER_EDIT_ITEMS and update.message.text != '/edit' and update.message.text != 'Изменить' and context.user_data['last_msg'] != '/predoplata' and context.user_data['last_msg'] != '/dostavka' and context.user_data['last_msg'] != '/remove':
+    if state_machine == ORDER_EDIT_ITEMS and (update.message.text == '/edit' or update.message.text == 'Изменить' or update.message.text == 'Вернуться назад'):
+        context.user_data['last_msg'] = update.message.text
+        if len(context.user_data['order_list']) != 0:
+            reply_keyboard = [[], []]
+            cnt = 0
+            for cnt in range(len(context.user_data['order_list'])):
+                reply_keyboard[0].append(str(cnt + 1))
+            reply_keyboard[1].append('Вернуться назад')
+            msg = make_msg_order_list(context.user_data)
+            msg += '\n\n\nВведите номер позиции от 1 до %d которую хотите изменить в заказе' % len(
+                context.user_data['order_list'])
+            update.message.reply_text(msg,
+                                      reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+        else:
+            update.message.reply_text(
+                'Похоже в вашем заказе пусто. Редактировать нечего. \nДля продолжения введите одну из следующих команд:\n/add - чтобы добавить в заказ еще позиции\n/remove - чтобы удалить из списка заказа позицию\n/edit - чтобы откорректировать позицию из списка заказа\n/comment - добавить коментарий к заказу\n/finish - чтобы завершить оформление')
+    elif state_machine == ORDER_EDIT_ITEMS and (context.user_data['last_msg'] == '/edit' or context.user_data['last_msg'] == 'Изменить' or context.user_data['last_msg'] == 'Вернуться назад'):
+        context.user_data['last_msg'] = int(update.message.text)-1 #Сохраняем номер выбранной позиции из заказа
+        reply_keyboard = [['Количество', 'Цена', 'Цвет'], ['Вернуться назад']]
+        text = "Вы выбрали для изменения:\n"
+        result = context.user_data['order_list'][context.user_data['last_msg']]['type']
+        if result == 'latex':
+            text += 'Шар %(name)s %(size)s \nЦвет: %(color)s \nКол-во - %(count)d шт. \nЦена %(price)d руб. \n' % \
+                      context.user_data['order_list'][context.user_data['last_msg']]
+        elif result == 'foil_fig' and not (
+                context.user_data['order_list'][context.user_data['last_msg']]["name"] == 'Сердце' or context.user_data['order_list'][context.user_data['last_msg']][
+            "name"] == 'Звезда' or context.user_data['order_list'][context.user_data['last_msg']]["name"] == 'Круг'):
+            text += 'Фигура %(name)s \nКол-во - %(count)d шт. \nЦена %(price)d руб. \n' % context.user_data['order_list'][context.user_data['last_msg']]
+
+        elif result == 'foil_fig' and (
+                context.user_data['order_list'][context.user_data['last_msg']]["name"] == 'Сердце' or context.user_data['order_list'][context.user_data['last_msg']][
+            "name"] == 'Звезда' or context.user_data['order_list'][context.user_data['last_msg']]["name"] == 'Круг'):
+            text += 'Фигура %(name)s \nЦвет: %(color)s \nКол-во - %(count)d шт. \nЦена %(price)d руб. \n' % context.user_data['order_list'][context.user_data['last_msg']]
+        elif result == 'foil_num':
+            text += 'Цифра %(name)s \nЦвет %(color)s \nЦена %(price)d руб. \n' % context.user_data['order_list'][context.user_data['last_msg']]
+        elif result == 'bubl':
+            text += 'Баблс %(size)s с наполнением: %(name)s \nЦвет: %(color)s \nЦена %(price)d руб. \n' % \
+                      context.user_data['order_list'][context.user_data['last_msg']]
+        elif result == 'label':
+            text += 'Надпись %(name)s \nЦвет: %(color)s \nЦена %(price)d руб.\n' % context.user_data['order_list'][context.user_data['last_msg']]
+        elif result == 'stand':
+            text += 'Стойка %(name)s \nЦена (Аренда) %(price)d руб. \n' % context.user_data['order_list'][context.user_data['last_msg']]
+        elif result == 'accessories':
+            text += '%(name)s \nКол-во - %(count)d шт. \nЦена %(price)d руб. Комментарий: %(comment)s\n' % context.user_data['order_list'][context.user_data['last_msg']]
+        elif result == 'other':
+            text += 'Другое: %(comment)s. \nЦена %(price)d руб. \n' % context.user_data['order_list'][context.user_data['last_msg']]
+        text += "Выберите что изменить: КОЛИЧЕСТВО, ЦВЕТ или ЦЕНУ, либо ВЕРНУТЬСЯ НАЗАД"
+        update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+    elif state_machine == ORDER_EDIT_ITEMS and update.message.text == 'Количество':
+        context.user_data['num_edit_element'] = context.user_data['last_msg']
+        context.user_data['last_msg'] = update.message.text
+        reply_keyboard = [['Вернуться назад']]
+        text = "Введите новое количество, либо ВЕРНУТЬСЯ НАЗАД"
+        update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+    elif state_machine == ORDER_EDIT_ITEMS and context.user_data['last_msg'] == 'Количество':
+        key = 'count'
+        value = int(update.message.text)
+        context.user_data['order_list'][int(context.user_data['num_edit_element'])][key] = value  # order_dict[key] = value
+        context.user_data['order_list'][int(context.user_data['num_edit_element'])]['summa'] = context.user_data['order_list'][int(context.user_data['num_edit_element'])]['count'] * context.user_data['order_list'][int(context.user_data['num_edit_element'])]['price']
+        state_machine = end(update, context)
+    elif state_machine == ORDER_EDIT_ITEMS and update.message.text == 'Цена':
+        context.user_data['num_edit_element'] = context.user_data['last_msg']
+        context.user_data['last_msg'] = update.message.text
+        text = "Введите новую цену, либо ВЕРНУТЬСЯ НАЗАД"
+        reply_keyboard = [['Вернуться назад']]
+        update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+    elif state_machine == ORDER_EDIT_ITEMS and context.user_data['last_msg'] == 'Цена':
+        key = 'price'
+        value = int(update.message.text)
+        context.user_data['order_list'][int(context.user_data['num_edit_element'])][key] = value  # order_dict[key] = value
+        context.user_data['order_list'][int(context.user_data['num_edit_element'])]['summa'] = context.user_data['order_list'][int(context.user_data['num_edit_element'])]['count'] * context.user_data['order_list'][int(context.user_data['num_edit_element'])]['price']
+        state_machine = end(update, context)
+    elif state_machine == ORDER_EDIT_ITEMS and update.message.text == 'Цвет':
+        context.user_data['num_edit_element'] = context.user_data['last_msg']
+        context.user_data['last_msg'] = update.message.text
+        reply_keyboard = [['Вернуться назад']]
+        text = "Введите новый цвет, либо ВЕРНУТЬСЯ НАЗАД"
+        update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+    elif state_machine == ORDER_EDIT_ITEMS and context.user_data['last_msg'] == 'Цвет':
+        key = 'color'
+        value = update.message.text
+        context.user_data['order_list'][int(context.user_data['num_edit_element'])][key] = value  # order_dict[key] = value
+        state_machine = end(update, context)
+    else:
+        update.message.reply_text(
+                'Похоже вы сделали что-то не то. Посмотрите несеколько сообщений назад и пришлите то что вас просят, либо  \nДля продолжения введите одну из следующих команд:\n/add - чтобы добавить в заказ еще позиции\n/remove - чтобы удалить из списка заказа позицию\n/edit - чтобы откорректировать позицию из списка заказа\n/comment - добавить коментарий к заказу\n/finish - чтобы завершить оформление')
     return state_machine
 
 def skip(update: Update, context: CallbackContext) -> int:  # Здесь пользователь пропускает шаги
@@ -1536,17 +1633,18 @@ def end(update: Update, context: CallbackContext) -> int:  # Здесь обра
     msg = make_msg_order_list(context.user_data)
     update.message.reply_text('Итак давай посмотрим что получается')
     update.message.reply_text(msg)
-    reply_keyboard = [['/add'], ['/remove'], ['/predoplata'], ['/dostavka'], ['/comment'], ['/reference'], ['/finish']]
+    reply_keyboard = [['/add'], ['/edit'], ['/remove'], ['/predoplata'], ['/dostavka'], ['/comment'], ['/reference'], ['/finish']]
     #text = "Выберите дейстивие ДОБАВИТЬ или УДАЛИТЬ, либо ВЕРНУТЬСЯ НАЗАД"
     update.message.reply_text(
         'Введите одну из следующих команд:\n'
         '/add - чтобы добавить в заказ еще позиции\n'
+        '/edit - чтобы отредактировать позиции заказе\n'
         '/remove - чтобы удалить из списка заказа позицию \n'
         '/predoplata - чтобы указать сумму предоплаты \n'
         '/dostavka - чтобы указать сумму доставки\n'
         '/comment - добавить коментарий к заказу\n'
         '/reference - добавить фото референс к заказу\n'
-        '/finish - чтобы завершить оформление')
+        '/finish - чтобы завершить оформление и сохранить заказ')
     text="Выберите действие"
     update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     return ORDER_ADD_ITEMS
@@ -1761,13 +1859,15 @@ def error_input(update: Update, context: CallbackContext) -> int:  # Здесь 
         update.message.reply_text('Введите стоимость ЦИФРАМИ')
     elif state_machine == REFERENCE:
         update.message.reply_text('Пришлите фото референс или для продолжения /skip')
+    elif state_machine == PROFILE:
+        update.message.reply_text('Пришлите фото нового логотипа или либо нажмите \'Назад\' чтобы вернуться')
     elif state_machine == PROFILE_COLOR_BG:
         update.message.reply_text('Введите цвет фона в формате HEX. Пример FFFFFF - белый, 000000 - черный, FF0000 - красный, 00FF00 - зеленый, 0000FF - синий. другие варианты цветов можно посмотреть на сайте https://colorscheme.ru/html-colors.html ')
     elif state_machine == START or state_machine == ConversationHandler.END:
         update.message.reply_text('Чтобы начать разговор введите команду /start')
         state_machine = ConversationHandler.END
 
-    return state_machine
+    return STATE_MACHINE
 
 def callback_button_pressed(update: Update, context: CallbackContext) -> None:
     global state_machine
@@ -1965,7 +2065,7 @@ def main() -> None:
                          MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$') & ~Filters.regex('^(В календарь)$'), edit_order),
                          MessageHandler(Filters.regex('^(ФИО|Телефон|Дата и время|Адрес|'
                                                       'Состав заказа|Оплата|Доставка|100%|50%|Другая сумма'
-                                                      '|Добавить|Удалить|Посмотреть|РЕФЕРЕНСЫ|В архив)$'), edit_order),
+                                                      '|Добавить|Удалить|Изменить|Количество|Цена|Посмотреть|РЕФЕРЕНСЫ|В архив)$'), edit_order),
                          MessageHandler(Filters.regex('^(В календарь)$'), edit_order)],
             ORDER_SHOW: [MessageHandler(Filters.regex('^(Добавить новый заказ)$'), order),
                          MessageHandler(Filters.regex('^(Редактировать заказ)$'), order),
@@ -1992,6 +2092,12 @@ def main() -> None:
                               CommandHandler('comment', comment),
                               CommandHandler('reference', reference),
                               MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],
+            ORDER_EDIT_ITEMS: [MessageHandler(Filters.regex('^(Количество|Цена|Цвет)$'), edit_items_from_order),
+                               MessageHandler(Filters.regex('^[1-9][0-9]*$'), edit_items_from_order),
+                               MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), error_input),
+                               CommandHandler('skip', skip),
+                               MessageHandler(Filters.regex('^(Вернуться назад)$'), edit_items_from_order),
+                               CommandHandler('end', end)],
             ARCHIVE: [MessageHandler(Filters.regex('^(Состав заказа|Восстановить)$'), archive),
                       MessageHandler(Filters.regex('^[1-9][0-9]*$'), archive),
                       MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), archive),
@@ -2056,14 +2162,15 @@ def main() -> None:
             REFERENCE: [MessageHandler(Filters.regex('^(Вернуться назад)$'), edit_order), MessageHandler(Filters.regex('^(1|2|3|4|5|6|7|8)$'), reference), MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), error_input), MessageHandler(Filters.forwarded | Filters.photo, reference), CommandHandler('skip', skip)],
 
             # Личный кабинет
-            PROFILE: [MessageHandler(Filters.regex('^(Вернуться назад)$'), start),
-                    MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), profile),
-                    MessageHandler(Filters.forwarded | Filters.photo, profile),
-                    CommandHandler('skip', skip)],
-
             PROFILE_COLOR_BG:[MessageHandler(Filters.regex('^(Вернуться назад)$'), start),
                     MessageHandler(Filters.regex('^([A-Fa-f0-9]{6})$'), profile),
                     MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), error_input),
+                    CommandHandler('skip', skip)],
+
+            PROFILE: [MessageHandler(Filters.regex('^(Вернуться назад)$'), start),
+                    MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), profile),
+                    MessageHandler(Filters.forwarded | Filters.photo | Filters.document.image, profile),
+                    MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$') & Filters.document, error_input),
                     CommandHandler('skip', skip)],
         },
         fallbacks=[CommandHandler('cancel', cancel)],
