@@ -791,7 +791,7 @@ def edit_items_from_order(update: Update, context: CallbackContext) -> int:
     user = update.message.from_user
     logger.info("Пользователь %s приступил к редактированию заказа. Изменение ", user.first_name)
     #if state_machine == ORDER_EDIT_ITEMS and update.message.text != '/edit' and update.message.text != 'Изменить' and context.user_data['last_msg'] != '/predoplata' and context.user_data['last_msg'] != '/dostavka' and context.user_data['last_msg'] != '/remove':
-    if state_machine == ORDER_EDIT_ITEMS and (update.message.text == '/edit' or update.message.text == 'Изменить' or update.message.text == 'Вернуться назад'):
+    if (state_machine == ORDER_EDIT_ITEMS or state_machine == ORDER_ADD_ITEMS) and (update.message.text == '/edit' or update.message.text == 'Изменить' or update.message.text == 'Вернуться назад'):
         context.user_data['last_msg'] = update.message.text
         if len(context.user_data['order_list']) != 0:
             reply_keyboard = [[], []]
