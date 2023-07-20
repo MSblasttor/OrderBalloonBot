@@ -1761,6 +1761,8 @@ def error_input(update: Update, context: CallbackContext) -> int:  # Здесь 
         update.message.reply_text('Введите стоимость ЦИФРАМИ')
     elif state_machine == REFERENCE:
         update.message.reply_text('Пришлите фото референс или для продолжения /skip')
+    elif state_machine == PROFILE:
+        update.message.reply_text('Пришлите фото нового логотипа или либо нажмите \'Назад\' чтобы вернуться')
     elif state_machine == PROFILE_COLOR_BG:
         update.message.reply_text('Введите цвет фона в формате HEX. Пример FFFFFF - белый, 000000 - черный, FF0000 - красный, 00FF00 - зеленый, 0000FF - синий. другие варианты цветов можно посмотреть на сайте https://colorscheme.ru/html-colors.html ')
     elif state_machine == START or state_machine == ConversationHandler.END:
@@ -2058,7 +2060,9 @@ def main() -> None:
             # Личный кабинет
             PROFILE: [MessageHandler(Filters.regex('^(Вернуться назад)$'), start),
                     MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), profile),
-                    MessageHandler(Filters.forwarded | Filters.photo, profile),
+                    MessageHandler(Filters.forwarded | Filters.photo | Filters.document.image, profile),
+                    MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$' & Filters.document),
+                                     error_input),
                     CommandHandler('skip', skip)],
 
             PROFILE_COLOR_BG:[MessageHandler(Filters.regex('^(Вернуться назад)$'), start),
