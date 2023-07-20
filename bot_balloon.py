@@ -1772,7 +1772,7 @@ def to_calendar(order, update):
 ##reply_keyboard = [['Инстаграм', 'Авито', 'ВКонтакте'], ['Telegram', 'WhatsApp', 'Viber'], ['Другое'], ['/skip']]
 def make_link_to_messanger(order, context, update):
     tel = order['order']['tel']
-    if tel != 0:
+    if tel != 0 or tel != '0':
         tel = list(filter(str.isdigit, tel))[1:]
         tel = "7{}{}{}{}{}{}{}{}{}{}".format(*tel)
         print(tel)
