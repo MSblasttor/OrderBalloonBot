@@ -793,6 +793,7 @@ def edit_items_from_order(update: Update, context: CallbackContext) -> int:
     #if state_machine == ORDER_EDIT_ITEMS and update.message.text != '/edit' and update.message.text != 'Изменить' and context.user_data['last_msg'] != '/predoplata' and context.user_data['last_msg'] != '/dostavka' and context.user_data['last_msg'] != '/remove':
     if (state_machine == ORDER_EDIT_ITEMS or state_machine == ORDER_ADD_ITEMS) and (update.message.text == '/edit' or update.message.text == 'Изменить' or update.message.text == 'Вернуться назад'):
         context.user_data['last_msg'] = update.message.text
+        state_machine = ORDER_EDIT_ITEMS
         if len(context.user_data['order_list']) != 0:
             reply_keyboard = [[], []]
             cnt = 0
@@ -1867,7 +1868,7 @@ def error_input(update: Update, context: CallbackContext) -> int:  # Здесь 
         update.message.reply_text('Чтобы начать разговор введите команду /start')
         state_machine = ConversationHandler.END
 
-    return STATE_MACHINE
+    return state_machine
 
 def callback_button_pressed(update: Update, context: CallbackContext) -> None:
     global state_machine
