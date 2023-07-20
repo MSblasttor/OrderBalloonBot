@@ -2082,6 +2082,7 @@ def main() -> None:
                               MessageHandler(Filters.regex('^(Аксеcсуары)$'), accessories),
                               CommandHandler('end', end),
                               CommandHandler('add', order_insert),
+                              CommandHandler('edit', edit_items_from_order),
                               MessageHandler(Filters.regex('^(Добавить)$'), order_insert),
                               CommandHandler('remove', remove_items_from_order),
                               MessageHandler(Filters.regex('^[1-9][0-9]*$'), remove_items_from_order),
