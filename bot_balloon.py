@@ -791,7 +791,8 @@ def edit_items_from_order(update: Update, context: CallbackContext) -> int:
     user = update.message.from_user
     logger.info("Пользователь %s приступил к редактированию заказа. Изменение ", user.first_name)
     #if state_machine == ORDER_EDIT_ITEMS and update.message.text != '/edit' and update.message.text != 'Изменить' and context.user_data['last_msg'] != '/predoplata' and context.user_data['last_msg'] != '/dostavka' and context.user_data['last_msg'] != '/remove':
-    if (state_machine == ORDER_EDIT_ITEMS or state_machine == ORDER_ADD_ITEMS) and (update.message.text == '/edit' or update.message.text == 'Изменить' or update.message.text == 'Вернуться назад'):
+    if (state_machine == ORDER_EDIT_ITEMS or state_machine == ORDER_ADD_ITEMS) and \
+            (update.message.text == '/edit' or update.message.text == 'Изменить' or update.message.text == 'Вернуться назад') and context.user_data['last_msg'] != 'Вернуться назад':
         context.user_data['last_msg'] = update.message.text
         state_machine = ORDER_EDIT_ITEMS
         if len(context.user_data['order_list']) != 0:
@@ -808,6 +809,9 @@ def edit_items_from_order(update: Update, context: CallbackContext) -> int:
         else:
             update.message.reply_text(
                 'Похоже в вашем заказе пусто. Редактировать нечего. \nДля продолжения введите одну из следующих команд:\n/add - чтобы добавить в заказ еще позиции\n/remove - чтобы удалить из списка заказа позицию\n/edit - чтобы откорректировать позицию из списка заказа\n/comment - добавить коментарий к заказу\n/finish - чтобы завершить оформление')
+    elif state_machine == ORDER_EDIT_ITEMS and context.user_data['last_msg'] == 'Вернуться назад':
+        context.user_data['last_msg'] = update.message.text
+        state_machine = end(update, context)
     elif state_machine == ORDER_EDIT_ITEMS and (context.user_data['last_msg'] == '/edit' or context.user_data['last_msg'] == 'Изменить' or context.user_data['last_msg'] == 'Вернуться назад'):
         context.user_data['last_msg'] = int(update.message.text)-1 #Сохраняем номер выбранной позиции из заказа
         reply_keyboard = [['Количество', 'Цена', 'Цвет'], ['Вернуться назад']]
@@ -2096,7 +2100,7 @@ def main() -> None:
                               MessageHandler(Filters.regex('^(Вернуться назад)$'), start)],
             ORDER_EDIT_ITEMS: [MessageHandler(Filters.regex('^(Количество|Цена|Цвет)$'), edit_items_from_order),
                                MessageHandler(Filters.regex('^[1-9][0-9]*$'), edit_items_from_order),
-                               MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), error_input),
+                               MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), edit_items_from_order),
                                CommandHandler('skip', skip),
                                MessageHandler(Filters.regex('^(Вернуться назад)$'), edit_items_from_order),
                                CommandHandler('end', end)],
