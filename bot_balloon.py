@@ -451,7 +451,16 @@ def edit_order(update: Update, context: CallbackContext) -> int:
     global state_machine
     user = update.message.from_user
     if (state_machine == ORDER or state_machine == ORDER_CHANGE) and (
-            update.message.text != 'ФИО' and update.message.text != 'Телефон' and update.message.text != 'Дата и время' and update.message.text != 'Состав заказа' and update.message.text != 'В архив' and update.message.text != 'Оплата' and update.message.text != 'Доставка' and update.message.text != '/predoplata' and update.message.text != '/dostavka' and update.message.text != 'В календарь' and update.message.text != 'РЕФЕРЕНСЫ'):
+            update.message.text != 'ФИО' and update.message.text != 'Телефон'
+            and update.message.text != 'Дата и время'
+            and update.message.text != 'Состав заказа'
+            and update.message.text != 'В архив'
+            and update.message.text != 'Оплата'
+            and update.message.text != 'Доставка'
+            and update.message.text != '/predoplata'
+            and update.message.text != '/dostavka'
+            and update.message.text != 'В календарь'
+            and update.message.text != 'РЕФЕРЕНСЫ'):
         state_machine = ORDER_EDIT
         # Сюда вставить функцию редактирования заказа из БД
         logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать", user.first_name,
@@ -570,6 +579,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         elif update.message.text == 'Другая сумма':
             text = "Введите сумму предоплаты цифрами:"
             update.message.reply_text(text)
+            return state_machine
         else:
             predoplata = int(update.message.text)
             if predoplata > order['summa']:
