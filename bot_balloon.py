@@ -121,7 +121,7 @@ def other(update: Update, context: CallbackContext) -> int:
     #     obj = BytesIO(tmp.read())
     #     obj.name = 'myevents.ics'
     #     context.bot.send_document(update.message.from_user.id, document=obj, caption='myevents.ics')
-    #move_to_archive(mdb, update, 1022)
+    # move_to_archive(mdb, update, 1022)
     update.message.reply_text('Данный раздел в разработке. Отправь команду /cancel чтобы начать сначала')
     return CHANGE
 
@@ -146,7 +146,7 @@ def change(update: Update, context: CallbackContext) -> int:  # Сюда при�
         """Пользователь приступил к оформлению сметы. Выводим предложение составить заказ"""
         logger.info("%s выбрала оформление сметы", user.first_name)
         reply_text = "Отлично давай прикинем смету. Что будут заказывать?"
-        #reply_keyboard = [['Латекс', 'Фольга', 'Баблс'], ['Стойка', 'Надпись', 'Другое'], ['/end']]
+        # reply_keyboard = [['Латекс', 'Фольга', 'Баблс'], ['Стойка', 'Надпись', 'Другое'], ['/end']]
         update.message.reply_text(
             reply_text,
             reply_markup=ReplyKeyboardMarkup(
@@ -181,7 +181,7 @@ def order(update: Update, context: CallbackContext) -> int:  # Здесь пол
         """Сохраняем телефон заказчика"""
         # Сохраняем значение
         phone = update.message.text
-        #print(update.message.contact.phone_number)
+        # print(update.message.contact.phone_number)
         if update.message.contact is not None:
             phone = update.message.contact.phone_number
         logger.info("Номер телефона Заказчика of %s: %s", user.first_name, phone)
@@ -198,7 +198,12 @@ def order(update: Update, context: CallbackContext) -> int:  # Здесь пол
         )
         state_machine = FROM
     elif state_machine == FROM and (
-            update.message.text == 'Инстаграм' or update.message.text == 'Авито' or update.message.text == 'ВКонтакте' or update.message.text == 'Telegram' or update.message.text == 'WhatshApp' or update.message.text == 'Viber'):
+            update.message.text == 'Инстаграм'
+            or update.message.text == 'Авито'
+            or update.message.text == 'ВКонтакте'
+            or update.message.text == 'Telegram'
+            or update.message.text == 'WhatshApp'
+            or update.message.text == 'Viber'):
         """Сохраняем откуда заказчика"""
         logger.info("Заказчик пришел of %s: %s", user.first_name, update.message.text)
         # Сохраняем значение
@@ -233,7 +238,7 @@ def order(update: Update, context: CallbackContext) -> int:  # Здесь пол
             else:
                 update.message.reply_text(
                 'Вы прислали:'
-                '\n'+ value +
+                '\n' + value +
                 '\n Что-то не то. Пришлите ссылку на профиль заказчика из Инстаграм'
                 ' или отправь /skip если ты не знаешь или требует уточнения',
                 )
@@ -287,7 +292,7 @@ def order(update: Update, context: CallbackContext) -> int:  # Здесь пол
         value = update.message.text
         context.user_data[key] = value
         reply_text = "Отлично давай прикинем смету. Что будут заказывать?"
-        #reply_keyboard = [['Латекс', 'Фольга', 'Баблс'], ['Стойка', 'Надпись', 'Акссесуары'], ['Другое']]
+        # reply_keyboard = [['Латекс', 'Фольга', 'Баблс'], ['Стойка', 'Надпись', 'Акссесуары'], ['Другое']]
         update.message.reply_text(
             reply_text,
             reply_markup=ReplyKeyboardMarkup(
@@ -299,7 +304,7 @@ def order(update: Update, context: CallbackContext) -> int:  # Здесь пол
         """Пользователь приступил к оформлению сметы. Выводим предложение составить заказ"""
         logger.info("%s выбрала оформление сметы", user.first_name)
         reply_text = "Отлично давай прикинем смету. Что будут заказывать?"
-        #reply_keyboard = [['Латекс', 'Фольга', 'Баблс'], ['Стойка', 'Надпись', 'Акссесуары'], ['Другое']]
+        # reply_keyboard = [['Латекс', 'Фольга', 'Баблс'], ['Стойка', 'Надпись', 'Акссесуары'], ['Другое']]
         update.message.reply_text(
             reply_text,
             reply_markup=ReplyKeyboardMarkup(
@@ -434,7 +439,7 @@ def show_order(update: Update, context: CallbackContext) -> int:
         # Сюда вставить функцию вывода состава заказа из БД
         order_num = context.user_data['select_order']
         order = show_order_user_from_db(mdb, update, order_num)
-        #order = order['order']
+        # order = order['order']
         text = "Заказ № " + str(context.user_data['select_order']) + ":\n"
         text += "ФИО:" + order['order']['fio'] + "\n"
         text += "Телефон:" + order['order']['tel'] + "\n"
@@ -497,7 +502,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         phone = update.message.text
         if update.message.contact is not None:
             phone = update.message.contact.phone_number
-        #print(update.message.contact.phone_number)
+        # print(update.message.contact.phone_number)
         if re.fullmatch(r'((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}', phone):
             logger.info("Пользователь %s выбрал заказ %d и отредактировал %s", user.first_name,
                         context.user_data['select_order'], context.user_data['last_msg'])
@@ -572,7 +577,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
             order = order['order']
         else:
             logger.info("Пользователь %s внес предоплату в размере %s", user.first_name, update.message.text)
-            order = {'summa' : context.user_data['summa']}
+            order = {'summa': context.user_data['summa']}
         predoplata = 0
         if update.message.text == '100%':
             predoplata = order['summa']
@@ -628,7 +633,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
             order = order['order']
         else:
             logger.info("Пользователь %s внес скидку в размере %s", user.first_name, update.message.text)
-            order = {'summa' : context.user_data['summa']}
+            order = {'summa': context.user_data['summa']}
         discount = 0
         if update.message.text == '15%':
             discount = order['summa'] * 0.15
@@ -685,7 +690,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         # print(order)
         context.user_data['order_list'] = order['order_list']
         if update.message.text == 'Добавить':
-            #print("Добавить")
+            # print("Добавить")
             state_machine = order_insert(update, context)
         elif update.message.text == 'Удалить':
             state_machine = ORDER_ADD_ITEMS
@@ -732,8 +737,8 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         else:
             logger.info("Пользователь %s выбрал чтобы внести стоимость доставки", user.first_name)
             context.user_data['last_msg'] = update.message.text
-            #TODO: Разобраться с доставкой во время оформления заказ и при выбранном самовывозе
-            order = {"location":context.user_data['location']}
+            # TODO: Разобраться с доставкой во время оформления заказ и при выбранном самовывозе
+            order = {"location": context.user_data['location']}
         text = "Введите сумму доставки до адреса: " + order['location']
         update.message.reply_text(text)
     elif (state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'Доставка') or (state_machine == ORDER_ADD_ITEMS and context.user_data['last_msg'] == '/dostavka'):
@@ -835,8 +840,8 @@ def remove_items_from_order(update: Update, context: CallbackContext) -> int:
             msg = 'Не верное значение! Введите номер позиции от 1 до %d' % len(context.user_data['order_list'])
             update.message.reply_text(msg)
     elif context.user_data['last_msg'] == '/predoplata' or context.user_data['last_msg'] == '/dostavka':
-        #print('Функция remove_items_from_order')
-        #print(state_machine)
+        # print('Функция remove_items_from_order')
+        # print(state_machine)
         edit_order(update, context)
     else:
         if len(context.user_data['order_list']) != 0:
@@ -860,7 +865,7 @@ def edit_items_from_order(update: Update, context: CallbackContext) -> int:
     # global order_list
     user = update.message.from_user
     logger.info("Пользователь %s приступил к редактированию заказа. Изменение ", user.first_name)
-    #if state_machine == ORDER_EDIT_ITEMS and update.message.text != '/edit' and update.message.text != 'Изменить' and context.user_data['last_msg'] != '/predoplata' and context.user_data['last_msg'] != '/dostavka' and context.user_data['last_msg'] != '/remove':
+    # if state_machine == ORDER_EDIT_ITEMS and update.message.text != '/edit' and update.message.text != 'Изменить' and context.user_data['last_msg'] != '/predoplata' and context.user_data['last_msg'] != '/dostavka' and context.user_data['last_msg'] != '/remove':
     if (state_machine == ORDER_EDIT_ITEMS or state_machine == ORDER_ADD_ITEMS) and \
             (update.message.text == '/edit' or update.message.text == 'Изменить' or update.message.text == 'Вернуться назад') and context.user_data['last_msg'] != 'Вернуться назад':
         context.user_data['last_msg'] = update.message.text
@@ -883,7 +888,7 @@ def edit_items_from_order(update: Update, context: CallbackContext) -> int:
         context.user_data['last_msg'] = update.message.text
         state_machine = end(update, context)
     elif state_machine == ORDER_EDIT_ITEMS and (context.user_data['last_msg'] == '/edit' or context.user_data['last_msg'] == 'Изменить' or context.user_data['last_msg'] == 'Вернуться назад'):
-        context.user_data['last_msg'] = int(update.message.text)-1 #Сохраняем номер выбранной позиции из заказа
+        context.user_data['last_msg'] = int(update.message.text)-1 # Сохраняем номер выбранной позиции из заказа
         reply_keyboard = [['Количество', 'Цена', 'Цвет'], ['Вернуться назад']]
         text = "Вы выбрали для изменения:\n"
         result = context.user_data['order_list'][context.user_data['last_msg']]['type']
@@ -891,12 +896,14 @@ def edit_items_from_order(update: Update, context: CallbackContext) -> int:
             text += 'Шар %(name)s %(size)s \nЦвет: %(color)s \nКол-во - %(count)d шт. \nЦена %(price)d руб. \n' % \
                       context.user_data['order_list'][context.user_data['last_msg']]
         elif result == 'foil_fig' and not (
-                context.user_data['order_list'][context.user_data['last_msg']]["name"] == 'Сердце' or context.user_data['order_list'][context.user_data['last_msg']][
-            "name"] == 'Звезда' or context.user_data['order_list'][context.user_data['last_msg']]["name"] == 'Круг'):
+                context.user_data['order_list'][context.user_data['last_msg']]["name"] == 'Сердце'
+                or context.user_data['order_list'][context.user_data['last_msg']]["name"] == 'Звезда'
+                or context.user_data['order_list'][context.user_data['last_msg']]["name"] == 'Круг'):
             text += 'Фигура %(name)s \nКол-во - %(count)d шт. \nЦена %(price)d руб. \n' % context.user_data['order_list'][context.user_data['last_msg']]
 
         elif result == 'foil_fig' and (
-                context.user_data['order_list'][context.user_data['last_msg']]["name"] == 'Сердце' or context.user_data['order_list'][context.user_data['last_msg']][
+                context.user_data['order_list'][context.user_data['last_msg']]["name"] == 'Сердце'
+                or context.user_data['order_list'][context.user_data['last_msg']][
             "name"] == 'Звезда' or context.user_data['order_list'][context.user_data['last_msg']]["name"] == 'Круг'):
             text += 'Фигура %(name)s \nЦвет: %(color)s \nКол-во - %(count)d шт. \nЦена %(price)d руб. \n' % context.user_data['order_list'][context.user_data['last_msg']]
         elif result == 'foil_num':
@@ -1233,11 +1240,11 @@ def foil(update: Update, context: CallbackContext) -> int:  # Здесь пол�
         summa = value * value_cnt
         key = 'summa'
         context.user_data['order_dict'][key] = summa
-        #print(context.user_data)
+        # print(context.user_data)
         dict2 = copy.deepcopy(context.user_data['order_dict'])
         order_list = context.user_data['order_list']
         order_list.append(dict2)
-        #print(order_list)
+        # print(order_list)
         context.user_data['order_list'] = order_list
         # Здесь необходимо сохранить словарь по данной ФИГУРЕ
         state_machine = order_insert(update, context)
@@ -1564,11 +1571,11 @@ def accessories(update: Update, context: CallbackContext) -> int:  # Здесь 
         summa = value * value_cnt
         key = 'summa'
         context.user_data['order_dict'][key] = summa
-        #print(context.user_data)
+        # print(context.user_data)
         dict2 = copy.deepcopy(context.user_data['order_dict'])
         order_list = context.user_data['order_list']
         order_list.append(dict2)
-        #print(order_list)
+        # print(order_list)
         context.user_data['order_list'] = order_list
         state_machine = order_insert(update, context)
     else:
@@ -1633,7 +1640,7 @@ def reference(update: Update, context: CallbackContext) -> int:  # Здесь п
         # Write to disk
         directory = PHOTO_PATH.rpartition('/')[0]
         try:
-            os.makedirs(directory, mode=0o777, exist_ok=False) #рекурсивно создаем каталоги где будут лежать референсы
+            os.makedirs(directory, mode=0o777, exist_ok=False) # рекурсивно создаем каталоги где будут лежать референсы
         except FileExistsError:
             print("Folder for save reference already exists")
         else:
@@ -1660,7 +1667,7 @@ def reference(update: Update, context: CallbackContext) -> int:  # Здесь п
         value = context.user_data['reference'] - 1
         del_ref_num = int(update.message.text)
         # print("reference - 1")
-        edit_order_user_from_db(mdb, update, order_num, param, value) #Уменьшаем в базе данных значение референсов на 1
+        edit_order_user_from_db(mdb, update, order_num, param, value) # Уменьшаем в базе данных значение референсов на 1
 
         PHOTO_PATH = str(pathlib.Path.cwd()) + "/orders/" + str(user.id) + "/" + str(order_num) + "/reference/" + str(update.message.text) + ".jpg"
         try:
@@ -1670,7 +1677,7 @@ def reference(update: Update, context: CallbackContext) -> int:  # Здесь п
         except:
             print("The system cannot find the file specified")
 
-        for i in range(del_ref_num,value + 1):
+        for i in range(del_ref_num, value + 1):
             PHOTO_PATH_old = str(pathlib.Path.cwd()) + "/orders/" + str(user.id) + "/" + str(
                 order_num) + "/reference/" + str(i+1) + ".jpg"
             PHOTO_PATH_new = str(pathlib.Path.cwd()) + "/orders/" + str(user.id) + "/" + str(
@@ -1709,7 +1716,7 @@ def end(update: Update, context: CallbackContext) -> int:  # Здесь обра
     update.message.reply_text('Итак давай посмотрим что получается')
     update.message.reply_text(msg)
     reply_keyboard = [['/add'], ['/edit'], ['/remove'], ['/predoplata'], ['/discount'], ['/dostavka'], ['/comment'], ['/reference'], ['/finish']]
-    #text = "Выберите дейстивие ДОБАВИТЬ или УДАЛИТЬ, либо ВЕРНУТЬСЯ НАЗАД"
+    # text = "Выберите дейстивие ДОБАВИТЬ или УДАЛИТЬ, либо ВЕРНУТЬСЯ НАЗАД"
     update.message.reply_text(
         'Введите одну из следующих команд:\n'
         '/add - чтобы добавить в заказ еще позиции\n'
@@ -1814,7 +1821,7 @@ def make_msg_order_list(user_data) -> str:
             message += '\nНеобходимая предоплата: %d руб.' % (summa // 2)
 
 
-    #print(message)
+    # print(message)
     return message
 
 def send_image_order(order, context, update):
@@ -1830,8 +1837,8 @@ def send_reference_image_order(order, context, update):
         PHOTO_PATH = str(pathlib.Path.cwd()) + "/orders/" + str(order['user_id']) + "/" + str(
             order['order_cnt']) + "/reference/" + str(i + 1) + ".jpg"
         media_group.append(InputMediaPhoto(open(PHOTO_PATH, 'rb'), caption=text if i == 0 else ''))
-        #PHOTO_PATH = str(pathlib.Path.cwd()) + "/orders/" + str(order['user_id']) + "/" + str(order['order_cnt']) + "/reference/" + str(i+1) + ".jpg"
-        #context.bot.send_photo(chat_id=update.message.chat_id, photo=open(PHOTO_PATH, 'rb'))
+        # PHOTO_PATH = str(pathlib.Path.cwd()) + "/orders/" + str(order['user_id']) + "/" + str(order['order_cnt']) + "/reference/" + str(i+1) + ".jpg"
+        # context.bot.send_photo(chat_id=update.message.chat_id, photo=open(PHOTO_PATH, 'rb'))
     context.bot.send_media_group(chat_id=update.message.chat_id, media = media_group)
     context.user_data['last_msg'] = 'РЕФЕРЕНСЫ'
     reply_keyboard = [['Добавить', 'Удалить', 'Посмотреть', 'Вернуться назад']]
@@ -1853,7 +1860,7 @@ def to_calendar(order, update):
     update.message.reply_text(text, parse_mode=ParseMode.HTML)
     return
 
-##reply_keyboard = [['Инстаграм', 'Авито', 'ВКонтакте'], ['Telegram', 'WhatsApp', 'Viber'], ['Другое'], ['/skip']]
+# reply_keyboard = [['Инстаграм', 'Авито', 'ВКонтакте'], ['Telegram', 'WhatsApp', 'Viber'], ['Другое'], ['/skip']]
 def make_link_to_messanger(order, context, update):
     tel = order['order']['tel']
     if tel != '0':
@@ -1861,17 +1868,17 @@ def make_link_to_messanger(order, context, update):
         tel = "7{}{}{}{}{}{}{}{}{}{}".format(*tel)
         print(tel)
         if order['order']['from'] == 'WhatsApp':
-            #link = "<b><a href=\"whatsapp://send?phone=" + str(tel)+ "\">Открыть чат в WhatsApp</a></b>"
+            # link = "<b><a href=\"whatsapp://send?phone=" + str(tel)+ "\">Открыть чат в WhatsApp</a></b>"
             link = "<b><a href=\"http://wa.me/" + str(tel) + "\">Открыть чат в WhatsApp</a></b>"
         elif order['order']['from'] == 'Telegram':
-            #link = "<b><a href=\"tg://resolve?domain=" + str(tel) + "\">Открыть чат в Телеграм</a></b>"
+            # link = "<b><a href=\"tg://resolve?domain=" + str(tel) + "\">Открыть чат в Телеграм</a></b>"
             link = "<b><a href=\"t.me/+" + str(tel) + "\">Открыть чат в Телеграм</a></b>"
         elif order['order']['from'] == 'Viber':
             link = "<b><a href=\"viber://chat?number=" + str(tel) + "\">Открыть чат в Viber</a></b>"
         elif order['order']['from'] == 'Инстаграм':
             print("Instagram develop")
-            #link = "<b><a href=\"http://ig.me/m/" + order['order']['nickname'] + "\">Открыть чат в Instagram</a></b>"
-            #link = "<b><a href=\"instagram://user?username=msblasttor\">Открыть чат в Instagram</a></b>"
+            # link = "<b><a href=\"http://ig.me/m/" + order['order']['nickname'] + "\">Открыть чат в Instagram</a></b>"
+            # link = "<b><a href=\"instagram://user?username=msblasttor\">Открыть чат в Instagram</a></b>"
             link = "<b><a href=\"http://ig.me/m/"+ order['order']['nickname'] +"\">Открыть чат в Instagram</a></b>"
         elif order['order']['from'] == 'Авито':
             print("Avito develop")
@@ -1926,7 +1933,7 @@ def finish(update: Update, context: CallbackContext) -> int:  # Здесь фи�
     else:
         text = "Заказ не сохранен так как нечего сохранять. Попробуй заново /start"
         update.message.reply_text(text)
-    context.user_data.clear() #Очищаем данные пользователя после сохранения заказа
+    context.user_data.clear() # Очищаем данные пользователя после сохранения заказа
     state_machine = ConversationHandler.END  # выходим из диалога
     return state_machine
 
@@ -2042,8 +2049,8 @@ def profile(update: Update, context: CallbackContext) -> int:
         update.message.reply_text(reply_text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     elif state_machine == PROFILE and context.user_data['last_msg'] == 'Карточка заказа' and update.message.text == 'Вывести текущий шаблон':
         logger.info("Пользователь %s выбрал раздел %s", user.first_name, update.message.text)
-        #context.user_data['last_msg'] = update.message.text
-        #user_id = update.effective_user.id
+        # context.user_data['last_msg'] = update.message.text
+        # user_id = update.effective_user.id
         user = search_or_save_user(mdb, update.effective_user, update.message)
         make_template_image(user)
         send_image_template_order(user['user_id'], context, update)
@@ -2235,7 +2242,7 @@ def main() -> None:
             STAND_NAME: [MessageHandler(Filters.text & ~Filters.command, stand), CommandHandler('skip', skip)],
             STAND_PRICE: [MessageHandler(Filters.regex('^\d+$') & ~Filters.command, stand),
                           MessageHandler(Filters.text & ~Filters.command, error_input), CommandHandler('skip', skip)],
-            #Аксессуары
+            # Аксессуары
             ACCESSORIES: [MessageHandler(Filters.text & ~Filters.command, accessories), CommandHandler('end', end)],
             ACCESSORIES_COMMENT: [MessageHandler(Filters.text & ~Filters.command, accessories), CommandHandler('skip', skip), CommandHandler('end', end)],
             ACCESSORIES_CNT: [MessageHandler(Filters.regex('^\d+$') & ~Filters.command, accessories),
@@ -2250,7 +2257,7 @@ def main() -> None:
             REFERENCE: [MessageHandler(Filters.regex('^(Вернуться назад)$'), edit_order), MessageHandler(Filters.regex('^(1|2|3|4|5|6|7|8)$'), reference), MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), error_input), MessageHandler(Filters.forwarded | Filters.photo, reference), CommandHandler('skip', skip)],
 
             # Личный кабинет
-            PROFILE_COLOR_BG:[MessageHandler(Filters.regex('^(Вернуться назад)$'), start),
+            PROFILE_COLOR_BG: [MessageHandler(Filters.regex('^(Вернуться назад)$'), start),
                     MessageHandler(Filters.regex('^([A-Fa-f0-9]{6})$'), profile),
                     MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$'), error_input),
                     CommandHandler('skip', skip)],
@@ -2266,7 +2273,7 @@ def main() -> None:
 
     dispatcher.add_handler(conv_handler)
 
-    #dispatcher.add_handler(CommandHandler('bad_command', bad_command))
+    # dispatcher.add_handler(CommandHandler('bad_command', bad_command))
     # error handlers
     dispatcher.add_error_handler(error_handler)
 
