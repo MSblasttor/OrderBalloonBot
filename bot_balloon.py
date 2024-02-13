@@ -451,7 +451,8 @@ def edit_order(update: Update, context: CallbackContext) -> int:
     global state_machine
     user = update.message.from_user
     if (state_machine == ORDER or state_machine == ORDER_CHANGE) and (
-            update.message.text != 'ФИО' and update.message.text != 'Телефон'
+            update.message.text != 'ФИО'
+            and update.message.text != 'Телефон'
             and update.message.text != 'Дата и время'
             and update.message.text != 'Состав заказа'
             and update.message.text != 'В архив'
@@ -459,6 +460,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
             and update.message.text != 'Доставка'
             and update.message.text != '/predoplata'
             and update.message.text != '/dostavka'
+            and update.message.text != '/discount'
             and update.message.text != 'В календарь'
             and update.message.text != 'РЕФЕРЕНСЫ'):
         state_machine = ORDER_EDIT
@@ -529,7 +531,7 @@ def edit_order(update: Update, context: CallbackContext) -> int:
             state_machine = CHANGE
             change(update, context)
         else:
-            text = "Введите дату мероприятия в формате дд-мм-гг ЧЧ:ММ"
+            text = "Введите дату мероприятия в формате дд.мм.гг ЧЧ:ММ"
             update.message.reply_text(text)
     elif state_machine == ORDER_EDIT and update.message.text == 'Адрес':
         logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать адрес", user.first_name,
@@ -606,6 +608,64 @@ def edit_order(update: Update, context: CallbackContext) -> int:
             context.user_data['predoplata'] = predoplata
             context.user_data['last_msg'] = update.message.text
             text = "Внесена предоплата в размере " + str(predoplata) + " руб."
+            update.message.reply_text(text)
+            end(update, context)
+    elif (state_machine == ORDER_EDIT and update.message.text == 'Скидка') or (state_machine == ORDER_ADD_ITEMS and update.message.text == '/discount'):
+        if update.message.text != '/discount':
+            logger.info("Пользователь %s выбрал заказ %d чтобы отредактировать %s", user.first_name,
+                        context.user_data['select_order'], update.message.text)
+        else:
+            logger.info("Пользователь %s выбрал внесение скидки", user.first_name)
+        context.user_data['last_msg'] = update.message.text
+        reply_keyboard = [['15%', '10%', '5%', 'Другая сумма']]
+        text = "Введите размер скидки"
+        update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
+    elif (state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'Скидка') or (state_machine == ORDER_ADD_ITEMS and context.user_data['last_msg'] == '/discount'):
+        if context.user_data['last_msg'] != '/discount' or (context.user_data.get('select_order') is not None and context.user_data['select_order'] != 0):
+            logger.info("Пользователь %s выбрал заказ %d и отредактировал %s", user.first_name,
+                        context.user_data['select_order'], context.user_data['last_msg'])
+            order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
+            order = order['order']
+        else:
+            logger.info("Пользователь %s внес скидку в размере %s", user.first_name, update.message.text)
+            order = {'summa' : context.user_data['summa']}
+        discount = 0
+        if update.message.text == '15%':
+            discount = order['summa'] * 0.15
+        elif update.message.text == '10%':
+            discount = order['summa'] * 0.10
+        elif update.message.text == '5%':
+            discount = order['summa'] * 0.05
+        elif update.message.text == 'Другая сумма':
+            text = "Введите сумму скидки цифрами:"
+            update.message.reply_text(text)
+            return state_machine
+        else:
+            discount = int(update.message.text)
+            if discount > order['summa']:
+                text = "Введите сумму скидки цифрами не больше %d:" % order['summa']
+                update.message.reply_text(text)
+                return state_machine
+        if context.user_data['last_msg'] != '/discount':
+            edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'discount', discount)
+            context.user_data['last_msg'] = update.message.text
+            text = "В заказе №" + str(
+                context.user_data['select_order']) + " внесена скидка в размере " + update.message.text + " руб."
+            update.message.reply_text(text)
+            state_machine = CHANGE
+            change(update, context)
+        elif context.user_data['last_msg'] == '/discount' and (context.user_data.get('select_order') is not None and context.user_data['select_order'] != 0):
+            edit_order_user_from_db(mdb, update, context.user_data['select_order'], 'discount', discount)
+            context.user_data['last_msg'] = update.message.text
+            text = "В заказе №" + str(
+                context.user_data['select_order']) + " внесена скидка в размере " + update.message.text + " руб."
+            update.message.reply_text(text)
+            end(update, context)
+        else:
+            print("Внесена скидка")
+            context.user_data['discount'] = discount
+            context.user_data['last_msg'] = update.message.text
+            text = "Внесена скидка в размере " + str(discount) + " руб."
             update.message.reply_text(text)
             end(update, context)
     elif state_machine == ORDER_EDIT and update.message.text == 'Состав заказа':
@@ -1648,7 +1708,7 @@ def end(update: Update, context: CallbackContext) -> int:  # Здесь обра
     msg = make_msg_order_list(context.user_data)
     update.message.reply_text('Итак давай посмотрим что получается')
     update.message.reply_text(msg)
-    reply_keyboard = [['/add'], ['/edit'], ['/remove'], ['/predoplata'], ['/dostavka'], ['/comment'], ['/reference'], ['/finish']]
+    reply_keyboard = [['/add'], ['/edit'], ['/remove'], ['/predoplata'], ['/discount'], ['/dostavka'], ['/comment'], ['/reference'], ['/finish']]
     #text = "Выберите дейстивие ДОБАВИТЬ или УДАЛИТЬ, либо ВЕРНУТЬСЯ НАЗАД"
     update.message.reply_text(
         'Введите одну из следующих команд:\n'
@@ -1656,6 +1716,7 @@ def end(update: Update, context: CallbackContext) -> int:  # Здесь обра
         '/edit - чтобы отредактировать позиции заказе\n'
         '/remove - чтобы удалить из списка заказа позицию \n'
         '/predoplata - чтобы указать сумму предоплаты \n'
+        '/discount - чтобы указать сумму предоплаты \n'
         '/dostavka - чтобы указать сумму доставки\n'
         '/comment - добавить коментарий к заказу\n'
         '/reference - добавить фото референс к заказу\n'
@@ -1731,11 +1792,18 @@ def make_msg_order_list(user_data) -> str:
         if user_data['comment'] != 0:
             message += '\n\nКомментарий: %s' % user_data['comment']
         user_data['summa'] = summa
-        message += '\n\nИтого сумма заказа без учета доставки: %d руб.' % summa
+        if 'discount' in user_data:
+            message += '\n\nИтого сумма заказа без учета доставки и скидки: %d руб.' % summa
+        else:
+            message += '\n\nИтого сумма заказа без учета доставки: %d руб.' % summa
         if 'dostavka' in user_data:
             message += '\nДоставка: %d руб.' % user_data['dostavka']
             user_data['summa'] = summa + user_data['dostavka']
             summa = user_data['summa']
+        if 'discount' in user_data:
+            message += '\nСкидка: %d руб.' % user_data['discount']
+            summa = summa - user_data['discount']
+            message += '\nИТОГО с учетом скидки: %d руб.' % summa
         if 'predoplata' in user_data:
             if summa - user_data['predoplata'] > 0:
                 message += '\nПредоплата: %d руб.' % user_data['predoplata']
@@ -1744,6 +1812,7 @@ def make_msg_order_list(user_data) -> str:
                 message += '\nВсе оплачено'
         else:
             message += '\nНеобходимая предоплата: %d руб.' % (summa // 2)
+
 
     #print(message)
     return message
@@ -1835,6 +1904,8 @@ def finish(update: Update, context: CallbackContext) -> int:  # Здесь фи�
     logger.info("Пользователь %s завершил оформление заказ", user.first_name)
     if context.user_data.get('predoplata') is None:
         context.user_data['predoplata'] = 0
+    if context.user_data.get('discount') is None:
+        context.user_data['discount'] = 0
     if context.user_data.get('dostavka') is None:
         context.user_data['dostavka'] = 0
     if context.user_data.get('reference') is None:
@@ -2079,7 +2150,7 @@ def main() -> None:
                          MessageHandler(Filters.regex('^(Вернуться назад)$'), start),
                          MessageHandler(Filters.text & ~Filters.command & ~Filters.regex('^(Вернуться назад)$') & ~Filters.regex('^(В календарь)$'), edit_order),
                          MessageHandler(Filters.regex('^(ФИО|Телефон|Дата и время|Адрес|'
-                                                      'Состав заказа|Оплата|Доставка|100%|50%|Другая сумма'
+                                                      'Состав заказа|Оплата|Скидка|Доставка|100%|50%|15%|10%|5%|Другая сумма'
                                                       '|Добавить|Удалить|Изменить|Количество|Цена|Посмотреть|РЕФЕРЕНСЫ|В архив)$'), edit_order),
                          MessageHandler(Filters.regex('^(В календарь)$'), edit_order)],
             ORDER_SHOW: [MessageHandler(Filters.regex('^(Добавить новый заказ)$'), order),
@@ -2101,8 +2172,9 @@ def main() -> None:
                               MessageHandler(Filters.regex('^(Добавить)$'), order_insert),
                               CommandHandler('remove', remove_items_from_order),
                               MessageHandler(Filters.regex('^[1-9][0-9]*$'), remove_items_from_order),
-                              MessageHandler(Filters.regex('^(100%|50%|Другая сумма)$'), edit_order),
+                              MessageHandler(Filters.regex('^(100%|50%|15%|10%|5%|Другая сумма)$'), edit_order),
                               CommandHandler('predoplata', edit_order),
+                              CommandHandler('discount', edit_order),
                               CommandHandler('dostavka', edit_order),
                               CommandHandler('finish', finish),
                               CommandHandler('comment', comment),

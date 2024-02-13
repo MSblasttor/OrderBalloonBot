@@ -147,7 +147,10 @@ def make_image_order(order):
         message = 'Комментарий: %s' % order['order']['comment']
         count += 1
         make_txt(im, 50, 320 + count * 30, message, "left")
-    message = 'Итого сумма заказа без учета доставки: %d руб.' % summa
+    if 'discount' in order['order'] and order['order']['discount'] != 0:
+        message = 'Итого сумма заказа без учета доставки и скидки: %d руб.' % summa
+    else:
+        message = 'Итого сумма заказа без учета доставки: %d руб.' % summa
     count += 1
     make_txt(im, 50, 320 + count * 30, message, "left")
     if 'dostavka' in order['order'] and order['order']['dostavka'] != 0:
@@ -158,6 +161,13 @@ def make_image_order(order):
         make_txt(im, 50, 320 + count * 30, message, "left")
     else:
         print("Not dostavka")
+    if 'discount' in order['order'] and order['order']['discount'] != 0:
+        message = 'Скидка: %d руб.' % order['order']['discount']
+        summa = summa - order['order']['discount']
+        message += '\nИТОГО с учетом скидки %d руб.' % summa
+    count += 1
+    make_txt(im, 50, 320 + count * 30, message, "left")
+    count += 1
     if 'predoplata' in order['order']:
         if summa - order['order']['predoplata'] > 0:
             message = 'Предоплата: %d руб.' % order['order']['predoplata']

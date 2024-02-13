@@ -52,7 +52,7 @@ def search_or_save_user(mdb, effective_user, message):
             "first_name": effective_user.first_name,
             "last_name": effective_user.last_name,
             "chat_id": message.chat.id,
-			"order_cnt": 1000
+			"order_cnt": 1000,
             "color_bg": 'FFFFFF'
         }
         mdb.users.insert_one(user)  # сохраняем в коллекцию users
@@ -96,6 +96,7 @@ def save_user_order(mdb, update, user_data):
                         "dostavka": user_data['dostavka'],
                         "reference": user_data['reference'],
                         "predoplata": user_data['predoplata'],
+                        "discount": user_data['discount'],
                         "summa": user_data['summa']
                     }
                 }
@@ -116,6 +117,7 @@ def save_user_order(mdb, update, user_data):
                         "dostavka": user_data['dostavka'],
                         "reference": user_data['reference'],
                         "predoplata": user_data['predoplata'],
+                        "discount": user_data['discount'],
                         "summa": user_data['summa']
                     }
                 }
