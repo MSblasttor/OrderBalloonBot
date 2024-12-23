@@ -1,5 +1,6 @@
 from PIL import Image, ImageDraw, ImageFont
 import pathlib
+import textwrap
 
 from math import ceil
 
@@ -82,8 +83,12 @@ def make_image_order(order):
     count = 0
     message = ""
     summa = 0
+    count_add = 0
+    #count_add_value = 0
     for element in order['order']['order_list']:
         result = order['order']['order_list'][count]['type']
+        #count_add = 0
+        count_add_value = 0
         if result == 'latex':
             msg_str = 'Шар %(name)s %(size)s Цвет: %(color)s Кол-во - %(count)d шт. Цена %(price)d руб. \n' % \
                       order['order']['order_list'][count]
@@ -121,6 +126,7 @@ def make_image_order(order):
             # print (msg_str)
             message = '%d. ' % (count + 1)
             message += msg_str
+            #print(message)
         elif result == 'stand':
             msg_str = 'Стойка %(name)s Цена (Аренда) %(price)d руб. \n' % order['order']['order_list'][count]
             # print (msg_str)
@@ -141,33 +147,49 @@ def make_image_order(order):
             message += msg_str
         summa += order['order']['order_list'][count]["summa"]
         count += 1
-        make_txt(im, 50, 320+count*30, message, "left")
+        y = 320 + count * 30 + count_add * 30
+        message_list = textwrap.wrap(message, drop_whitespace=False, width=65)
+        # print(message_list)
+
+        message = ""
+        for line in message_list:
+            message += line
+            message += "\n"
+            count_add_value += 1
+        count_add_value -= 1
+        make_txt(im, 50, y, message, "left")
+        print(message)
+        print(f"Count {count}")
+        count_add += count_add_value
+        print(f"Count add {count_add}")
+        print(f"Y Coordinate: {y}")
+
     count += 1
     if order['order']['comment'] != 0:
         message = 'Комментарий: %s' % order['order']['comment']
         count += 1
-        make_txt(im, 50, 320 + count * 30, message, "left")
+        make_txt(im, 50, 320 + count * 30+count_add*30, message, "left")
     if 'discount' in order['order'] and order['order']['discount'] != 0:
         message = 'Итого сумма заказа без учета доставки и скидки: %d руб.' % summa
     else:
         message = 'Итого сумма заказа без учета доставки: %d руб.' % summa
     count += 1
-    make_txt(im, 50, 320 + count * 30, message, "left")
+    make_txt(im, 50, 320 + count * 30+count_add*30, message, "left")
     if 'dostavka' in order['order'] and order['order']['dostavka'] != 0:
-        print(order['order']['dostavka'])
+        #print(order['order']['dostavka'])
         message = 'Доставка: %d руб.' % order['order']['dostavka']
         summa = summa + order['order']['dostavka']
         count += 1
-        make_txt(im, 50, 320 + count * 30, message, "left")
+        make_txt(im, 50, 320 + count * 30+count_add*30, message, "left")
     else:
         print("Not dostavka")
     if 'discount' in order['order'] and order['order']['discount'] != 0:
         message = 'Скидка: %d руб.' % order['order']['discount']
         summa = summa - order['order']['discount']
         message += '\nИТОГО с учетом скидки %d руб.' % summa
-    count += 1
-    make_txt(im, 50, 320 + count * 30, message, "left")
-    count += 1
+        count += 1
+        make_txt(im, 50, 320 + count * 30 + count_add * 30, message, "left")
+        count += 1
     if 'predoplata' in order['order']:
         if summa - order['order']['predoplata'] > 0:
             message = 'Предоплата: %d руб.' % order['order']['predoplata']
@@ -177,7 +199,7 @@ def make_image_order(order):
     else:
         message = 'Необходимая предоплата: %d руб.' % (summa // 2)
     count += 1
-    make_txt(im, 50, 320 + count * 30, message, "left")
+    make_txt(im, 50, 320 + count * 30+count_add*30, message, "left")
     count += 1
     if 'reference' in order['order'] and order['order']['reference'] != 0:
         count += 2

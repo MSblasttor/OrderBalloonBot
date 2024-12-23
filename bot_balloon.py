@@ -627,20 +627,24 @@ def edit_order(update: Update, context: CallbackContext) -> int:
         update.message.reply_text(text, reply_markup=ReplyKeyboardMarkup(reply_keyboard, one_time_keyboard=True))
     elif (state_machine == ORDER_EDIT and context.user_data['last_msg'] == 'Скидка') or (state_machine == ORDER_ADD_ITEMS and context.user_data['last_msg'] == '/discount'):
         if context.user_data['last_msg'] != '/discount' or (context.user_data.get('select_order') is not None and context.user_data['select_order'] != 0):
-            logger.info("Пользователь %s выбрал заказ %d и отредактировал %s", user.first_name,
-                        context.user_data['select_order'], context.user_data['last_msg'])
+            logger.info("Пользователь %s выбрал заказ %d и отредактировал %s. новое значение: %s", user.first_name,
+                        context.user_data['select_order'], context.user_data['last_msg'], update.message.text)
             order = show_order_user_from_db(mdb, update, context.user_data['select_order'])
             order = order['order']
         else:
             logger.info("Пользователь %s внес скидку в размере %s", user.first_name, update.message.text)
             order = {'summa': context.user_data['summa']}
         discount = 0
+        print(f"Сумма заказа: {order['summa']}")
         if update.message.text == '15%':
+            print("15%")
             discount = order['summa'] * 0.15
         elif update.message.text == '10%':
             discount = order['summa'] * 0.10
+            print("10%")
         elif update.message.text == '5%':
             discount = order['summa'] * 0.05
+            print("5%")
         elif update.message.text == 'Другая сумма':
             text = "Введите сумму скидки цифрами:"
             update.message.reply_text(text)
@@ -1866,7 +1870,7 @@ def make_link_to_messanger(order, context, update):
     if tel != '0':
         tel = list(filter(str.isdigit, tel))[1:]
         tel = "7{}{}{}{}{}{}{}{}{}{}".format(*tel)
-        print(tel)
+        #print(tel)
         if order['order']['from'] == 'WhatsApp':
             # link = "<b><a href=\"whatsapp://send?phone=" + str(tel)+ "\">Открыть чат в WhatsApp</a></b>"
             link = "<b><a href=\"http://wa.me/" + str(tel) + "\">Открыть чат в WhatsApp</a></b>"
@@ -1919,7 +1923,7 @@ def finish(update: Update, context: CallbackContext) -> int:  # Здесь фи�
         context.user_data['reference'] = 0
     if context.user_data.get('nickname') is None:
         context.user_data['nickname'] = 0
-    print(context.user_data)
+    print(f"Function 'finish' result: {context.user_data}")
 
     order = save_user_order(mdb, update, context.user_data)  # Сохраняем заказ в базу данных
     if order != 0:

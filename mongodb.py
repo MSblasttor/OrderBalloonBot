@@ -65,7 +65,7 @@ def save_user_order(mdb, update, user_data):
         #order = mdb.orders.find_one({'user_id': user['user_id'], 'order_cnt': user_data['select_order']})
         result_order_list = user_data['order_list']
         #reference = user_data['reference']
-        print(result_order_list)
+        #print(result_order_list)
         finish = mdb.orders.update_one(
             {'user_id': user['user_id'], 'order_cnt': user_data['select_order']},
             #{'$set': {'order.order_list' : result_order_list, 'order.reference' : reference}})
@@ -138,7 +138,7 @@ def list_archive_from_db(mdb, update):
 def show_order_user_from_db(mdb, update, order_num):
     user = search_or_save_user(mdb, update.effective_user, update.message)
     order = mdb.orders.find_one({'user_id': user['user_id'], 'order_cnt': order_num})
-    #print(order)
+    print(f"Show order number {order_num} user {user['user_id']} from db:\n {order}")
     return order
 
 def show_archive_user_from_db(mdb, update, order_num):
@@ -152,7 +152,7 @@ def edit_order_user_from_db(mdb, update, order_num, param, value):
     finish = mdb.orders.update_one(
         {'user_id': user['user_id'], 'order_cnt': order_num},
         {'$set': {'order.'+param: value}})
-    print(finish)
+    print(f"Edit order number {order_num} user {user['user_id']} Param: {param} Value: {value} \n{finish}")
 
 # сохраняем - обновляем результаты анкеты и возвращаем результат
 def save_user_anketa(mdb, user, user_data):
